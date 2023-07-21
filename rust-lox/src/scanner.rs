@@ -176,7 +176,13 @@ pub mod scan {
                 c if c == '}' => self.add_token(TokenType::RightBrace),
                 c if c == ',' => self.add_token(TokenType::Comma),
                 c if c == '.' => self.add_token(TokenType::Dot),
-                c if c == '-' => self.add_token(TokenType::Minus),
+                c if c == '-' => {
+                    if self.peek().is_digit(10) {
+                        self.number();
+                    } else {
+                        self.add_token(TokenType::Minus)
+                    }
+                },
                 c if c == '+' => self.add_token(TokenType::Plus),
                 c if c == ';' => self.add_token(TokenType::Semicolon),
                 c if c == '*' => self.add_token(TokenType::Star),
@@ -405,7 +411,8 @@ mod test {
     test_token!(read_multiple_line_string_ok, "\"first\nsecond\nthird\nfourth\"", TokenType::String(String::from("first\nsecond\nthird\nfourth")));
     test_token!(read_number_ok, "123", TokenType::Number(123.00));
     test_token!(read_number_with_decimal_ok, "123.456", TokenType::Number(123.456));
-    test_token!(read_number_with_decimal_and_no_leading_zero_and_no_leading_dot_ok, "456", TokenType::Number(456.00));
+    test_token!(read_negative_with_decimal_ok, "-123.456", TokenType::Number(-123.456));
+    test_token!(read_negative_number_ok, "-123", TokenType::Number(-123.00));
 
     // try to read a token that is not supported
     #[test]
