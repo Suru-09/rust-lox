@@ -17,15 +17,6 @@ pub mod error_handling {
     }
 
     impl RLoxError {
-        fn new(line: u32, column: u32, message: String, location: String) -> RLoxError {
-            RLoxError {
-                line,
-                column,
-                message,
-                location,
-            }
-        }
-
         fn report(&self) {
             println!("[line {} and column {}] Error {}: {}", self.line, self.column, self.location, self.message);
         }

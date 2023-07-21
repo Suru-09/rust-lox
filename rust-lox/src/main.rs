@@ -6,7 +6,7 @@ fn run(source: String) {
     let mut scanner = scanner::scan::Scanner::new(source);
     let tokens = scanner.scan_tokens();
     for token in tokens {
-        println!("{:?}", token.to_string());
+        println!("{}", token.to_string());
     }
 }
 
@@ -19,7 +19,7 @@ fn run_prompt() {
     loop {
         print!("> ");
         let mut input = String::new();
-        std::io::stdin().read_line(&mut input).expect("Failed to read line");
+        std::io::stdin().read_line(&mut input).expect("[run_prompt] Failed to read line");
         run(input);
     }
 }
