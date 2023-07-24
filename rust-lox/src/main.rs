@@ -1,5 +1,6 @@
 pub mod error_handling;
 pub mod scanner;
+pub mod expr;
 
 
 fn run(source: String) {
@@ -22,6 +23,7 @@ fn run_prompt() {
         std::io::stdin().read_line(&mut input).expect("[run_prompt] Failed to read line");
         run(input);
     }
+    let ast = expr::expr::build_test_ast();
 }
 
 fn main() {

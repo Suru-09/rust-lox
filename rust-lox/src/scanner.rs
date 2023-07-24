@@ -17,7 +17,6 @@ pub mod scan {
         Greater, GreaterEqual,
         Less, LessEqual,
 
-
         Identifier(String), String(String), Number(f64),
 
         // Keywords.
@@ -114,7 +113,7 @@ pub mod scan {
     }
 
     impl Token {
-        fn new(t_type: TokenType, lexeme: String, line: u32, column: u32, length: u32) -> Token {
+        pub fn new(t_type: TokenType, lexeme: String, line: u32, column: u32, length: u32) -> Token {
             Token {
                 t_type,
                 lexeme,
