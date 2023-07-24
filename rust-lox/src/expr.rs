@@ -53,6 +53,7 @@ pub mod expr {
     pub struct AstBuilder;
 
     impl Visitor<Expr> for AstBuilder {
+    
         fn visit_binary_expr(&self, left: &Expr, operator: &Token, right: &Expr) -> Expr {
             Expr::Binary(
                 Box::new(left.accept(self)),
@@ -98,7 +99,17 @@ pub mod expr {
         expression
     }
 
-    pub struct GraphVizPrinter;
+    pub struct GraphVizPrinter  {
+        graph: Graph
+    }
+
+    impl GraphVizPrinter {
+        pub fn new(&self) -> GraphVizPrinter {
+            GraphVizPrinter { 
+                graph: graph!(id!("RLox_ast")) 
+            }
+        }
+    }
 
     impl Visitor<String> for GraphVizPrinter {
         fn visit_binary_expr(&self, left: &Expr, operator: &Token, right: &Expr) -> String {
