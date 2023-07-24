@@ -127,6 +127,10 @@ pub mod scan {
             format!("[Tok]: {} lex:[{}]  line:[{}] col:[{}] len:[{}]",
             self.t_type, self.lexeme, self.line, self.column, self.length)
         }
+
+        pub fn token_type_value(&self) -> String {
+            self.t_type.to_string()
+        }
     }
 
     pub struct Scanner {
