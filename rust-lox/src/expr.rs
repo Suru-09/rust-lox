@@ -6,9 +6,12 @@ pub mod expr {
     use graphviz_rust::{
         attributes::*,
         cmd::{CommandArg, Format},
-        exec, parse,
+        exec, exec_dot, parse,
         printer::{DotPrinter, PrinterContext},
     };
+    use std::fs::File;
+    use std::process::Command;
+    use std::io::prelude::*;
 
     pub trait Visitable {
         fn accept<T>(&self, visitor: &mut dyn Visitor<T>) -> T;
@@ -94,21 +97,34 @@ pub mod expr {
                 45,
                 1,
                 2
-            ))))),
+            ), 
+        )))),
         );
         expression
+    }
+
+    pub fn generate_test_graph() {
+        let ast = build_test_ast();
+        let mut graph_printer = GraphVizPrinter::new( String::from("test"));
+        ast.accept(&mut graph_printer);
+        graph_printer.close_graph();
+        graph_printer.write_to_file();
+        graph_printer.generate_image();
+        println!("{}", graph_printer.to_string());
     }
 
     pub struct GraphVizPrinter  {
         graph: String,
         node_count: u64,
+        graph_name: String,
     }
 
     impl GraphVizPrinter {
         pub fn new(graph_name: String) -> GraphVizPrinter {
             GraphVizPrinter { 
-                graph: format!("digraph {} {{\n", graph_name),
-                node_count: 0
+                graph: format!("digraph {} {{\n \trankdir=\"LR\";\n", graph_name),
+                node_count: 0,
+                graph_name: graph_name,
             }
         }
 
@@ -120,49 +136,87 @@ pub mod expr {
             self.node_count += 1;
         }
 
-        pub fn add_node(&mut self, label: String, related_nodes: Vec<String>) {
+        pub fn add_node(&mut self, label: String) -> u64 {
             self.increase_node_count();
             self.graph.push_str(format!("\tnode_{} [label=\"{}\"];\n", self.node_count, label).as_str());
-            let mut count: u64 = 0;
-            for node in related_nodes {
-                count += 1;
-                self.add_edge(self.node_count, self.node_count - count);
-            }
+            self.node_count
         }
 
-        pub fn add_edge(&mut self, node1: u64, node2: u64) {
-            self.graph.push_str(format!("\tnode_{} -> node_{};\n", node1, node2).as_str());
+        pub fn add_edge(&mut self, from: u64, to: u64) {
+            self.graph.push_str(format!("\tnode_{} -> node_{};\n", from, to).as_str());
         }
 
         pub fn to_string(&self) -> String {
             self.graph.clone()
         }
+
+        pub fn write_to_file(&self) {
+            let path = self.path_to_generated() + &self.graph_name + ".dot";
+
+            let mut file = match File::create(path) {
+                Ok(file) => file,
+                Err(why) => panic!("couldn't create file: {}", why),
+            };
+            
+            match file.write_all(self.graph.as_bytes()) {
+                Ok(_) => println!("successfully wrote to file"),
+                Err(why) => panic!("couldn't write to file: {}", why),
+            }
+        }
+
+        fn path_to_generated(&self) -> String {
+            let current_dir = match std::env::current_dir() {
+                Ok(dir) => dir,
+                Err(why) => panic!("couldn't get current dir: {}", why),
+            };
+            println!("The current directory is {}", current_dir.display());
+
+            format!("{}/src/resources/generated/ast/", current_dir.display())
+        }
+
+        pub fn generate_image(&self) {
+            let path = self.path_to_generated();
+            let dot_path = path.clone() + &self.graph_name + ".dot";
+            let output_path = path + &self.graph_name + ".png";
+            let output = Command::new("dot")
+                .arg("-Tpng")
+                .arg(dot_path)
+                .arg("-o")
+                .arg(output_path)
+                .output()
+                .expect("failed to execute process");
+            println!("output: {}", String::from_utf8_lossy(&output.stdout));
+        }
+
+
     }
 
-    impl Visitor<String> for GraphVizPrinter {
-        fn visit_binary_expr(&mut self, left: &Expr, operator: &Token, right: &Expr) -> String {
-            let left_graph = left.accept(self);
-            let right_graph = right.accept(self);
-            self.add_node(operator.token_type_value(), vec![left_graph.clone(), right_graph.clone()]);
-            left_graph + operator.token_type_value().as_str() + right_graph.as_str()
+    impl Visitor<u64> for GraphVizPrinter {
+        fn visit_binary_expr(&mut self, left: &Expr, operator: &Token, right: &Expr) -> u64 {
+            let left_node_index = left.accept(self);
+            let right_node_index = right.accept(self);
+            let operator_node_index = self.add_node(operator.token_type_value());
+            self.add_edge(operator_node_index, left_node_index);
+            self.add_edge(operator_node_index, right_node_index);
+            operator_node_index
         }
 
-        fn visit_grouping_expr(&mut self, expression: &Expr) -> String {
-            let expr = expression.accept(self);
-            self.add_node(format!("({})", expr), vec![expr.clone()]);
-            format!("({})", expr)
+        fn visit_grouping_expr(&mut self, expression: &Expr) -> u64 {
+            let expression_node_index = expression.accept(self);
+            let grouping_node_index = self.add_node(String::from("(Grouping)"));
+            self.add_edge(grouping_node_index, expression_node_index);
+            grouping_node_index
         }
 
-        fn visit_literal_expr(&mut self, value: &Token) -> String {
-            let literal = value.token_type_value();
-            self.add_node(literal.clone(), vec![]);
-            literal
+        fn visit_literal_expr(&mut self, value: &Token) -> u64 {
+            self.add_node(value.token_type_value())
         }
 
-        fn visit_unary_expr(&mut self, operator: &Token, right: &Expr) -> String {
-            let right_graph = right.accept(self);
-            self.add_node(operator.token_type_value(), vec![right_graph.clone()]);
-            operator.token_type_value() + right_graph.as_str()
+        fn visit_unary_expr(&mut self, operator: &Token, right: &Expr) -> u64 {
+            let right_node_index = right.accept(self);
+            let operator_node_index = self.add_node(operator.token_type_value());
+            self.add_edge(operator_node_index, right_node_index);
+            operator_node_index
         }
     }
 

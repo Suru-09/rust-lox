@@ -1,4 +1,4 @@
-use expr::expr::GraphVizPrinter;
+use expr::expr::{GraphVizPrinter, generate_test_graph};
 
 pub mod error_handling;
 pub mod scanner;
@@ -25,12 +25,7 @@ fn run_prompt() {
     //     std::io::stdin().read_line(&mut input).expect("[run_prompt] Failed to read line");
     //     run(input);
     // }
-    let ast = expr::expr::build_test_ast();
-    let mut graph_printer = GraphVizPrinter::new( String::from("test"));
-    let graph = ast.accept(&mut graph_printer);
-    graph_printer.close_graph();
-
-    println!("{}", graph_printer.to_string());
+    generate_test_graph();
 }
 
 fn main() {
