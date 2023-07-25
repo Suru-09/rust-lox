@@ -2,6 +2,7 @@ pub mod parser {
 
     use crate::scanner::scan::{Token, TokenType};
     use crate::expr::expr::Expr;
+    use crate::error_handling::error_handling::error;
 
     pub struct Parser {
         tokens: Vec<Token>,
@@ -92,7 +93,16 @@ pub mod parser {
             self.primary()
         }
 
+        fn match_any_number_or_string(&mut self) -> bool {
+            match self.peek().get_token_type() {
+                TokenType::Number(_) | TokenType::String(_) => true,
+                _ => false,
+            }
+        }
+
         fn primary(&mut self) -> Expr {
+            println!("{}", self.peek().to_string());
+
             if self.match_token(vec![TokenType::False]) {
                 return Expr::Literal(self.previous());
             }
@@ -105,24 +115,25 @@ pub mod parser {
                 return Expr::Literal(self.previous());
             }
 
-            if self.match_token(vec![TokenType::Number(0.0), TokenType::String(String::from(""))]) {
+            if self.match_any_number_or_string() {
                 return Expr::Literal(self.previous());
             }
 
             if self.match_token(vec![TokenType::LeftParen]) {
                 let expr = self.expression();
-                self.consume(TokenType::RightParen, "Expect ')' after expression.");
+                self.consume(TokenType::RightParen, "Expect ')' after expression.".to_string());
                 return Expr::Grouping(Box::new(expr));
             }
+            
             panic!("Expect expression.");
         }
 
-        fn consume(&mut self, token_type: TokenType, message: &str) {
+        fn consume(&mut self, token_type: TokenType, message: String) {
             if self.check(token_type) {
                 self.advance();
                 return;
             }
-            panic!("{}", message);
+            error(self.current as u32, 0, message);
         }
 
         pub fn parse(&mut self) -> Expr {
