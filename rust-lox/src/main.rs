@@ -1,8 +1,9 @@
-use expr::expr::{GraphVizPrinter, generate_test_graph};
+use expr::expr::generate_test_graph;
 
 pub mod error_handling;
 pub mod scanner;
 pub mod expr;
+pub mod parser;
 
 
 fn run(source: String) {

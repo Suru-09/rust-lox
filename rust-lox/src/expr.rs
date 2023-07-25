@@ -1,14 +1,6 @@
 pub mod expr {
 
     use crate::scanner::scan::{Token, TokenType};
-    use graphviz_rust::dot_generator::*;
-    use graphviz_rust::dot_structures::*;
-    use graphviz_rust::{
-        attributes::*,
-        cmd::{CommandArg, Format},
-        exec, exec_dot, parse,
-        printer::{DotPrinter, PrinterContext},
-    };
     use std::fs::File;
     use std::process::Command;
     use std::io::prelude::*;

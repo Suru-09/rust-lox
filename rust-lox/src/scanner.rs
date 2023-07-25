@@ -131,6 +131,10 @@ pub mod scan {
         pub fn token_type_value(&self) -> String {
             self.t_type.to_string()
         }
+
+        pub fn get_token_type(&self) -> TokenType {
+            self.t_type.clone()
+        }
     }
 
     pub struct Scanner {
