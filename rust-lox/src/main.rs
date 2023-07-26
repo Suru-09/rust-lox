@@ -2,6 +2,7 @@ pub mod error_handling;
 pub mod scanner;
 pub mod expr;
 pub mod parser;
+pub mod interpreter;
 
 
 fn run(source: String) {
@@ -12,7 +13,10 @@ fn run(source: String) {
     }
 
     let mut parser = parser::parser::Parser::new(tokens);
-    let ast = parser.parse();
+    let ast = match parser.parse() {
+        Ok(ast) => ast,
+        Err(_) => return,    
+    };
 
     // print AST to console as a string(pretty ugly).
     let mut ast_printer = expr::expr::AstPrinter;

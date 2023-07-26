@@ -135,6 +135,18 @@ pub mod scan {
         pub fn get_token_type(&self) -> TokenType {
             self.t_type.clone()
         }
+
+        pub fn get_line(&self) -> u32 {
+            self.line
+        }
+
+        pub fn get_column(&self) -> u32 {
+            self.column
+        }
+
+        pub fn get_length(&self) -> u32 {
+            self.length
+        }
     }
 
     pub struct Scanner {

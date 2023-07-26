@@ -9,6 +9,7 @@ pub mod expr {
         fn accept<T>(&self, visitor: &mut dyn Visitor<T>) -> T;
     }
 
+    #[derive(Clone)]
     pub enum Expr {
         Binary(Box<Expr>, Token, Box<Expr>),
         Grouping(Box<Expr>),
