@@ -12,12 +12,14 @@ fn run(source: String) {
     }
 
     let mut parser = parser::parser::Parser::new(tokens);
-    parser.parse();
-
-    // build ast from tokens
     let ast = parser.parse();
 
-    // generate graph from ast
+    // print AST to console as a string(pretty ugly).
+    let mut ast_printer = expr::expr::AstPrinter;
+    let printed_ast = ast.accept(&mut ast_printer);
+    println!("{}", printed_ast);
+
+    // generate graph from AST both as a dot file and as a png image.
     let mut graph_printer = expr::expr::GraphVizPrinter::new( String::from("main"));
     ast.accept(&mut graph_printer);
     graph_printer.close_graph();

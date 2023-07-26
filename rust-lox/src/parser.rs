@@ -1,5 +1,15 @@
 pub mod parser {
 
+    /**
+     * ! Notes to my self:
+     * ! No. 1:
+     * * * * Most of the functions used in the parser have side-effects, calling match_token, match_any_number_or_string, etc.
+     * * * * if they are returning true it means that the index(current) has been changed and should proceed with caution knowing this
+     * * * * at typical bug would be calling match_token and after testing the value calling self.peek() which returns the current value
+     * * * * (jokes on you) because it was changed, when match_token found the character it did current += 1.
+     * *
+     */
+
     use crate::scanner::scan::{Token, TokenType};
     use crate::expr::expr::Expr;
     use crate::error_handling::error_handling::error;
@@ -42,7 +52,6 @@ pub mod parser {
             }
             self.previous()
         }
-
 
         fn match_token(&mut self, token_types: Vec<TokenType>) -> bool {
             for token_type in token_types {
@@ -94,25 +103,29 @@ pub mod parser {
         }
 
         fn match_any_number_or_string(&mut self) -> bool {
-            match self.peek().get_token_type() {
+            let is_number_or_string = match self.peek().get_token_type() {
                 TokenType::Number(_) | TokenType::String(_) => true,
                 _ => false,
+            };
+            if is_number_or_string {
+                self.advance();
             }
+            is_number_or_string
         }
 
         fn primary(&mut self) -> Expr {
             println!("{}", self.peek().to_string());
 
             if self.match_token(vec![TokenType::False]) {
-                return Expr::Literal(self.previous());
+                return Expr::Literal(Token::new(TokenType::False, String::from("false"), 0, 0, 0));
             }
 
             if self.match_token(vec![TokenType::True]) {
-                return Expr::Literal(self.previous());
+                return Expr::Literal(Token::new(TokenType::True, String::from("true"), 0, 0, 0));
             }
 
             if self.match_token(vec![TokenType::Nil]) {
-                return Expr::Literal(self.previous());
+                return Expr::Literal(Token::new(TokenType::Nil, String::from("nil"), 0, 0, 0));
             }
 
             if self.match_any_number_or_string() {

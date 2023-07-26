@@ -45,64 +45,26 @@ pub mod expr {
         }
     }
 
-    pub struct AstBuilder;
-
-    impl Visitor<Expr> for AstBuilder {
+    pub struct AstPrinter;
+    impl Visitor<String> for AstPrinter {
     
-        fn visit_binary_expr(&mut self, left: &Expr, operator: &Token, right: &Expr) -> Expr {
-            Expr::Binary(
-                Box::new(left.accept(self)),
-                operator.clone(),
-                Box::new(right.accept(self)),
-            )
+        fn visit_binary_expr(&mut self, left: &Expr, operator: &Token, right: &Expr) -> String {
+            let left = left.accept(self);
+            let right = right.accept(self);
+            format!("({} {} {})", operator.token_type_value(), left, right)
         }
 
-        fn visit_grouping_expr(&mut self, expression: &Expr) -> Expr {
-            Expr::Grouping(Box::new(expression.accept(self)))
+        fn visit_grouping_expr(&mut self, expression: &Expr) -> String {
+            format!("(group {})", expression.accept(self))
         }
 
-        fn visit_literal_expr(&mut self, value: &Token) -> Expr {
-            Expr::Literal(value.clone())
+        fn visit_literal_expr(&mut self, value: &Token) -> String {
+            format!("{}", value.token_type_value())
         }
 
-        fn visit_unary_expr(&mut self, operator: &Token, right: &Expr) -> Expr {
-            Expr::Unary(operator.clone(), Box::new(right.accept(self)))
+        fn visit_unary_expr(&mut self, operator: &Token, right: &Expr) -> String {
+            format!("({} {})", operator.token_type_value(), right.accept(self))
         }
-    }
-
-    pub fn build_test_ast() -> Expr {
-        let expression = Expr::Binary(
-            Box::new(Expr::Unary(
-                Token::new(TokenType::Minus, String::from("-"), 1, 1, 0),
-                Box::new(Expr::Literal(Token::new(
-                    TokenType::Number(123.0),
-                    String::from("123"),
-                    123,
-                    1,
-                    2
-                ))),
-            )),
-            Token::new(TokenType::Star, String::from("*"), 1, 1, 0),
-            Box::new(Expr::Grouping(Box::new(Expr::Literal(Token::new(
-                TokenType::Number(45.67),
-                String::from("45.67"),
-                45,
-                1,
-                2
-            ), 
-        )))),
-        );
-        expression
-    }
-
-    pub fn generate_test_graph() {
-        let ast = build_test_ast();
-        let mut graph_printer = GraphVizPrinter::new( String::from("test"));
-        ast.accept(&mut graph_printer);
-        graph_printer.close_graph();
-        graph_printer.write_to_file();
-        graph_printer.generate_image();
-        println!("{}", graph_printer.to_string());
     }
 
     pub struct GraphVizPrinter  {
@@ -210,6 +172,41 @@ pub mod expr {
             self.add_edge(operator_node_index, right_node_index);
             operator_node_index
         }
+    }
+
+    pub fn build_test_ast() -> Expr {
+        let expression = Expr::Binary(
+            Box::new(Expr::Unary(
+                Token::new(TokenType::Minus, String::from("-"), 1, 1, 0),
+                Box::new(Expr::Literal(Token::new(
+                    TokenType::Number(123.0),
+                    String::from("123"),
+                    123,
+                    1,
+                    2
+                ))),
+            )),
+            Token::new(TokenType::Star, String::from("*"), 1, 1, 0),
+            Box::new(Expr::Grouping(Box::new(Expr::Literal(Token::new(
+                TokenType::Number(45.67),
+                String::from("45.67"),
+                45,
+                1,
+                2
+            ), 
+        )))),
+        );
+        expression
+    }
+
+    pub fn generate_test_graph() {
+        let ast = build_test_ast();
+        let mut graph_printer = GraphVizPrinter::new( String::from("test"));
+        ast.accept(&mut graph_printer);
+        graph_printer.close_graph();
+        graph_printer.write_to_file();
+        graph_printer.generate_image();
+        println!("{}", graph_printer.to_string());
     }
 
 
