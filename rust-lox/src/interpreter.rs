@@ -4,6 +4,16 @@ pub mod interpreter {
     use crate::scanner::scan::{Token, TokenType};
     use std::any::Any;
 
+    /**
+     * ! Notes to my self:
+     * ! No. 1:
+     * * The final result of the interpretor visitor is a Literal, therefore If I try to downcast the result of the
+     * * f64 or String for example, I will fail miserably, I would need to downcast the result to a Literal and then
+     * * check the type of the literal.
+     * ! No. 2:
+     * * Could there be improvements in error handling? Everything seems too verbose.
+     */
+
  pub struct Interpreter;
 
  impl Interpreter {
