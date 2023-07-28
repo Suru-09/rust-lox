@@ -29,6 +29,12 @@ fn run(source: String) {
     graph_printer.close_graph();
     graph_printer.write_to_file();
     graph_printer.generate_image();
+
+    let mut interpreter = interpreter::interpreter::Interpreter;
+    match interpreter.interpret(&ast) {
+        Ok(_) => println!("Interpreter finished successfully"),
+        Err(err_str) => println!("{err_str}"),
+    }
 }
 
 fn run_file(path: String) {
