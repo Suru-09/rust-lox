@@ -48,7 +48,7 @@ pub mod expr {
 
     pub struct AstPrinter;
     impl Visitor<String> for AstPrinter {
-    
+
         fn visit_binary_expr(&mut self, left: &Expr, operator: &Token, right: &Expr) -> String {
             let left = left.accept(self);
             let right = right.accept(self);
@@ -76,7 +76,7 @@ pub mod expr {
 
     impl GraphVizPrinter {
         pub fn new(graph_name: String) -> GraphVizPrinter {
-            GraphVizPrinter { 
+            GraphVizPrinter {
                 graph: format!("digraph {} {{\n \trankdir=\"LR\";\n", graph_name),
                 node_count: 0,
                 graph_name: graph_name,
@@ -112,7 +112,7 @@ pub mod expr {
                 Ok(file) => file,
                 Err(why) => panic!("couldn't create file: {}", why),
             };
-            
+
             match file.write_all(self.graph.as_bytes()) {
                 Ok(_) => println!("successfully wrote to file"),
                 Err(why) => panic!("couldn't write to file: {}", why),
@@ -194,7 +194,7 @@ pub mod expr {
                 45,
                 1,
                 2
-            ), 
+            ),
         )))),
         );
         expression

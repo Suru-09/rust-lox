@@ -3,8 +3,8 @@ pub mod error_handling {
     pub fn error(line: u32, column: u32, message: String) {
         RLoxError{
             line,
-            column, 
-            message, 
+            column,
+            message,
             location: String::new()
         }.report();
     }

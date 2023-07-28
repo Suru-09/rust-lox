@@ -151,7 +151,7 @@ pub mod parser {
                 self.consume(TokenType::RightParen, "Expect ')' after expression.".to_string());
                 return Ok(Expr::Grouping(Box::new(expr)));
             }
-            
+
             error(self.peek().get_line(), self.peek().get_column(),"Expect expression.".to_string());
             Err("")
         }
