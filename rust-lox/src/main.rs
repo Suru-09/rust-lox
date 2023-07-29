@@ -32,7 +32,11 @@ fn run(source: String) {
 
     let mut interpreter = interpreter::interpreter::Interpreter;
     match interpreter.interpret(&ast) {
-        Ok(_) => println!("Interpreter finished successfully"),
+        Ok(expr) => {
+            // downcast to Tokeen
+            let token = expr.downcast_ref::<f64>().unwrap();
+            println!("{}", token.to_string());
+        },
         Err(err_str) => println!("{err_str}"),
     }
 }

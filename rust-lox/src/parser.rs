@@ -63,7 +63,7 @@ pub mod parser {
             false
         }
 
-        fn binary_expr_loop(&mut self, operators: Vec<TokenType>, next_rule: fn(&mut Self) -> Result<Expr, &'static str>) -> Result<Expr, &'static str> {
+        fn binary_expr_loop(&mut self, operators: Vec<TokenType>, next_rule: fn(&mut Self) -> Result<Expr, String>) -> Result<Expr, String> {
             let mut expr = match next_rule(self) {
                 Ok(expr_val) => expr_val,
                 Err(e) => return Err(e),
@@ -81,27 +81,27 @@ pub mod parser {
             Ok(expr)
         }
 
-        fn expression(&mut self) -> Result<Expr, &'static str>  {
+        fn expression(&mut self) -> Result<Expr, String>  {
             self.equality()
         }
 
-        fn equality(&mut self) -> Result<Expr, &'static str> {
+        fn equality(&mut self) -> Result<Expr, String> {
             self.binary_expr_loop(vec![TokenType::BangEqual, TokenType::EqualEqual], Self::comparison)
         }
 
-        fn comparison(&mut self) -> Result<Expr, &'static str> {
+        fn comparison(&mut self) -> Result<Expr, String> {
             self.binary_expr_loop(vec![TokenType::Greater, TokenType::GreaterEqual, TokenType::Less, TokenType::LessEqual], Self::term)
         }
 
-        fn term(&mut self) -> Result<Expr, &'static str> {
+        fn term(&mut self) -> Result<Expr, String> {
             self.binary_expr_loop(vec![TokenType::Minus, TokenType::Plus], Self::factor)
         }
 
-        fn factor(&mut self) -> Result<Expr, &'static str> {
+        fn factor(&mut self) -> Result<Expr, String> {
             self.binary_expr_loop(vec![TokenType::Slash, TokenType::Star], Self::unary)
         }
 
-        fn unary(&mut self) -> Result<Expr, &'static str> {
+        fn unary(&mut self) -> Result<Expr, String> {
             if self.match_token(vec![TokenType::Bang, TokenType::Minus]) {
                 let operator = self.previous();
                 let right = match self.unary() {
@@ -124,7 +124,7 @@ pub mod parser {
             is_number_or_string
         }
 
-        fn primary(&mut self) -> Result<Expr, &'static str> {
+        fn primary(&mut self) -> Result<Expr, String> {
             println!("{}", self.peek().to_string());
 
             if self.match_token(vec![TokenType::False]) {
@@ -153,7 +153,7 @@ pub mod parser {
             }
 
             error(self.peek().get_line(), self.peek().get_column(),"Expect expression.".to_string());
-            Err("")
+            Err("".to_string())
         }
 
         fn consume(&mut self, token_type: TokenType, message: String) {
@@ -164,7 +164,7 @@ pub mod parser {
             error(self.current as u32, 0, message);
         }
 
-        pub fn parse(&mut self) -> Result<Expr, &'static str> {
+        pub fn parse(&mut self) -> Result<Expr, String> {
             self.expression()
         }
 
