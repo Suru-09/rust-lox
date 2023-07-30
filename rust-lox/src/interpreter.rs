@@ -21,12 +21,17 @@ pub mod interpreter {
         expr.accept(self)
     }
 
-    // TODO: This does not work due to the fact that I should first downcast to token
-    // TODO: and after to bool.
     fn is_truthy(&mut self, obj: Box<dyn Any>) -> Result<Box<dyn Any>, String> {
-        match obj.downcast::<bool>() {
-            Ok(d_obj) => Ok(Box::new(*d_obj)),
-            Err(_) => Err("Could not downcast object to bool".to_string()),
+        match obj.downcast::<Token>() {
+            Ok(d_obj) => {
+                match d_obj.get_token_type() {
+                    TokenType::Nil => Ok(Box::new(Token::new(TokenType::False, "".to_string(), 0, 0, 0))),
+                    TokenType::True => Ok(Box::new(Token::new(TokenType::True, "".to_string(), 0, 0, 0))),
+                    TokenType::False => Ok(Box::new(Token::new(TokenType::False, "".to_string(), 0, 0, 0))),
+                    _ => Err("Given token can't be considered as a boolean".to_string()),
+                }
+            },
+            Err(_) => Err("Could not downcast object to Token".to_string()),
         }
     }
 
@@ -42,7 +47,15 @@ pub mod interpreter {
         }
     }
 
-    fn downcast_token_to_f64(&mut self, token1: &Token, token2: &Token) -> Result<(f64, f64), String> {
+    fn downcast_to_token_to_f64(&mut self, token1: Box<dyn Any>, token2: Box<dyn Any>) -> Result<(f64, f64), String> {
+        let (tok1, tok2) = self.downcast_to_token(token1, token2)?;        
+        match self.downcast_token_to_f64(tok1, tok2) {
+            Ok((tok1_f64, tok2_f64)) => Ok((tok1_f64, tok2_f64)),
+            Err(_) => Err("Could not downcast token1 and token2 to f64".to_string()),
+        }
+    }
+
+    fn downcast_token_to_f64(&mut self, token1: Token, token2: Token) -> Result<(f64, f64), String> {
         match token1.get_token_type() {
             TokenType::Number(tok1_f64) => {
                 match token2.get_token_type() {
@@ -53,8 +66,8 @@ pub mod interpreter {
             _ => Err("Could not downcast token1 to f64".to_string()),
         }
     }
-
-    fn downcast_token_to_string(&mut self, token1: &Token, token2: &Token) -> Result<(String, String), String> {
+    
+    fn downcast_token_to_string(&mut self, token1: Token, token2: Token) -> Result<(String, String), String> {
         match token1.get_token_type() {
             TokenType::String(tok1_str) => {
                 match token2.get_token_type() {
@@ -63,6 +76,14 @@ pub mod interpreter {
                 }
             },
             _ => Err("Could not downcast token1 to String".to_string()),
+        }
+    }
+
+    fn downcast_to_token_to_string(&mut self, token1: Box<dyn Any>, token2: Box<dyn Any>) -> Result<(String, String), String> {
+        let (tok1, tok2) = self.downcast_to_token(token1, token2)?;
+        match self.downcast_token_to_string(tok1, tok2) {
+            Ok((tok1_str, tok2_str)) => Ok((tok1_str, tok2_str)),
+            Err(_) => Err("Could not downcast token1 and token2 to String".to_string()),
         }
     }
 
@@ -81,129 +102,133 @@ pub mod interpreter {
     }
 
     fn substract(&mut self, operand1: Box<dyn Any>, operand2: Box<dyn Any>) -> Result<Box<dyn Any>, String> {
-        let (tok1, tok2) = self.downcast_to_token(operand1, operand2)?;
-        if self.is_token_number(&tok1) && self.is_token_number(&tok2) {
-            let (tok1_f64, tok2_f64) = self.downcast_token_to_f64(&tok1, &tok2)?;
-            return Ok(Box::new(Token::new(TokenType::Number(tok1_f64 - tok2_f64), "".to_string(), 0, 0, 0)))
-        }
-        Err("In order to substract them, operands must be two numbers.".to_string())
+            match self.downcast_to_token_to_f64(operand1, operand2) {
+                Ok((tok1_f64, tok2_f64)) => Ok(Box::new(Token::new(TokenType::Number(tok1_f64 - tok2_f64), "".to_string(), 0, 0, 0))),
+                _ => Err("In order to substract two things they need to be numbers".to_string()),
+            }
     }
 
     fn add(&mut self, operand1: Box<dyn Any>, operand2: Box<dyn Any>) -> Result<Box<dyn Any>, String> {
         let (tok1, tok2) = self.downcast_to_token(operand1, operand2)?;
-
-        if self.is_token_number(&tok1) && self.is_token_number(&tok2) {
-            let (tok1_f64, tok2_f64) = self.downcast_token_to_f64(&tok1, &tok2)?;
-            return Ok(Box::new(Token::new(TokenType::Number(tok1_f64 + tok2_f64), "".to_string(), 0, 0, 0)));
-        }
-
         if self.is_token_string(&tok1) && self.is_token_string(&tok2) {
-            let (tok1_str, tok2_str) = self.downcast_token_to_string(&tok1, &tok2)?;
-            return Ok(Box::new(Token::new(TokenType::String(tok1_str + &tok2_str), "".to_string(), 0, 0, 0)));
-        }
-        
-        Err("In order to add them, operands must be two numbers or two strings.".to_string())
+            let (tok1_str, tok2_str) = self.downcast_to_token_to_string(Box::new(tok1), Box::new(tok2))?;
+            return Ok(Box::new(Token::new(TokenType::String(tok1_str + &tok2_str), "".to_string(), 0, 0, 0)))
+        } else if self.is_token_number(&tok1) && self.is_token_number(&tok2) {
+            let (tok1_f64, tok2_f64) = self.downcast_to_token_to_f64(Box::new(tok1), Box::new(tok2))?;
+            return Ok(Box::new(Token::new(TokenType::Number(tok1_f64 + tok2_f64), "".to_string(), 0, 0, 0)))
+        } 
+        Err("In order to add two things they need to be numbers or strings".to_string())     
     }
 
     fn multiply(&mut self, operand1: Box<dyn Any>, operand2: Box<dyn Any>) -> Result<Box<dyn Any>, String> {
-        let (tok1, tok2) = self.downcast_to_token(operand1, operand2)?;
-        if self.is_token_number(&tok1) && self.is_token_number(&tok2) {
-            let (tok1_f64, tok2_f64) = self.downcast_token_to_f64(&tok1, &tok2)?;
-            return Ok(Box::new(Token::new(TokenType::Number(tok1_f64 * tok2_f64), "".to_string(), 0, 0, 0)))
+        match self.downcast_to_token_to_f64(operand1, operand2) {
+            Ok((tok1_f64, tok2_f64)) => Ok(Box::new(Token::new(TokenType::Number(tok1_f64 * tok2_f64), "".to_string(), 0, 0, 0))),
+            _ => Err("In order to multiply two things they need to be numbers".to_string()),
         }
-        Err("In order to multiply them, operands must be two numbers.".to_string())
     }
 
     fn divide(&mut self, operand1: Box<dyn Any>, operand2: Box<dyn Any>) -> Result<Box<dyn Any>, String> {
-        let (tok1, tok2) = self.downcast_to_token(operand1, operand2)?;
-        if self.is_token_number(&tok1) && self.is_token_number(&tok2) {
-            let (tok1_f64, tok2_f64) = self.downcast_token_to_f64(&tok1, &tok2)?;
-            return Ok(Box::new(Token::new(TokenType::Number(tok1_f64 / tok2_f64), "".to_string(), 0, 0, 0)))
+        match self.downcast_to_token_to_f64(operand1, operand2) {
+            Ok((tok1_f64, tok2_f64)) => Ok(Box::new(Token::new(TokenType::Number(tok1_f64 / tok2_f64), "".to_string(), 0, 0, 0))),
+            _ => Err("In order to divide two things they need to be numbers".to_string()),
         }
-        Err("In order to divide them, operands must be two numbers.".to_string())
     }
 
     fn greater(&mut self, operand1: Box<dyn Any>, operand2: Box<dyn Any>) -> Result<Box<dyn Any>, String> {
-        let (tok1, tok2) = self.downcast_to_token(operand1, operand2)?;
-
-        if self.is_token_number(&tok1) && self.is_token_number(&tok2) {
-            let (tok1_f64, tok2_f64) = self.downcast_token_to_f64(&tok1, &tok2)?;
-            if tok1_f64 > tok2_f64 {
-                return Ok(Box::new(Token::new(TokenType::True, "".to_string(), 0, 0, 0)));
-            }
-            return Ok(Box::new(Token::new(TokenType::False, "".to_string(), 0, 0, 0)));
+        match self.downcast_to_token_to_f64(operand1, operand2) {
+            Ok((tok1_f64, tok2_f64)) => {
+                if tok1_f64 > tok2_f64 {
+                    return Ok(Box::new(Token::new(TokenType::True, "".to_string(), 0, 0, 0)));
+                }
+                Ok(Box::new(Token::new(TokenType::False, "".to_string(), 0, 0, 0)))
+            },
+            _ => Err("In order to compare them, operands must be two numbers.".to_string()),
         }
-        Err("In order to compare them, operands must be two numbers.".to_string())
     }
 
     fn greater_equal(&mut self, operand1: Box<dyn Any>, operand2: Box<dyn Any>) -> Result<Box<dyn Any>, String> {
-        let (tok1, tok2) = self.downcast_to_token(operand1, operand2)?;
-        if self.is_token_number(&tok1) && self.is_token_number(&tok2) {
-            let (tok1_f64, tok2_f64) = self.downcast_token_to_f64(&tok1, &tok2)?;
-            if tok1_f64 >= tok2_f64 {
-                return Ok(Box::new(Token::new(TokenType::True, "".to_string(), 0, 0, 0)));
-            }
-            return Ok(Box::new(Token::new(TokenType::False, "".to_string(), 0, 0, 0)));
+        match self.downcast_to_token_to_f64(operand1, operand2) {
+            Ok((tok1_f64, tok2_f64)) => {
+                if tok1_f64 >= tok2_f64 {
+                    return Ok(Box::new(Token::new(TokenType::True, "".to_string(), 0, 0, 0)));
+                }
+                Ok(Box::new(Token::new(TokenType::False, "".to_string(), 0, 0, 0)))
+            },
+            _ => Err("In order to compare them, operands must be two numbers.".to_string()),
         }
-        Err("In order to compare them, operands must be two numbers.".to_string())
     }
 
     fn less(&mut self, operand1: Box<dyn Any>, operand2: Box<dyn Any>) -> Result<Box<dyn Any>, String> {
-        let (tok1, tok2) = self.downcast_to_token(operand1, operand2)?;
-        if self.is_token_number(&tok1) && self.is_token_number(&tok2) {
-            let (tok1_f64, tok2_f64) = self.downcast_token_to_f64(&tok1, &tok2)?;
-            if tok1_f64 < tok2_f64 {
-                return Ok(Box::new(Token::new(TokenType::True, "true".to_string(), 0, 0, 0)));
-            } else {
-                return Ok(Box::new(Token::new(TokenType::False, "false".to_string(), 0, 0, 0)));
-            }
-            
+        match self.downcast_to_token_to_f64(operand1, operand2) {
+            Ok((tok1_f64, tok2_f64)) => {
+                if tok1_f64 < tok2_f64 {
+                    return Ok(Box::new(Token::new(TokenType::True, "".to_string(), 0, 0, 0)));
+                }
+                Ok(Box::new(Token::new(TokenType::False, "".to_string(), 0, 0, 0)))
+            },
+            _ => Err("In order to compare them, operands must be two numbers.".to_string()),
         }
-        Err("In order to compare them, operands must be two numbers.".to_string())
     }
 
     fn less_equal(&mut self, operand1: Box<dyn Any>, operand2: Box<dyn Any>) -> Result<Box<dyn Any>, String> {
-        let (tok1, tok2) = self.downcast_to_token(operand1, operand2)?;
-        if self.is_token_number(&tok1) && self.is_token_number(&tok2) {
-            let (tok1_f64, tok2_f64) = self.downcast_token_to_f64(&tok1, &tok2)?;
-            if tok1_f64 <= tok2_f64 {
-                return Ok(Box::new(Token::new(TokenType::True, "".to_string(), 0, 0, 0)));
-            }
-            return Ok(Box::new(Token::new(TokenType::False, "".to_string(), 0, 0, 0)));
+        match self.downcast_to_token_to_f64(operand1, operand2) {
+            Ok((tok1_f64, tok2_f64)) => {
+                if tok1_f64 <= tok2_f64 {
+                    return Ok(Box::new(Token::new(TokenType::True, "".to_string(), 0, 0, 0)));
+                }
+                Ok(Box::new(Token::new(TokenType::False, "".to_string(), 0, 0, 0)))
+            },
+            _ => Err("In order to compare them, operands must be two numbers.".to_string()),
         }
-        Err("In order to compare them, operands must be two numbers.".to_string())
     }
 
     fn equal_equal(&mut self, operand1: Box<dyn Any>, operand2: Box<dyn Any>) -> Result<Box<dyn Any>, String> {
         if operand1.type_id() != operand2.type_id() {
             return Err("Could not compare objects of different types".to_string());
         }
-
         let (tok1, tok2) = self.downcast_to_token(operand1, operand2)?;
+
+        if self.is_token_string(&tok1) && self.is_token_string(&tok2) {
+            let (tok1_str, tok2_str) = self.downcast_token_to_string(tok1, tok2)?;
+            if tok1_str == tok2_str {
+                return Ok(Box::new(Token::new(TokenType::True, "".to_string(), 0, 0, 0)));
+            }
+            return Ok(Box::new(Token::new(TokenType::False, "".to_string(), 0, 0, 0)));
+        }
+
         if self.is_token_number(&tok1) && self.is_token_number(&tok2) {
-            let (tok1_f64, tok2_f64) = self.downcast_token_to_f64(&tok1, &tok2)?;
+            let (tok1_f64, tok2_f64) = self.downcast_token_to_f64(tok1, tok2)?;
             if tok1_f64 == tok2_f64 {
                 return Ok(Box::new(Token::new(TokenType::True, "".to_string(), 0, 0, 0)));
             }
             return Ok(Box::new(Token::new(TokenType::False, "".to_string(), 0, 0, 0)));
         }
-        Err("In order to compare them, operands must be two numbers.".to_string())
+        Err("Could not compare(EqualEqual) objects of different types".to_string())
     }
 
     fn bang_equal(&mut self, operand1: Box<dyn Any>, operand2: Box<dyn Any>) -> Result<Box<dyn Any>, String> {
         if operand1.type_id() != operand2.type_id() {
             return Err("Could not compare objects of different types".to_string());
         }
-        
         let (tok1, tok2) = self.downcast_to_token(operand1, operand2)?;
+
         if self.is_token_number(&tok1) && self.is_token_number(&tok2) {
-            let (tok1_f64, tok2_f64) = self.downcast_token_to_f64(&tok1, &tok2)?;
+            let (tok1_f64, tok2_f64) = self.downcast_token_to_f64(tok1, tok2)?;
             if tok1_f64 != tok2_f64 {
                 return Ok(Box::new(Token::new(TokenType::True, "".to_string(), 0, 0, 0)));
             }
             return Ok(Box::new(Token::new(TokenType::False, "".to_string(), 0, 0, 0)));
         }
-        Err("In order to compare them, operands must be two numbers.".to_string())
+
+        if self.is_token_string(&tok1) && self.is_token_string(&tok2) {
+            let (tok1_str, tok2_str) = self.downcast_token_to_string(tok1, tok2)?;
+            if tok1_str != tok2_str {
+                return Ok(Box::new(Token::new(TokenType::True, "".to_string(), 0, 0, 0)));
+            }
+            return Ok(Box::new(Token::new(TokenType::False, "".to_string(), 0, 0, 0)));
+        }
+
+        Err("Could not compare(BangEqual) objects of different types".to_string())
     }
 
     pub fn interpret(&mut self, expr: &Expr) -> Result<Box<dyn Any>, String> {
