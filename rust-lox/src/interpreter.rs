@@ -1,6 +1,7 @@
 pub mod interpreter {
 
     use crate::expr::expr::{Expr, Visitor};
+    use crate::stmt::stmt::{Stmt, StmtVisitor};
     use crate::scanner::scan::{Token, TokenType};
     use std::any::Any;
 
@@ -231,8 +232,16 @@ pub mod interpreter {
         Err("Could not compare(BangEqual) objects of different types".to_string())
     }
 
-    pub fn interpret(&mut self, expr: &Expr) -> Result<Box<dyn Any>, String> {
-        self.evaluate(expr)
+    pub fn execute(&mut self, stmt: Stmt) -> Result<Box<dyn Any>, String> {
+        stmt.accept(self)
+    }
+
+    pub fn interpret(&mut self, statements: Vec<Stmt>) -> Result<Vec<Box<dyn Any>>, String> {
+        let mut vec = Vec::new();
+        for stmt in statements {
+            vec.push(self.execute(stmt)?);
+        }
+        Ok(vec)
     }
  }
 
@@ -271,6 +280,17 @@ pub mod interpreter {
             TokenType::Bang => Ok(Box::new(self.is_truthy(Box::new(right.clone())))),
             _ => Err("The given operator is not a unary operator.".to_string())
         }
+    }
+ }
+
+ impl StmtVisitor<Result<Box<dyn Any>, String>> for Interpreter {
+    fn visit_expr_stmt(&mut self, expr: &Expr) -> Result<Box<dyn Any>, String> {
+        self.evaluate(expr)
+    }
+
+    fn visit_print_stmt(&mut self, expr: &Expr) -> Result<Box<dyn Any>, String> {
+        let value = self.evaluate(expr)?;
+        Ok(Box::new(value))
     }
  }
 

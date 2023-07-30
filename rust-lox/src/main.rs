@@ -3,7 +3,7 @@ pub mod scanner;
 pub mod expr;
 pub mod parser;
 pub mod interpreter;
-
+pub mod stmt;
 
 fn run(source: String) {
     let mut scanner = scanner::scan::Scanner::new(source);
@@ -13,32 +13,45 @@ fn run(source: String) {
     }
 
     let mut parser = parser::parser::Parser::new(tokens);
-    let ast = match parser.parse() {
-        Ok(ast) => ast,
-        Err(_) => return,    
-    };
+    let ast = parser.parse();
+    match ast {
+        Ok(ast_val) => {
+            // for expr in ast_val {
+            //     // print AST to console as a string(pretty ugly).
+            //     let mut ast_printer = expr::expr::AstPrinter;
+            //     let printed_ast = expr.accept(&mut ast_printer);
+            //     println!("{}", printed_ast);
 
-    // print AST to console as a string(pretty ugly).
-    let mut ast_printer = expr::expr::AstPrinter;
-    let printed_ast = ast.accept(&mut ast_printer);
-    println!("{}", printed_ast);
+            //     // generate graph from AST both as a dot file and as a png image.
+            //     let mut graph_printer = expr::expr::GraphVizPrinter::new( String::from("main"));
+            //     expr.accept(&mut graph_printer);
+            //     graph_printer.close_graph();
+            //     graph_printer.write_to_file();
+            //     graph_printer.generate_image();
+            // }
 
-    // generate graph from AST both as a dot file and as a png image.
-    let mut graph_printer = expr::expr::GraphVizPrinter::new( String::from("main"));
-    ast.accept(&mut graph_printer);
-    graph_printer.close_graph();
-    graph_printer.write_to_file();
-    graph_printer.generate_image();
+            
 
-    let mut interpreter = interpreter::interpreter::Interpreter;
-    match interpreter.interpret(&ast) {
-        Ok(expr) => {
-            // downcast to Tokeen
-            let token = expr.downcast_ref::<scanner::scan::Token>().unwrap();
-            println!("{}", token.to_string());
-        },
-        Err(err_str) => println!("{err_str}"),
+            let mut interpreter = interpreter::interpreter::Interpreter;
+            let interpreted_vec = interpreter.interpret(ast_val);
+
+            match interpreted_vec {
+                Ok(interpreted_vec_val) => {
+                    for interpreted in interpreted_vec_val {
+                        let token = interpreted.downcast_ref::<scanner::scan::Token>().unwrap();
+                        println!("{}", token.to_string());
+                    }
+                }
+                Err(err) => {
+                    println!("{}", err);
+                }
+            }
+        }
+        Err(err) => {
+            println!("{}", err);
+        }
     }
+
 }
 
 fn run_file(path: String) {

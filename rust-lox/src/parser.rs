@@ -13,6 +13,7 @@ pub mod parser {
     use crate::scanner::scan::{Token, TokenType};
     use crate::expr::expr::Expr;
     use crate::error_handling::error_handling::error;
+    use crate::stmt::stmt::Stmt;
 
     pub struct Parser {
         tokens: Vec<Token>,
@@ -164,8 +165,36 @@ pub mod parser {
             error(self.current as u32, 0, message);
         }
 
-        pub fn parse(&mut self) -> Result<Expr, String> {
-            self.expression()
+        pub fn parse(&mut self) -> Result<Vec<Stmt>, String> {
+            let mut expressions: Vec<Stmt> = Vec::new();
+            while !self.is_at_end() {
+                expressions.push(self.statement()?);
+            }
+            Ok(expressions)
+        }
+
+        pub fn statement(&mut self) -> Result<Stmt, String> {
+            match self.peek().get_token_type() {
+                TokenType::Identifier(text) => {
+                    if text == "print".to_string() {
+                        return self.print_statement();
+                    }
+                    return self.expression_statement();
+                },
+                _ => self.expression_statement(),
+            }
+        }
+
+        pub fn print_statement(&mut self) -> Result<Stmt, String> {
+            let value = self.expression()?;
+            self.consume(TokenType::Semicolon, "Expect ';' after value.".to_string());
+            Ok(Stmt::PrintStmt(value))
+        }
+
+        pub fn expression_statement(&mut self) -> Result<Stmt, String> {
+            let expr = self.expression()?;
+            self.consume(TokenType::Semicolon, "Expect ';' after expression.".to_string());
+            Ok(Stmt::ExprStmt(expr))
         }
 
     }
