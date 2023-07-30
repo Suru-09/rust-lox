@@ -94,12 +94,12 @@ pub mod interpreter {
 
         if self.is_token_number(&tok1) && self.is_token_number(&tok2) {
             let (tok1_f64, tok2_f64) = self.downcast_token_to_f64(&tok1, &tok2)?;
-            return Ok(Box::new(tok1_f64 + tok2_f64));
+            return Ok(Box::new(Token::new(TokenType::Number(tok1_f64 + tok2_f64), "".to_string(), 0, 0, 0)));
         }
 
         if self.is_token_string(&tok1) && self.is_token_string(&tok2) {
             let (tok1_str, tok2_str) = self.downcast_token_to_string(&tok1, &tok2)?;
-            return Ok(Box::new(tok1_str + &tok2_str));
+            return Ok(Box::new(Token::new(TokenType::String(tok1_str + &tok2_str), "".to_string(), 0, 0, 0)));
         }
         
         Err("In order to add them, operands must be two numbers or two strings.".to_string())
@@ -109,7 +109,7 @@ pub mod interpreter {
         let (tok1, tok2) = self.downcast_to_token(operand1, operand2)?;
         if self.is_token_number(&tok1) && self.is_token_number(&tok2) {
             let (tok1_f64, tok2_f64) = self.downcast_token_to_f64(&tok1, &tok2)?;
-            return Ok(Box::new(tok1_f64 * tok2_f64));
+            return Ok(Box::new(Token::new(TokenType::Number(tok1_f64 * tok2_f64), "".to_string(), 0, 0, 0)))
         }
         Err("In order to multiply them, operands must be two numbers.".to_string())
     }
@@ -118,7 +118,7 @@ pub mod interpreter {
         let (tok1, tok2) = self.downcast_to_token(operand1, operand2)?;
         if self.is_token_number(&tok1) && self.is_token_number(&tok2) {
             let (tok1_f64, tok2_f64) = self.downcast_token_to_f64(&tok1, &tok2)?;
-            return Ok(Box::new(tok1_f64 / tok2_f64));
+            return Ok(Box::new(Token::new(TokenType::Number(tok1_f64 / tok2_f64), "".to_string(), 0, 0, 0)))
         }
         Err("In order to divide them, operands must be two numbers.".to_string())
     }
@@ -128,7 +128,10 @@ pub mod interpreter {
 
         if self.is_token_number(&tok1) && self.is_token_number(&tok2) {
             let (tok1_f64, tok2_f64) = self.downcast_token_to_f64(&tok1, &tok2)?;
-            return Ok(Box::new(tok1_f64 > tok2_f64));
+            if tok1_f64 > tok2_f64 {
+                return Ok(Box::new(Token::new(TokenType::True, "".to_string(), 0, 0, 0)));
+            }
+            return Ok(Box::new(Token::new(TokenType::False, "".to_string(), 0, 0, 0)));
         }
         Err("In order to compare them, operands must be two numbers.".to_string())
     }
@@ -137,7 +140,10 @@ pub mod interpreter {
         let (tok1, tok2) = self.downcast_to_token(operand1, operand2)?;
         if self.is_token_number(&tok1) && self.is_token_number(&tok2) {
             let (tok1_f64, tok2_f64) = self.downcast_token_to_f64(&tok1, &tok2)?;
-            return Ok(Box::new(tok1_f64 >= tok2_f64));
+            if tok1_f64 >= tok2_f64 {
+                return Ok(Box::new(Token::new(TokenType::True, "".to_string(), 0, 0, 0)));
+            }
+            return Ok(Box::new(Token::new(TokenType::False, "".to_string(), 0, 0, 0)));
         }
         Err("In order to compare them, operands must be two numbers.".to_string())
     }
@@ -160,23 +166,44 @@ pub mod interpreter {
         let (tok1, tok2) = self.downcast_to_token(operand1, operand2)?;
         if self.is_token_number(&tok1) && self.is_token_number(&tok2) {
             let (tok1_f64, tok2_f64) = self.downcast_token_to_f64(&tok1, &tok2)?;
-            return Ok(Box::new(tok1_f64 <= tok2_f64));
+            if tok1_f64 <= tok2_f64 {
+                return Ok(Box::new(Token::new(TokenType::True, "".to_string(), 0, 0, 0)));
+            }
+            return Ok(Box::new(Token::new(TokenType::False, "".to_string(), 0, 0, 0)));
         }
         Err("In order to compare them, operands must be two numbers.".to_string())
     }
 
     fn equal_equal(&mut self, operand1: Box<dyn Any>, operand2: Box<dyn Any>) -> Result<Box<dyn Any>, String> {
-        if operand1.type_id() == operand2.type_id() {
-            return Ok(Box::new(true));
+        if operand1.type_id() != operand2.type_id() {
+            return Err("Could not compare objects of different types".to_string());
         }
-        Err("Could not compare objects of different types".to_string())
+
+        let (tok1, tok2) = self.downcast_to_token(operand1, operand2)?;
+        if self.is_token_number(&tok1) && self.is_token_number(&tok2) {
+            let (tok1_f64, tok2_f64) = self.downcast_token_to_f64(&tok1, &tok2)?;
+            if tok1_f64 == tok2_f64 {
+                return Ok(Box::new(Token::new(TokenType::True, "".to_string(), 0, 0, 0)));
+            }
+            return Ok(Box::new(Token::new(TokenType::False, "".to_string(), 0, 0, 0)));
+        }
+        Err("In order to compare them, operands must be two numbers.".to_string())
     }
 
     fn bang_equal(&mut self, operand1: Box<dyn Any>, operand2: Box<dyn Any>) -> Result<Box<dyn Any>, String> {
         if operand1.type_id() != operand2.type_id() {
-            return Ok(Box::new(true));
+            return Err("Could not compare objects of different types".to_string());
         }
-        Err("Could not compare objects of different types".to_string())
+        
+        let (tok1, tok2) = self.downcast_to_token(operand1, operand2)?;
+        if self.is_token_number(&tok1) && self.is_token_number(&tok2) {
+            let (tok1_f64, tok2_f64) = self.downcast_token_to_f64(&tok1, &tok2)?;
+            if tok1_f64 != tok2_f64 {
+                return Ok(Box::new(Token::new(TokenType::True, "".to_string(), 0, 0, 0)));
+            }
+            return Ok(Box::new(Token::new(TokenType::False, "".to_string(), 0, 0, 0)));
+        }
+        Err("In order to compare them, operands must be two numbers.".to_string())
     }
 
     pub fn interpret(&mut self, expr: &Expr) -> Result<Box<dyn Any>, String> {
