@@ -34,7 +34,7 @@ fn run(source: String) {
     match interpreter.interpret(&ast) {
         Ok(expr) => {
             // downcast to Tokeen
-            let token = expr.downcast_ref::<f64>().unwrap();
+            let token = expr.downcast_ref::<scanner::scan::Token>().unwrap();
             println!("{}", token.to_string());
         },
         Err(err_str) => println!("{err_str}"),

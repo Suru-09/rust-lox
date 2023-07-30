@@ -84,7 +84,7 @@ pub mod interpreter {
         let (tok1, tok2) = self.downcast_to_token(operand1, operand2)?;
         if self.is_token_number(&tok1) && self.is_token_number(&tok2) {
             let (tok1_f64, tok2_f64) = self.downcast_token_to_f64(&tok1, &tok2)?;
-            return Ok(Box::new(tok1_f64 - tok2_f64));
+            return Ok(Box::new(Token::new(TokenType::Number(tok1_f64 - tok2_f64), "".to_string(), 0, 0, 0)))
         }
         Err("In order to substract them, operands must be two numbers.".to_string())
     }
@@ -146,7 +146,12 @@ pub mod interpreter {
         let (tok1, tok2) = self.downcast_to_token(operand1, operand2)?;
         if self.is_token_number(&tok1) && self.is_token_number(&tok2) {
             let (tok1_f64, tok2_f64) = self.downcast_token_to_f64(&tok1, &tok2)?;
-            return Ok(Box::new(tok1_f64 < tok2_f64));
+            if tok1_f64 < tok2_f64 {
+                return Ok(Box::new(Token::new(TokenType::True, "true".to_string(), 0, 0, 0)));
+            } else {
+                return Ok(Box::new(Token::new(TokenType::False, "false".to_string(), 0, 0, 0)));
+            }
+            
         }
         Err("In order to compare them, operands must be two numbers.".to_string())
     }
