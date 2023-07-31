@@ -14,6 +14,7 @@ pub mod parser {
     use crate::expr::expr::Expr;
     use crate::error_handling::error_handling::error;
     use crate::stmt::stmt::Stmt;
+    use log::debug;
 
     pub struct Parser {
         tokens: Vec<Token>,
@@ -126,7 +127,7 @@ pub mod parser {
         }
 
         fn primary(&mut self) -> Result<Expr, String> {
-            println!("{}", self.peek().to_string());
+            debug!("{}", self.peek().get_token_type());
 
             if self.match_token(vec![TokenType::False]) {
                 return Ok(Expr::Literal(Token::new(TokenType::False, String::from("false"), 0, 0, 0)));
@@ -181,11 +182,13 @@ pub mod parser {
                     }
                     return self.expression_statement();
                 },
+                TokenType::Print => self.print_statement(),
                 _ => self.expression_statement(),
             }
         }
 
         pub fn print_statement(&mut self) -> Result<Stmt, String> {
+            self.advance();
             let value = self.expression()?;
             self.consume(TokenType::Semicolon, "Expect ';' after value.".to_string());
             Ok(Stmt::PrintStmt(value))

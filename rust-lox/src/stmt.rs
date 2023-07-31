@@ -1,10 +1,20 @@
 pub mod stmt {
 
     use crate::expr::expr::Expr;
+    use std::fmt;
 
     pub enum Stmt {
         ExprStmt(Expr),
         PrintStmt(Expr),
+    }
+    
+    impl fmt::Display for Stmt {
+        fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+            match self {
+                Stmt::ExprStmt(expr) => write!(f, "{}", expr),
+                Stmt::PrintStmt(expr) => write!(f, "(print {})", expr),
+            }
+        }
     }
 
     pub trait StmtVisitable {

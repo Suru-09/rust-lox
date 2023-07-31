@@ -5,6 +5,8 @@ pub mod parser;
 pub mod interpreter;
 pub mod stmt;
 
+use log::error;
+
 fn run(source: String) {
     let mut scanner = scanner::scan::Scanner::new(source);
     let tokens = scanner.scan_tokens();
@@ -38,17 +40,40 @@ fn run(source: String) {
             match interpreted_vec {
                 Ok(interpreted_vec_val) => {
                     for interpreted in interpreted_vec_val {
-                        let token = interpreted.downcast_ref::<scanner::scan::Token>().unwrap();
-                        println!("{}", token.to_string());
+                        let token = interpreted.downcast_ref::<scanner::scan::Token>();
+                        match token {
+                            Some(token_val) => {
+                                println!("{}", token_val.to_string());
+                            }
+                            None => {
+                                let stmt = interpreted.downcast_ref::<stmt::stmt::Stmt>();
+                                match stmt {
+                                    Some(stmt_val) => {
+                                        println!("{}", stmt_val.to_string());
+                                    }
+                                    None => {
+                                        let expr = interpreted.downcast_ref::<expr::expr::Expr>();
+                                        match expr {
+                                            Some(expr_val) => {
+                                                println!("{}", expr_val.to_string());
+                                            }
+                                            None => {
+                                                error!("Could not downcast to any type(Token, Stmt, Expr)");
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
                 Err(err) => {
-                    println!("{}", err);
+                    error!("{}", err);
                 }
             }
         }
         Err(err) => {
-            println!("{}", err);
+            error!("{}", err);
         }
     }
 
@@ -69,6 +94,8 @@ fn run_prompt() {
 }
 
 fn main() {
+    env_logger::init();
+
     let args: Vec<String> = std::env::args().collect();
     match args.len() {
         1 => run_prompt(),

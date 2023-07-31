@@ -4,6 +4,7 @@ pub mod expr {
     use std::fs::File;
     use std::process::Command;
     use std::io::prelude::*;
+    use std::fmt;
 
     pub trait Visitable {
         fn accept<T>(&self, visitor: &mut dyn Visitor<T>) -> T;
@@ -15,6 +16,17 @@ pub mod expr {
         Grouping(Box<Expr>),
         Literal(Token),
         Unary(Token, Box<Expr>),
+    }
+
+    impl fmt::Display for Expr {
+        fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+            match self {
+                Expr::Binary(left_expr, operand, right_expr) => write!(f, "({} {} {})", left_expr, operand.token_type_value() , right_expr),
+                Expr::Grouping(expression) => write!(f, "(group {})", expression),
+                Expr::Literal(value) => write!(f, "{}", value.token_type_value()),
+                Expr::Unary(operand, right_expr) => write!(f, "({} {})", operand.token_type_value(), right_expr),
+            }
+        }
     }
 
     impl  Visitable for Expr {

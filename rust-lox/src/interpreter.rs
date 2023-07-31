@@ -290,7 +290,34 @@ pub mod interpreter {
 
     fn visit_print_stmt(&mut self, expr: &Expr) -> Result<Box<dyn Any>, String> {
         let value = self.evaluate(expr)?;
-        Ok(Box::new(value))
+        
+       let val_downcast = value.downcast_ref::<Token>();
+       // match val_downcast without borrowing it and downcast to Token, Stmt and Expr
+         match val_downcast {
+              Some(token) => {
+                println!("{}", token.get_token_type());
+                return Ok(Box::new(token.clone()));
+            },
+            None => {
+                let val_downcast = value.downcast_ref::<Stmt>();
+                match val_downcast {
+                    Some(stmt) => {
+                        println!("{}", stmt);
+                        //return Ok(stmt);
+                    },
+                    None => {
+                        let val_downcast = value.downcast_ref::<Expr>();
+                        match val_downcast {
+                            Some(expr) =>{ 
+                                println!("{}", expr);
+                            },
+                            None => return Err("Could not print value".to_string())
+                        }
+                    }
+                }
+            }
+        }
+        Err("Could not print value".to_string())
     }
  }
 
