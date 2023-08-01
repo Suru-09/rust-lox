@@ -152,12 +152,12 @@ pub mod parser {
                 return Ok(Expr::Literal(Token::new(TokenType::Nil, String::from("nil"), 0, 0, 0)));
             }
 
-            if self.match_any_identifier() {
-                return Ok(Expr::Variable(self.previous()));
-            }
-
             if self.match_any_number_or_string() {
                 return Ok(Expr::Literal(self.previous()));
+            }
+
+            if self.match_any_identifier() {
+                return Ok(Expr::Variable(self.previous()));
             }
 
             if self.match_token(vec![TokenType::LeftParen]) {
@@ -170,7 +170,7 @@ pub mod parser {
             }
 
             error(self.peek().get_line(), self.peek().get_column(),"Expect expression.".to_string());
-            Err("".to_string())
+            Err("Expect Expression?".to_string())
         }
 
         fn consume(&mut self, token_type: TokenType, message: String) {
