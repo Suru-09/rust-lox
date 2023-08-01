@@ -16,6 +16,7 @@ pub mod expr {
         Grouping(Box<Expr>),
         Literal(Token),
         Unary(Token, Box<Expr>),
+        Variable(Token),
     }
 
     impl fmt::Display for Expr {
@@ -25,6 +26,7 @@ pub mod expr {
                 Expr::Grouping(expression) => write!(f, "(group {})", expression),
                 Expr::Literal(value) => write!(f, "{}", value.token_type_value()),
                 Expr::Unary(operand, right_expr) => write!(f, "({} {})", operand.token_type_value(), right_expr),
+                Expr::Variable(token) => write!(f, "{}", token.token_type_value()),
             }
         }
     }
@@ -36,6 +38,7 @@ pub mod expr {
                 Expr::Grouping(expression) => visitor.visit_grouping_expr(expression),
                 Expr::Literal(value) => visitor.visit_literal_expr(value),
                 Expr::Unary(operator, right) => visitor.visit_unary_expr(operator, right),
+                Expr::Variable(token) => visitor.visit_variable_expr(token),
             }
         }
     }
@@ -45,6 +48,7 @@ pub mod expr {
         fn visit_grouping_expr(&mut self, expression: &Expr) -> T;
         fn visit_literal_expr(&mut self, value: &Token) -> T;
         fn visit_unary_expr(&mut self, operator: &Token, right: &Expr) -> T;
+        fn visit_variable_expr(&mut self, token: &Token) -> T;
     }
 
     impl Expr {
@@ -54,6 +58,7 @@ pub mod expr {
                 Expr::Grouping(expression) => visitor.visit_grouping_expr(expression),
                 Expr::Literal(value) => visitor.visit_literal_expr(value),
                 Expr::Unary(operator, right) => visitor.visit_unary_expr(operator, right),
+                Expr::Variable(token) => visitor.visit_variable_expr(token),
             }
         }
     }
@@ -77,6 +82,10 @@ pub mod expr {
 
         fn visit_unary_expr(&mut self, operator: &Token, right: &Expr) -> String {
             format!("({} {})", operator.token_type_value(), right.accept(self))
+        }
+
+        fn visit_variable_expr(&mut self, token: &Token) -> String {
+            format!("{}", token.token_type_value())
         }
     }
 
@@ -184,6 +193,10 @@ pub mod expr {
             let operator_node_index = self.add_node(operator.token_type_value());
             self.add_edge(operator_node_index, right_node_index);
             operator_node_index
+        }
+
+        fn visit_variable_expr(&mut self, token: &Token) -> u64 {
+            self.add_node(token.token_type_value())
         }
     }
 

@@ -281,6 +281,10 @@ pub mod interpreter {
             _ => Err("The given operator is not a unary operator.".to_string())
         }
     }
+
+    fn visit_variable_expr(&mut self, name: &Token) -> Result<Box<dyn Any>, String> {
+        Ok(Box::new(name.clone()))
+    }
  }
 
  impl StmtVisitor<Result<Box<dyn Any>, String>> for Interpreter {
@@ -318,6 +322,11 @@ pub mod interpreter {
             }
         }
         Err("Could not print value".to_string())
+    }
+
+    fn visit_var_stmt(&mut self, name: &Token, _initializer: &Expr) -> Result<Box<dyn Any>, String> {
+        //let value = self.evaluate(initializer)?;
+        Ok(Box::new(name.clone()))
     }
  }
 

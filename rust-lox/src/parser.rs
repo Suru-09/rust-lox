@@ -126,6 +126,17 @@ pub mod parser {
             is_number_or_string
         }
 
+        fn match_any_identifier(&mut self) -> bool {
+            let is_identifier = match self.peek().get_token_type() {
+                TokenType::Identifier(_) => true,
+                _ => false,
+            };
+            if is_identifier {
+                self.advance();
+            }
+            is_identifier
+        }
+
         fn primary(&mut self) -> Result<Expr, String> {
             debug!("{}", self.peek().get_token_type());
 
@@ -139,6 +150,10 @@ pub mod parser {
 
             if self.match_token(vec![TokenType::Nil]) {
                 return Ok(Expr::Literal(Token::new(TokenType::Nil, String::from("nil"), 0, 0, 0)));
+            }
+
+            if self.match_any_identifier() {
+                return Ok(Expr::Variable(self.previous()));
             }
 
             if self.match_any_number_or_string() {
@@ -163,13 +178,13 @@ pub mod parser {
                 self.advance();
                 return;
             }
-            error(self.current as u32, 0, message);
+            error(self.current as u32, 0, message); 
         }
 
         pub fn parse(&mut self) -> Result<Vec<Stmt>, String> {
             let mut expressions: Vec<Stmt> = Vec::new();
             while !self.is_at_end() {
-                expressions.push(self.statement()?);
+                expressions.push(self.declaration()?);
             }
             Ok(expressions)
         }
@@ -198,6 +213,28 @@ pub mod parser {
             let expr = self.expression()?;
             self.consume(TokenType::Semicolon, "Expect ';' after expression.".to_string());
             Ok(Stmt::ExprStmt(expr))
+        }
+
+        fn declaration(&mut self) -> Result<Stmt, String> {
+            if self.match_token(vec![TokenType::Var]) {
+                return self.var_declaration();
+            }
+            self.statement()
+        }
+
+        fn var_declaration(&mut self) -> Result<Stmt, String> {
+            if !self.match_any_identifier() {
+                error(self.peek().get_line(), self.peek().get_column(), "Expect variable name.".to_string());
+                return Err("".to_string());
+            }
+            let name = self.previous();
+            let mut initializer = Expr::Literal(Token::new(TokenType::Nil, String::from("nil"), 0, 0, 0));
+            if self.match_token(vec![TokenType::Equal]) {
+                initializer = self.expression()?;
+            };
+
+            self.consume(TokenType::Semicolon, "Expect ';' after variable declaration.".to_string());
+            Ok(Stmt::VarStmt(name, initializer))
         }
 
     }
