@@ -37,14 +37,9 @@ pub mod interpreter {
     }
 
     fn downcast_to_token(&mut self, obj_1: Box<dyn Any>, obj_2: Box<dyn Any>) -> Result<(Token, Token), String> {
-        match obj_1.downcast::<Token>() {
-            Ok(d_obj_1) => {
-                match obj_2.downcast::<Token>() {
-                    Ok(d_obj_2) => Ok((*d_obj_1, *d_obj_2)),
-                    Err(_) => Err("Could not downcast object to Token".to_string()),
-                }
-            },
-            Err(_) => Err("Could not downcast object to Token".to_string()),
+        match (obj_1.downcast::<Token>(), obj_2.downcast::<Token>()) {
+            (Ok(d_obj_1), Ok(d_obj_2)) => Ok((*d_obj_1, *d_obj_2)),
+            _ => Err("Could not downcast object to Token".to_string()),
         }
     }
 
@@ -57,26 +52,16 @@ pub mod interpreter {
     }
 
     fn downcast_token_to_f64(&mut self, token1: Token, token2: Token) -> Result<(f64, f64), String> {
-        match token1.get_token_type() {
-            TokenType::Number(tok1_f64) => {
-                match token2.get_token_type() {
-                    TokenType::Number(tok2_f64) => Ok((tok1_f64, tok2_f64)),
-                    _ => Err("Could not downcast token2 to f64".to_string()),
-                }
-            },
-            _ => Err("Could not downcast token1 to f64".to_string()),
+        match (token1.get_token_type(), token2.get_token_type()) {
+            (TokenType::Number(tok1_f64), TokenType::Number(tok2_f64)) => Ok((tok1_f64, tok2_f64)),
+            _ => Err("Could not downcast token1/token2 to f64".to_string()),
         }
     }
     
     fn downcast_token_to_string(&mut self, token1: Token, token2: Token) -> Result<(String, String), String> {
-        match token1.get_token_type() {
-            TokenType::String(tok1_str) => {
-                match token2.get_token_type() {
-                    TokenType::String(tok2_str) => Ok((tok1_str, tok2_str)),
-                    _ => Err("Could not downcast token2 to String".to_string()),
-                }
-            },
-            _ => Err("Could not downcast token1 to String".to_string()),
+        match (token1.get_token_type(), token2.get_token_type()) {
+            (TokenType::String(tok1_str), TokenType::String(tok2_str)) => Ok((tok1_str, tok2_str)),
+            _ => Err("Could not downcast token1/token2 to String".to_string()),
         }
     }
 

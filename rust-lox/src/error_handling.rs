@@ -1,5 +1,7 @@
 pub mod error_handling {
 
+    use log::error;
+
     pub fn error(line: u32, column: u32, message: String) {
         RLoxError{
             line,
@@ -18,7 +20,7 @@ pub mod error_handling {
 
     impl RLoxError {
         fn report(&self) {
-            println!("[line {} and column {}] Error {}: {}", self.line, self.column, self.location, self.message);
+            error!("[line {} and column {}] Error {}: {}", self.line, self.column, self.location, self.message);
         }
     }
 }

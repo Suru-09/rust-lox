@@ -80,7 +80,7 @@ pub mod scan {
                 TokenType::Equal => write!(f, "="),
                 TokenType::EqualEqual => write!(f, "=="),
                 TokenType::Identifier(ident) => write!(f, "{}", ident),
-                TokenType::String(str) => write!(f, "{}", str),
+                TokenType::String(str) => write!(f, "\"{}\"", str),
                 TokenType::Number(num) => write!(f, "{}", num),
                 TokenType::And => write!(f, "and"),
                 TokenType::Class => write!(f, "class"),

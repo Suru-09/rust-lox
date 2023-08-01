@@ -5,34 +5,27 @@ pub mod parser;
 pub mod interpreter;
 pub mod stmt;
 
-use log::error;
+use log::{info, error};
 
 fn run(source: String) {
     let mut scanner = scanner::scan::Scanner::new(source);
     let tokens = scanner.scan_tokens();
     for token in tokens.clone() {
-        println!("{}", token.to_string());
+        info!("{}", token.to_string());
     }
 
     let mut parser = parser::parser::Parser::new(tokens);
     let ast = parser.parse();
     match ast {
         Ok(ast_val) => {
-            // for expr in ast_val {
-            //     // print AST to console as a string(pretty ugly).
-            //     let mut ast_printer = expr::expr::AstPrinter;
-            //     let printed_ast = expr.accept(&mut ast_printer);
-            //     println!("{}", printed_ast);
-
-            //     // generate graph from AST both as a dot file and as a png image.
-            //     let mut graph_printer = expr::expr::GraphVizPrinter::new( String::from("main"));
-            //     expr.accept(&mut graph_printer);
-            //     graph_printer.close_graph();
-            //     graph_printer.write_to_file();
-            //     graph_printer.generate_image();
-            // }
-
-            
+            for expr in ast_val.clone() {
+                // generate graph from AST both as a dot file and as a png image.
+                let mut graph_printer = stmt::stmt::StmtGraphvizPrinter::new( String::from("main"));
+                expr.accept(&mut graph_printer);
+                graph_printer.close_graph();
+                graph_printer.write_to_file();
+                graph_printer.generate_image();
+            }
 
             let mut interpreter = interpreter::interpreter::Interpreter;
             let interpreted_vec = interpreter.interpret(ast_val);
