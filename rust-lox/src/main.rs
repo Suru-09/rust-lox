@@ -4,6 +4,7 @@ pub mod expr;
 pub mod parser;
 pub mod interpreter;
 pub mod stmt;
+pub mod environment;
 
 use log::{info, error};
 
@@ -27,7 +28,7 @@ fn run(source: String) {
                 graph_printer.generate_image();
             }
 
-            let mut interpreter = interpreter::interpreter::Interpreter;
+            let mut interpreter = interpreter::interpreter::Interpreter::new();
             let interpreted_vec = interpreter.interpret(ast_val);
 
             match interpreted_vec {

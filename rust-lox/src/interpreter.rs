@@ -3,6 +3,7 @@ pub mod interpreter {
     use crate::expr::expr::{Expr, Visitor};
     use crate::stmt::stmt::{Stmt, StmtVisitor};
     use crate::scanner::scan::{Token, TokenType};
+    use crate::environment::environment::Environment;
     use std::any::Any;
 
     /**
@@ -15,9 +16,17 @@ pub mod interpreter {
      * * Could there be improvements in error handling? Everything seems too verbose.
      */
 
- pub struct Interpreter;
+ pub struct Interpreter {
+    pub environment: Environment,
+ }
 
  impl Interpreter {
+    pub fn new() -> Interpreter {
+        Interpreter {
+            environment: Environment::new(),
+        }
+    }
+
     fn evaluate(&mut self, expr: &Expr) -> Result<Box<dyn Any>, String> {
         expr.accept(self)
     }
@@ -268,7 +277,11 @@ pub mod interpreter {
     }
 
     fn visit_variable_expr(&mut self, name: &Token) -> Result<Box<dyn Any>, String> {
-        Ok(Box::new(name.clone()))
+        let value = self.environment.get(name.get_token_type().to_string());
+        match value {
+            Some(value) => Ok(Box::new(value.clone())),
+            None => Err("Undefined variable".to_string())
+        }
     }
  }
 
@@ -309,8 +322,10 @@ pub mod interpreter {
         Err("Could not print value".to_string())
     }
 
-    fn visit_var_stmt(&mut self, name: &Token, _initializer: &Expr) -> Result<Box<dyn Any>, String> {
-        //let value = self.evaluate(initializer)?;
+    fn visit_var_stmt(&mut self, name: &Token, initializer: &Expr) -> Result<Box<dyn Any>, String> {
+        let value = self.evaluate(initializer)?;
+        
+        self.environment.define(name.get_token_type().to_string(), value);
         Ok(Box::new(name.clone()))
     }
  }
