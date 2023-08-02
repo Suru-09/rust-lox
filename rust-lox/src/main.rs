@@ -19,9 +19,12 @@ fn run(source: String) {
     let ast = parser.parse();
     match ast {
         Ok(ast_val) => {
+            let mut counter: u32 = 0;
             for expr in ast_val.clone() {
                 // generate graph from AST both as a dot file and as a png image.
-                let mut graph_printer = stmt::stmt::StmtGraphvizPrinter::new( String::from("main"));
+                let graph_name = format!("graph_{}", counter);
+                let mut graph_printer = stmt::stmt::StmtGraphvizPrinter::new(graph_name);
+                counter += 1;
                 expr.accept(&mut graph_printer);
                 graph_printer.close_graph();
                 graph_printer.write_to_file();

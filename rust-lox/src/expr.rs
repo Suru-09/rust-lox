@@ -14,6 +14,7 @@ pub mod expr {
         Literal(Token),
         Unary(Token, Box<Expr>),
         Variable(Token),
+        Assign(Token, Box<Expr>),
     }
 
     impl fmt::Display for Expr {
@@ -24,6 +25,7 @@ pub mod expr {
                 Expr::Literal(value) => write!(f, "{}", value.token_type_value()),
                 Expr::Unary(operand, right_expr) => write!(f, "({} {})", operand.token_type_value(), right_expr),
                 Expr::Variable(token) => write!(f, "{}", token.token_type_value()),
+                Expr::Assign(token, expr) => write!(f, "{} = {}", token.token_type_value(), expr),
             }
         }
     }
@@ -36,6 +38,7 @@ pub mod expr {
                 Expr::Literal(value) => visitor.visit_literal_expr(value),
                 Expr::Unary(operator, right) => visitor.visit_unary_expr(operator, right),
                 Expr::Variable(token) => visitor.visit_variable_expr(token),
+                Expr::Assign(token, expr) => visitor.visit_assign_expr(token, expr),
             }
         }
     }
@@ -46,6 +49,7 @@ pub mod expr {
         fn visit_literal_expr(&mut self, value: &Token) -> T;
         fn visit_unary_expr(&mut self, operator: &Token, right: &Expr) -> T;
         fn visit_variable_expr(&mut self, token: &Token) -> T;
+        fn visit_assign_expr(&mut self, token: &Token, expr: &Expr) -> T;
     }
 
     impl Expr {
@@ -56,6 +60,7 @@ pub mod expr {
                 Expr::Literal(value) => visitor.visit_literal_expr(value),
                 Expr::Unary(operator, right) => visitor.visit_unary_expr(operator, right),
                 Expr::Variable(token) => visitor.visit_variable_expr(token),
+                Expr::Assign(token, expr) => visitor.visit_assign_expr(token, expr),
             }
         }
     }
@@ -83,6 +88,10 @@ pub mod expr {
 
         fn visit_variable_expr(&mut self, token: &Token) -> String {
             format!("{}", token.token_type_value())
+        }
+
+        fn visit_assign_expr(&mut self, token: &Token, expr: &Expr) -> String {
+            format!("{} = {}", token.token_type_value(), expr.accept(self))
         }
     }
 }

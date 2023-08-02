@@ -192,6 +192,13 @@ pub mod stmt {
         fn visit_variable_expr(&mut self, token: &Token) -> u64 {
             self.add_node(token.token_type_value())
         }
+
+        fn visit_assign_expr(&mut self, token: &Token, expr: &Expr) -> u64 {
+            let expr_node_id = expr.accept(self);
+            let token_node_id = self.add_node(token.token_type_value());
+            self.add_edge(token_node_id, expr_node_id);
+            token_node_id
+        }
     }
 
 }

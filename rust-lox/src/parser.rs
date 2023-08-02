@@ -84,7 +84,7 @@ pub mod parser {
         }
 
         fn expression(&mut self) -> Result<Expr, String>  {
-            self.equality()
+            self.assignment()
         }
 
         fn equality(&mut self) -> Result<Expr, String> {
@@ -235,6 +235,29 @@ pub mod parser {
 
             self.consume(TokenType::Semicolon, "Expect ';' after variable declaration.".to_string());
             Ok(Stmt::VarStmt(name, initializer))
+        }
+
+        fn assignment(&mut self) -> Result<Expr, String> {
+            let expr = self.equality()?;
+
+            /*
+             * * * Note: we enter the if statement only if we have an assignment,
+             * * * otherwise we just return the expression, therefore for variable
+             * * * declaration we return directly the value of expr.
+            */
+            if self.match_token(vec![TokenType::Equal]) {
+                let equals = self.previous();
+                let value = self.assignment()?;
+
+                match expr {
+                    Expr::Literal(name) | Expr::Variable(name) | Expr::Assign(name, _) => return Ok(Expr::Assign(name, Box::new(value))),
+                    _ => {
+                        error(equals.get_line(), equals.get_column(), "Invalid assignment target.".to_string());
+                        return Err("Invalid assignment target.".to_string());
+                    }
+                }
+            }
+            Ok(expr)
         }
 
     }

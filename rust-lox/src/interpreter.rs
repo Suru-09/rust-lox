@@ -302,6 +302,12 @@ pub mod interpreter {
             None => Err(format!("Variable {} is not defined", name.get_token_type()))
         }
     }
+
+    fn visit_assign_expr(&mut self, name: &Token, value: &Expr) -> Result<Box<dyn Any>, String> {
+        let value = self.evaluate(value)?;
+        self.environment.assign(name.get_token_type().to_string(), value)?;
+        return self.visit_variable_expr(name);
+    }
  }
 
  impl StmtVisitor<Result<Box<dyn Any>, String>> for Interpreter {
