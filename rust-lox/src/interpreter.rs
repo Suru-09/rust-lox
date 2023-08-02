@@ -279,8 +279,27 @@ pub mod interpreter {
     fn visit_variable_expr(&mut self, name: &Token) -> Result<Box<dyn Any>, String> {
         let value = self.environment.get(name.get_token_type().to_string());
         match value {
-            Some(value) => Ok(Box::new(value.clone())),
-            None => Err("Undefined variable".to_string())
+            Some(value) => {
+                // try to downcast the value to a Token/Stmt/Expr and return it.
+                let val_downcast = value.downcast_ref::<Token>();
+                match val_downcast {
+                    Some(token) => return Ok(Box::new(token.clone())),
+                    None => {
+                        let val_downcast = value.downcast_ref::<Stmt>();
+                        match val_downcast {
+                            Some(stmt) => return Ok(Box::new(stmt.clone())),
+                            None => {
+                                let val_downcast = value.downcast_ref::<Expr>();
+                                match val_downcast {
+                                    Some(expr) => return Ok(Box::new(expr.clone())),
+                                    None => return Err("Could not downcast value".to_string())
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            None => Err(format!("Variable {} is not defined", name.get_token_type()))
         }
     }
  }
