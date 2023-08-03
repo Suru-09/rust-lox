@@ -191,15 +191,20 @@ pub mod parser {
 
         pub fn statement(&mut self) -> Result<Stmt, String> {
             match self.peek().get_token_type() {
-                TokenType::Identifier(text) => {
-                    if text == "print".to_string() {
-                        return self.print_statement();
-                    }
-                    return self.expression_statement();
-                },
                 TokenType::Print => self.print_statement(),
+                TokenType::LeftBrace => Ok(Stmt::BlockStmt(self.block_statement()?)),
                 _ => self.expression_statement(),
             }
+        }
+
+        fn block_statement(&mut self) -> Result<Vec<Stmt>, String> {
+            let mut statements: Vec<Stmt> = Vec::new();
+            self.advance();
+            while !self.check(TokenType::RightBrace) && !self.is_at_end() {
+                statements.push(self.declaration()?);
+            }
+            self.consume(TokenType::RightBrace, "Expect '}' after block.".to_string());
+            Ok(statements)
         }
 
         pub fn print_statement(&mut self) -> Result<Stmt, String> {

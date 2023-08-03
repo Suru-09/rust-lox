@@ -17,6 +17,19 @@ pub mod expr {
         Assign(Token, Box<Expr>),
     }
 
+    impl Expr {
+        pub fn name(&self) -> String {
+            match self {
+                Expr::Binary(_, _, _) => "Binary".to_string(),
+                Expr::Grouping(_) => "Grouping".to_string(),
+                Expr::Literal(_) => "Literal".to_string(),
+                Expr::Unary(_, _) => "Unary".to_string(),
+                Expr::Variable(_) => "Variable".to_string(),
+                Expr::Assign(_, _) => "Assign".to_string(),
+            }
+        }
+    }
+
     impl fmt::Display for Expr {
         fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
             match self {

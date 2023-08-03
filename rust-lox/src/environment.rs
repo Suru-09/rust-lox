@@ -4,12 +4,21 @@ pub mod environment {
 
     pub struct Environment {
         values: HashMap<String, Box<dyn Any>>,
+        enclosing: Option<Box<Environment>>
     }
 
     impl Environment {
-        pub fn new() -> Environment {
+        pub fn empty_env() -> Environment {
             Environment {
                 values: HashMap::new(),
+                enclosing: None,
+            }
+        }
+
+        pub fn new(env: Environment) -> Environment {
+            Environment {
+                values: HashMap::new(),
+                enclosing: Some(Box::new(env)),
             }
         }
 
@@ -20,7 +29,12 @@ pub mod environment {
         pub fn get(&self, name: String) -> Option<&Box<dyn Any>> {
             match self.values.get(&name) {
                 Some(value) => Some(value),
-                None => None,
+                None => {
+                    match &self.enclosing {
+                        Some(enclosing) => enclosing.get(name),
+                        None => None,
+                    }
+                },
             }
         }
 
@@ -33,6 +47,16 @@ pub mod environment {
                 self.values.insert(name, value);
                 return Ok(());
             } 
+
+            match &mut self.enclosing {
+                Some(enclosing) => {
+                    match enclosing.assign(name, value) {
+                        Ok(_) => return Ok(()),
+                        Err(err) => return Err(err),
+                    }
+                },
+                None => (),
+            }
             Err(format!("Variable '{}' is undefined.", name))
         }
     }

@@ -13,6 +13,7 @@ pub mod stmt {
         ExprStmt(Expr),
         PrintStmt(Expr),
         VarStmt(Token, Expr),
+        BlockStmt(Vec<Stmt>),
     }
     
     impl fmt::Display for Stmt {
@@ -21,6 +22,13 @@ pub mod stmt {
                 Stmt::ExprStmt(expr) => write!(f, "{}", expr),
                 Stmt::PrintStmt(expr) => write!(f, "(print {})", expr),
                 Stmt::VarStmt(token, expr) => write!(f, "(var {} {})", token.get_token_type(), expr),
+                Stmt::BlockStmt(stmts) => {
+                    let mut stmts_str = String::new();
+                    for stmt in stmts {
+                        stmts_str.push_str(format!("{}", stmt).as_str());
+                    }
+                    write!(f, "{}", stmts_str)
+                }
             }
         }
     }
@@ -33,6 +41,7 @@ pub mod stmt {
         fn visit_expr_stmt(&mut self, expr: &Expr) -> T;
         fn visit_print_stmt(&mut self, expr: &Expr) -> T;
         fn visit_var_stmt(&mut self, token: &Token, expr: &Expr) -> T;
+        fn visit_block_stmt(&mut self, stmts: &Vec<Stmt>) -> T;
     }
 
     impl StmtVisitable for Stmt {
@@ -41,6 +50,7 @@ pub mod stmt {
                 Stmt::ExprStmt(expr) => visitor.visit_expr_stmt(expr),
                 Stmt::PrintStmt(expr) => visitor.visit_print_stmt(expr),
                 Stmt::VarStmt(token, expr) => visitor.visit_var_stmt(token, expr),
+                Stmt::BlockStmt(stmts) => visitor.visit_block_stmt(stmts),
             }
         }
     }
@@ -51,6 +61,7 @@ pub mod stmt {
                 Stmt::ExprStmt(expr) => visitor.visit_expr_stmt(expr),
                 Stmt::PrintStmt(expr) => visitor.visit_print_stmt(expr),
                 Stmt::VarStmt(token, expr) => visitor.visit_var_stmt(token, expr),
+                Stmt::BlockStmt(stmts) => visitor.visit_block_stmt(stmts),
             }
         }
     }
@@ -120,6 +131,23 @@ pub mod stmt {
             };
             println!("The current directory is {}", current_dir.display());
 
+            // make sure bothh generated and ast directories exist, if not create them.
+            let generated_dir = format!("{}/src/resources/generated/", current_dir.display());
+            let ast_dir = format!("{}/src/resources/generated/ast/", current_dir.display());
+            if !std::path::Path::new(&generated_dir).exists() {
+                match std::fs::create_dir(&generated_dir) {
+                    Ok(_) => println!("successfully created generated directory"),
+                    Err(why) => panic!("couldn't create generated directory: {}", why),
+                }
+            }
+
+            if !std::path::Path::new(&ast_dir).exists() {
+                match std::fs::create_dir(&ast_dir) {
+                    Ok(_) => println!("successfully created ast directory"),
+                    Err(why) => panic!("couldn't create ast directory: {}", why),
+                }
+            }
+
             format!("{}/src/resources/generated/ast/", current_dir.display())
         }
 
@@ -141,7 +169,7 @@ pub mod stmt {
     impl StmtVisitor<u64> for StmtGraphvizPrinter {
         fn visit_expr_stmt(&mut self, expr: &Expr) -> u64 {
             let expr_node_id = expr.accept(self);
-            let node_id = self.add_node(String::from("expr"));
+            let node_id = self.add_node(expr.name());
             self.add_edge(node_id, expr_node_id);
             node_id
         }
@@ -158,6 +186,15 @@ pub mod stmt {
             let token_node_id = self.add_node(token.token_type_value());
             self.add_edge(token_node_id, expr_node_id);
             token_node_id
+        }
+
+        fn visit_block_stmt(&mut self, stmts: &Vec<Stmt>) -> u64 {
+            let mut stmts_node_id = self.add_node(String::from("Block"));
+            for stmt in stmts {
+                let stmt_node_id = stmt.accept(self);
+                self.add_edge(stmts_node_id, stmt_node_id);
+            }
+            stmts_node_id
         }
     }
 

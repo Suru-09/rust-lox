@@ -23,7 +23,7 @@ pub mod interpreter {
  impl Interpreter {
     pub fn new() -> Interpreter {
         Interpreter {
-            environment: Environment::new(),
+            environment: Environment::empty_env(),
         }
     }
 
@@ -237,6 +237,16 @@ pub mod interpreter {
         }
         Ok(vec)
     }
+
+    fn execute_block(&mut self, stmts: &Vec<Stmt>, environment: Environment) -> Result<Box<dyn Any>, String> {
+        let previous = &self.environment;
+        self.environment = environment;
+        for stmt in stmts {
+            self.execute(stmt.clone())?;
+        }
+        //self.environment = previous;
+        Ok(Box::new(Token::new(TokenType::Nil, "".to_string(), 0, 0, 0)))
+    }
  }
 
  impl Visitor<Result<Box<dyn Any>,  String>> for Interpreter {
@@ -353,6 +363,11 @@ pub mod interpreter {
         self.environment.define(name.get_token_type().to_string(), value);
         Ok(Box::new(name.clone()))
     }
+
+    fn visit_block_stmt(&mut self, stmts: &Vec<Stmt>) -> Result<Box<dyn Any>, String> {
+        self.execute_block(stmts, Environment::new(self.environment))
+    }
+    
  }
 
 }
