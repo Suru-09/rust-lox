@@ -3,8 +3,10 @@ pub mod interpreter {
     use crate::expr::expr::{Expr, Visitor};
     use crate::stmt::stmt::{Stmt, StmtVisitor};
     use crate::scanner::scan::{Token, TokenType};
-    use crate::environment::environment::Environment;
+    use crate::environment::environment::EnvironmentStack;
     use std::any::Any;
+    use std::rc::Rc;
+    use std::cell::RefCell;
 
     /**
      * ! Notes to my self:
@@ -17,13 +19,13 @@ pub mod interpreter {
      */
 
  pub struct Interpreter {
-    pub environment: Environment,
+    pub environment: Rc<RefCell<EnvironmentStack>>,
  }
 
  impl Interpreter {
     pub fn new() -> Interpreter {
         Interpreter {
-            environment: Environment::empty_env(),
+            environment: Rc::new(RefCell::new(EnvironmentStack::new())),
         }
     }
 
@@ -238,13 +240,11 @@ pub mod interpreter {
         Ok(vec)
     }
 
-    fn execute_block(&mut self, stmts: &Vec<Stmt>, environment: Environment) -> Result<Box<dyn Any>, String> {
-        let previous = &self.environment;
-        self.environment = environment;
+    fn execute_block(&mut self, stmts: &Vec<Stmt>) -> Result<Box<dyn Any>, String> {
         for stmt in stmts {
             self.execute(stmt.clone())?;
         }
-        //self.environment = previous;
+        self.environment.as_ref().borrow_mut().pop();
         Ok(Box::new(Token::new(TokenType::Nil, "".to_string(), 0, 0, 0)))
     }
  }
@@ -287,7 +287,8 @@ pub mod interpreter {
     }
 
     fn visit_variable_expr(&mut self, name: &Token) -> Result<Box<dyn Any>, String> {
-        let value = self.environment.get(name.get_token_type().to_string());
+        let mut binding = self.environment.as_ref().borrow_mut();
+        let value = binding.get(name.get_token_type().to_string());
         match value {
             Some(value) => {
                 // try to downcast the value to a Token/Stmt/Expr and return it.
@@ -315,7 +316,7 @@ pub mod interpreter {
 
     fn visit_assign_expr(&mut self, name: &Token, value: &Expr) -> Result<Box<dyn Any>, String> {
         let value = self.evaluate(value)?;
-        self.environment.assign(name.get_token_type().to_string(), value)?;
+        self.environment.as_ref().borrow_mut().assign(name.get_token_type().to_string(), value.into())?;
         return self.visit_variable_expr(name);
     }
  }
@@ -360,12 +361,13 @@ pub mod interpreter {
     fn visit_var_stmt(&mut self, name: &Token, initializer: &Expr) -> Result<Box<dyn Any>, String> {
         let value = self.evaluate(initializer)?;
         
-        self.environment.define(name.get_token_type().to_string(), value);
+        self.environment.as_ref().borrow_mut().define(name.get_token_type().to_string(), value.into());
         Ok(Box::new(name.clone()))
     }
 
     fn visit_block_stmt(&mut self, stmts: &Vec<Stmt>) -> Result<Box<dyn Any>, String> {
-        self.execute_block(stmts, Environment::new(self.environment))
+        self.environment.as_ref().borrow_mut().push_env();
+        self.execute_block(stmts)
     }
     
  }

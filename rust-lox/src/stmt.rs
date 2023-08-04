@@ -189,7 +189,7 @@ pub mod stmt {
         }
 
         fn visit_block_stmt(&mut self, stmts: &Vec<Stmt>) -> u64 {
-            let mut stmts_node_id = self.add_node(String::from("Block"));
+            let stmts_node_id = self.add_node(String::from("Block"));
             for stmt in stmts {
                 let stmt_node_id = stmt.accept(self);
                 self.add_edge(stmts_node_id, stmt_node_id);
