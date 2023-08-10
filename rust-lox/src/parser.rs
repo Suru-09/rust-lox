@@ -66,25 +66,37 @@ pub mod parser {
         }
 
         fn binary_expr_loop(&mut self, operators: Vec<TokenType>, next_rule: fn(&mut Self) -> Result<Expr, String>) -> Result<Expr, String> {
-            let mut expr = match next_rule(self) {
-                Ok(expr_val) => expr_val,
-                Err(e) => return Err(e),
-            };
-
+            let mut expr = next_rule(self)?;
 
             while self.match_token(operators.clone()) {
                 let operator = self.previous();
-                let right = match next_rule(self) {
-                    Ok(right_val) => right_val,
-                    Err(e) => return Err(e),
-                };
+                let right = next_rule(self)?;
                 expr = Expr::Binary(Box::new(expr), operator, Box::new(right));
+            }
+            Ok(expr)
+        }
+
+        fn logical_expr_loop(&mut self, operators: Vec<TokenType>, next_rule: fn(&mut Self) -> Result<Expr, String>) -> Result<Expr, String> {
+            let mut expr = next_rule(self)?;
+
+            while self.match_token(operators.clone()) {
+                let operator = self.previous();
+                let right = next_rule(self)?;
+                expr = Expr::Logical(Box::new(expr), operator, Box::new(right));
             }
             Ok(expr)
         }
 
         fn expression(&mut self) -> Result<Expr, String>  {
             self.assignment()
+        }
+
+        fn or(&mut self) -> Result<Expr, String> {
+            self.logical_expr_loop(vec![TokenType::Or], Self::and)
+        }
+
+        fn and(&mut self) -> Result<Expr, String> {
+            self.logical_expr_loop(vec![TokenType::And], Self::equality)
         }
 
         fn equality(&mut self) -> Result<Expr, String> {
@@ -266,7 +278,7 @@ pub mod parser {
         }
 
         fn assignment(&mut self) -> Result<Expr, String> {
-            let expr = self.equality()?;
+            let expr = self.or()?;
 
             /*
              * * * Note: we enter the if statement only if we have an assignment,

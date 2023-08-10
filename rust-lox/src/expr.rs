@@ -10,6 +10,7 @@ pub mod expr {
     #[derive(Clone)]
     pub enum Expr {
         Binary(Box<Expr>, Token, Box<Expr>),
+        Logical(Box<Expr>, Token, Box<Expr>),
         Grouping(Box<Expr>),
         Literal(Token),
         Unary(Token, Box<Expr>),
@@ -26,6 +27,7 @@ pub mod expr {
                 Expr::Unary(_, _) => "Unary".to_string(),
                 Expr::Variable(_) => "Variable".to_string(),
                 Expr::Assign(_, _) => "Assign".to_string(),
+                Expr::Logical(_, _, _) => "Logical".to_string(),
             }
         }
     }
@@ -39,6 +41,7 @@ pub mod expr {
                 Expr::Unary(operand, right_expr) => write!(f, "({} {})", operand.token_type_value(), right_expr),
                 Expr::Variable(token) => write!(f, "{}", token.token_type_value()),
                 Expr::Assign(token, expr) => write!(f, "{} = {}", token.token_type_value(), expr),
+                Expr::Logical(left, operator, right) => write!(f, "({} {} {})", left, operator.token_type_value(), right),
             }
         }
     }
@@ -52,6 +55,7 @@ pub mod expr {
                 Expr::Unary(operator, right) => visitor.visit_unary_expr(operator, right),
                 Expr::Variable(token) => visitor.visit_variable_expr(token),
                 Expr::Assign(token, expr) => visitor.visit_assign_expr(token, expr),
+                Expr::Logical(left, operator, right) => visitor.visit_logical_expr(left, operator, right),
             }
         }
     }
@@ -63,6 +67,7 @@ pub mod expr {
         fn visit_unary_expr(&mut self, operator: &Token, right: &Expr) -> T;
         fn visit_variable_expr(&mut self, token: &Token) -> T;
         fn visit_assign_expr(&mut self, token: &Token, expr: &Expr) -> T;
+        fn visit_logical_expr(&mut self, left: &Expr, operator: &Token, right: &Expr) -> T;
     }
 
     impl Expr {
@@ -74,6 +79,7 @@ pub mod expr {
                 Expr::Unary(operator, right) => visitor.visit_unary_expr(operator, right),
                 Expr::Variable(token) => visitor.visit_variable_expr(token),
                 Expr::Assign(token, expr) => visitor.visit_assign_expr(token, expr),
+                Expr::Logical(left, operator, right) => visitor.visit_logical_expr(left, operator, right),
             }
         }
     }
@@ -105,6 +111,12 @@ pub mod expr {
 
         fn visit_assign_expr(&mut self, token: &Token, expr: &Expr) -> String {
             format!("{} = {}", token.token_type_value(), expr.accept(self))
+        }
+
+        fn visit_logical_expr(&mut self, left: &Expr, operator: &Token, right: &Expr) -> String {
+            let left = left.accept(self);
+            let right = right.accept(self);
+            format!("({} {} {})", operator.token_type_value(), left, right)
         }
     }
 }

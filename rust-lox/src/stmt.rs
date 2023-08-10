@@ -263,6 +263,15 @@ pub mod stmt {
             token_node_id
         }
 
+        fn visit_logical_expr(&mut self, left: &Expr, operator: &Token, right: &Expr) -> u64 {
+            let left_node_index = left.accept(self);
+            let right_node_index = right.accept(self);
+            let operator_node_index = self.add_node(operator.token_type_value());
+            self.add_edge(operator_node_index, left_node_index);
+            self.add_edge(operator_node_index, right_node_index);
+            operator_node_index
+        }
+
     }
 
 }

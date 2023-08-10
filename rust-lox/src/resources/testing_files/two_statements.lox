@@ -4,7 +4,14 @@
 
     lox = "string";
 
-    if(false)
+    var a = 2;
+    var b = 3;
+    var condition = false;
+    if (a < b) {
+        condition = true;
+    }
+
+    if(condition or true)
     {
         var lox = " Hehehe another string in this block";
         print lox;

@@ -319,6 +319,26 @@ pub mod interpreter {
         self.environment.as_ref().borrow_mut().assign(name.get_token_type().to_string(), value.into())?;
         return self.visit_variable_expr(name);
     }
+
+    fn visit_logical_expr(&mut self, left: &Expr, operator: &Token, right: &Expr) -> Result<Box<dyn Any>,  String> {
+        let left_val = self.evaluate(left)?;
+        let is_truthy = self.is_truthy(left_val)?;
+        if let Some(truth) = is_truthy.downcast_ref::<Token>() {
+            if truth.get_token_type() == TokenType::True {
+                if operator.get_token_type() == TokenType::Or {
+                    return Ok(Box::new(truth.clone()));
+                }
+                return self.evaluate(right);
+            }
+            else if truth.get_token_type() == TokenType::False {
+                if operator.get_token_type() == TokenType::Or {
+                    return self.evaluate(right);
+                }
+                return Ok(Box::new(truth.clone()));
+            }
+        }
+        return Err("Could not visit Logical Expression, truthy might be a reason.".to_string());
+    }
  }
 
  impl StmtVisitor<Result<Box<dyn Any>, String>> for Interpreter {
@@ -344,7 +364,7 @@ pub mod interpreter {
             return Ok(Box::new(stmt.clone()));
         }
 
-        Err("Could not print value".to_string())
+        Err("Could not print value.".to_string())
     }
 
     fn visit_var_stmt(&mut self, name: &Token, initializer: &Expr) -> Result<Box<dyn Any>, String> {
@@ -373,7 +393,7 @@ pub mod interpreter {
                 return Ok(Box::new(Token::new(TokenType::Nil, "".to_string(), 0, 0, 0)));
             }
         }
-        return Err("Could not downcast is_truthy to Token".to_string());
+        return Err("Could not visit IF statement, truthy might be a reason.".to_string());
     }
     
  }
