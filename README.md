@@ -15,6 +15,7 @@ This is a work in progress. I'm currently working on the interpreter, and I'll b
 - [ ] add support for block comments.
 - [ ] add support for error recovery & synchronization.
 - [ ] add tests for the interpreter.
+- [ ] add support for newlines and tabs in print statements(\n, \t).
 - [x] add tests for the scanner.
 
 

@@ -19,5 +19,10 @@
     else 
         print "Ciocanul lui Thor";
 
-    print lox;
+    for(var i = 0 ; i < 3; i = i + 1) {
+        lox = lox + "i";
+        print lox;
+    }
+
+    print lox + " se fini";
 }

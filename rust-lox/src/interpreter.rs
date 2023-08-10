@@ -395,6 +395,21 @@ pub mod interpreter {
         }
         return Err("Could not visit IF statement, truthy might be a reason.".to_string());
     }
+
+    fn visit_while_stmt(&mut self, expr: &Expr, stmt: &Stmt) -> Result<Box<dyn Any>, String> {
+        let value = self.evaluate(expr)?;
+        let is_truthy = self.is_truthy(value)?;
+        if let Some(truth) = is_truthy.downcast_ref::<Token>() {
+            if truth.get_token_type() == TokenType::True {
+                self.execute(stmt.clone())?;
+                return self.visit_while_stmt(expr, stmt);
+            }
+            else if truth.get_token_type() == TokenType::False {
+                return Ok(Box::new(Token::new(TokenType::Nil, "".to_string(), 0, 0, 0)));
+            }
+        }
+        return Err("Could not visit WHILE statement, truthy might be a reason.".to_string());
+    }
     
  }
 

@@ -15,6 +15,7 @@ pub mod stmt {
         VarStmt(Token, Expr),
         BlockStmt(Vec<Stmt>),
         IfStmt(Expr, Box<Stmt>, Option<Box<Stmt>>),
+        WhileStmt(Expr, Box<Stmt>),
     }
     
     impl fmt::Display for Stmt {
@@ -38,7 +39,8 @@ pub mod stmt {
                     }
                     if_stmt_str.push_str(")");
                     write!(f, "{}", if_stmt_str)
-                }
+                },
+                Stmt::WhileStmt(expr, stmt) => write!(f, "(while {} {})", expr, stmt),
             }
         }
     }
@@ -53,6 +55,7 @@ pub mod stmt {
         fn visit_var_stmt(&mut self, token: &Token, expr: &Expr) -> T;
         fn visit_block_stmt(&mut self, stmts: &Vec<Stmt>) -> T;
         fn visit_if_stmt(&mut self, expr: &Expr, stmt: &Stmt, else_stmt: &Option<Box<Stmt>>) -> T;
+        fn visit_while_stmt(&mut self, expr: &Expr, stmt: &Stmt) -> T;
     }
 
     impl StmtVisitable for Stmt {
@@ -63,6 +66,7 @@ pub mod stmt {
                 Stmt::VarStmt(token, expr) => visitor.visit_var_stmt(token, expr),
                 Stmt::BlockStmt(stmts) => visitor.visit_block_stmt(stmts),
                 Stmt::IfStmt(expr, stmt, else_stmt) => visitor.visit_if_stmt(expr, stmt, else_stmt),
+                Stmt::WhileStmt(expr, stmt) => visitor.visit_while_stmt(expr, stmt),
             }
         }
     }
@@ -75,6 +79,7 @@ pub mod stmt {
                 Stmt::VarStmt(token, expr) => visitor.visit_var_stmt(token, expr),
                 Stmt::BlockStmt(stmts) => visitor.visit_block_stmt(stmts),
                 Stmt::IfStmt(expr, stmt, else_stmt) => visitor.visit_if_stmt(expr, stmt, else_stmt),
+                Stmt::WhileStmt(expr, stmt) => visitor.visit_while_stmt(expr, stmt),
             }
         }
     }
@@ -221,6 +226,15 @@ pub mod stmt {
                 self.add_edge(if_node_id, else_node_id);
             }
             if_node_id
+        }
+
+        fn visit_while_stmt(&mut self, expr: &Expr, stmt: &Stmt) -> u64 {
+            let expr_node_id = expr.accept(self);
+            let stmt_node_id = stmt.accept(self);
+            let while_node_id = self.add_node(String::from("while"));
+            self.add_edge(while_node_id, expr_node_id);
+            self.add_edge(while_node_id, stmt_node_id);
+            while_node_id
         }
     }
 
