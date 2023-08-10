@@ -358,6 +358,23 @@ pub mod interpreter {
         self.environment.as_ref().borrow_mut().push_env();
         self.execute_block(stmts)
     }
+
+    fn visit_if_stmt(&mut self, expr: &Expr, stmt: &Stmt, else_stmt: &Option<Box<Stmt>>) -> Result<Box<dyn Any>, String> {
+        let value = self.evaluate(expr)?;
+        let is_truthy = self.is_truthy(value)?;
+        if let Some(truth) = is_truthy.downcast_ref::<Token>() {
+            if truth.get_token_type() == TokenType::True {
+                return self.execute(stmt.clone());
+            }
+            else if truth.get_token_type() == TokenType::False {
+                if let Some(else_stmt) = else_stmt {
+                    return self.execute(*else_stmt.clone());
+                }
+                return Ok(Box::new(Token::new(TokenType::Nil, "".to_string(), 0, 0, 0)));
+            }
+        }
+        return Err("Could not downcast is_truthy to Token".to_string());
+    }
     
  }
 

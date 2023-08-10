@@ -192,6 +192,7 @@ pub mod parser {
         pub fn statement(&mut self) -> Result<Stmt, String> {
             match self.peek().get_token_type() {
                 TokenType::Print => self.print_statement(),
+                TokenType::If => self.if_statement(),
                 TokenType::LeftBrace => Ok(Stmt::BlockStmt(self.block_statement()?)),
                 _ => self.expression_statement(),
             }
@@ -212,6 +213,28 @@ pub mod parser {
             let value = self.expression()?;
             self.consume(TokenType::Semicolon, "Expect ';' after value.".to_string());
             Ok(Stmt::PrintStmt(value))
+        }
+
+        fn if_statement(&mut self) -> Result<Stmt, String> {
+            self.consume(TokenType::If, "Expect 'if' after 'if'.".to_string());
+            self.consume(TokenType::LeftParen, "Expect '(' after 'if'.".to_string());
+            let expr = self.expression()?;
+            self.consume(TokenType::RightParen, "Expect ')' after if condition.".to_string());
+            let then_branch = match self.statement() {
+                Ok(then_branch_val) => then_branch_val,
+                Err(e) => return Err(e),
+            };
+
+            let else_branch = if self.match_token(vec![TokenType::Else]) {
+                match self.statement() {
+                    Ok(else_branch_val) => Some(Box::new(else_branch_val)),
+                    Err(e) => return Err(e),
+                }
+            } else {
+                None
+            };
+            
+            return Ok(Stmt::IfStmt(expr, Box::new(then_branch), else_branch));
         }
 
         pub fn expression_statement(&mut self) -> Result<Stmt, String> {

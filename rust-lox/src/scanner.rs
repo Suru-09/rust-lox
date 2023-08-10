@@ -351,7 +351,7 @@ pub mod scan {
                 Some(text) => text.to_string(),
                 None => panic!("[add_token] Could not get text from source!"),
             };
-            self.tokens.push(Token { t_type: t_type, lexeme: text, line: self.line, column: 0, length: 0 });
+            self.tokens.push(Token{ t_type: t_type, lexeme: text, line: self.line, column: 0, length: 0 });
         }
     }
 

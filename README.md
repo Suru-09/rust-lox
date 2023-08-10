@@ -25,7 +25,7 @@ The AST visualizer in my case is a visitor that constructs a dot file, from whic
 For example, the following code:
 
 ```java
-    {
+{
     var lox = 1 + 2 - 3 + 4 - 5 / 7 * 9 - 12.3 * (2.34 + 11);
     print lox;
 
@@ -42,8 +42,6 @@ For example, the following code:
 
 Generates the following two pngs:
 
-- The first one is the variable declaration and assignment:
+- This a block statement which containes everything else in this example,
+  for more complex use cases we could have multiple images generated.
 ![AST](/images/lox_variable.png)
-
-- The second one is the print statement:    
-![AST](/images/print_stmt.png)

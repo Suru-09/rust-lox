@@ -4,10 +4,13 @@
 
     lox = "string";
 
+    if(false)
     {
         var lox = " Hehehe another string in this block";
         print lox;
     }
+    else 
+        print "Ciocanul lui Thor";
 
     print lox;
 }

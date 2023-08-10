@@ -1,5 +1,4 @@
 pub mod environment {
-    use std::borrow::BorrowMut;
     use std::collections::HashMap;
     use std::any::Any;
     use std::rc::Rc;

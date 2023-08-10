@@ -14,6 +14,7 @@ pub mod stmt {
         PrintStmt(Expr),
         VarStmt(Token, Expr),
         BlockStmt(Vec<Stmt>),
+        IfStmt(Expr, Box<Stmt>, Option<Box<Stmt>>),
     }
     
     impl fmt::Display for Stmt {
@@ -28,6 +29,15 @@ pub mod stmt {
                         stmts_str.push_str(format!("{}", stmt).as_str());
                     }
                     write!(f, "{}", stmts_str)
+                },
+                Stmt::IfStmt(expr, stmt, else_stmt) => {
+                    let mut if_stmt_str = String::new();
+                    if_stmt_str.push_str(format!("(if {} {} ", expr, stmt).as_str());
+                    if let Some(else_stmt) = else_stmt {
+                        if_stmt_str.push_str(format!("{} ", else_stmt).as_str());
+                    }
+                    if_stmt_str.push_str(")");
+                    write!(f, "{}", if_stmt_str)
                 }
             }
         }
@@ -42,6 +52,7 @@ pub mod stmt {
         fn visit_print_stmt(&mut self, expr: &Expr) -> T;
         fn visit_var_stmt(&mut self, token: &Token, expr: &Expr) -> T;
         fn visit_block_stmt(&mut self, stmts: &Vec<Stmt>) -> T;
+        fn visit_if_stmt(&mut self, expr: &Expr, stmt: &Stmt, else_stmt: &Option<Box<Stmt>>) -> T;
     }
 
     impl StmtVisitable for Stmt {
@@ -51,6 +62,7 @@ pub mod stmt {
                 Stmt::PrintStmt(expr) => visitor.visit_print_stmt(expr),
                 Stmt::VarStmt(token, expr) => visitor.visit_var_stmt(token, expr),
                 Stmt::BlockStmt(stmts) => visitor.visit_block_stmt(stmts),
+                Stmt::IfStmt(expr, stmt, else_stmt) => visitor.visit_if_stmt(expr, stmt, else_stmt),
             }
         }
     }
@@ -62,6 +74,7 @@ pub mod stmt {
                 Stmt::PrintStmt(expr) => visitor.visit_print_stmt(expr),
                 Stmt::VarStmt(token, expr) => visitor.visit_var_stmt(token, expr),
                 Stmt::BlockStmt(stmts) => visitor.visit_block_stmt(stmts),
+                Stmt::IfStmt(expr, stmt, else_stmt) => visitor.visit_if_stmt(expr, stmt, else_stmt),
             }
         }
     }
@@ -196,6 +209,19 @@ pub mod stmt {
             }
             stmts_node_id
         }
+
+        fn visit_if_stmt(&mut self, expr: &Expr, stmt: &Stmt, else_stmt: &Option<Box<Stmt>>) -> u64 {
+            let expr_node_id = expr.accept(self);
+            let stmt_node_id = stmt.accept(self);
+            let if_node_id = self.add_node(String::from("if"));
+            self.add_edge(if_node_id, expr_node_id);
+            self.add_edge(if_node_id, stmt_node_id);
+            if let Some(else_stmt) = else_stmt {
+                let else_node_id = else_stmt.accept(self);
+                self.add_edge(if_node_id, else_node_id);
+            }
+            if_node_id
+        }
     }
 
     impl Visitor<u64> for StmtGraphvizPrinter {
@@ -236,6 +262,7 @@ pub mod stmt {
             self.add_edge(token_node_id, expr_node_id);
             token_node_id
         }
+
     }
 
 }
