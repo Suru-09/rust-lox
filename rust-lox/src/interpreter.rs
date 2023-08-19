@@ -7,7 +7,7 @@ pub mod interpreter {
     use std::any::Any;
     use std::rc::Rc;
     use std::cell::RefCell;
-
+    //use crate::rlox_callable::rlox_callable::RLoxCallable;
     /**
      * ! Notes to my self:
      * ! No. 1:
@@ -247,6 +247,10 @@ pub mod interpreter {
         self.environment.as_ref().borrow_mut().pop();
         Ok(Box::new(Token::new(TokenType::Nil, "".to_string(), 0, 0, 0)))
     }
+
+    fn retrieve_callable(&mut self, _callee: Box<dyn Any>) -> Result<Box<dyn Any>, String> {
+        Err("The identifier provided seems to not be a valid callable.".to_string())
+    }
  }
 
  impl Visitor<Result<Box<dyn Any>,  String>> for Interpreter {
@@ -338,6 +342,17 @@ pub mod interpreter {
             }
         }
         return Err("Could not visit Logical Expression, truthy might be a reason.".to_string());
+    }
+
+    fn visit_call_expr(&mut self, callee: &Expr, _: &Token, arguments: &Vec<Expr>) -> Result<Box<dyn Any>,  String> {
+        let calle_local = self.evaluate(callee)?;
+
+        let mut args = Vec::new();
+        for arg in arguments {
+            args.push(self.evaluate(arg)?);
+        }
+
+        self.retrieve_callable(calle_local)
     }
  }
 

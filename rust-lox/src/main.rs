@@ -5,6 +5,7 @@ pub mod parser;
 pub mod interpreter;
 pub mod stmt;
 pub mod environment;
+pub mod rlox_callable;
 
 use log::{info, error};
 

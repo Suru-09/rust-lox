@@ -124,7 +124,37 @@ pub mod parser {
                 };
                 return Ok(Expr::Unary(operator, Box::new(right)));
             }
-            self.primary()
+            self.call()
+        }
+
+        fn call(&mut self) -> Result<Expr, String> {
+            let mut expr = self.primary()?;
+
+            loop {
+                if self.match_token(vec![TokenType::LeftParen]) {
+                    expr = self.finish_call(expr)?;
+                } else {
+                    break;
+                }
+            }
+            Ok(expr)
+        }
+
+        fn finish_call(&mut self, expr: Expr) -> Result<Expr, String> {
+            let mut arguments: Vec<Expr> = Vec::new();
+            if !self.check(TokenType::RightParen) {
+                loop {
+                    if arguments.len() >= 255 {
+                        error(self.peek().get_line(), 0, "Can't have more than 255 arguments.".to_string());
+                    }
+                    arguments.push(self.expression()?);
+                    if !self.match_token(vec![TokenType::Comma]) {
+                        break;
+                    }
+                }
+            }
+            let paren = self.consume(TokenType::RightParen, "Expect ')' after arguments.".to_string());
+            Ok(Expr::Call(Box::new(expr), paren, arguments))
         }
 
         fn match_any_number_or_string(&mut self) -> bool {
@@ -185,12 +215,13 @@ pub mod parser {
             Err("Expect Expression?".to_string())
         }
 
-        fn consume(&mut self, token_type: TokenType, message: String) {
+        fn consume(&mut self, token_type: TokenType, message: String) -> Token {
             if self.check(token_type) {
                 self.advance();
-                return;
+                return self.previous();
             }
-            error(self.current as u32, 0, message); 
+            error(self.current as u32, 0, message);
+            self.peek()
         }
 
         pub fn parse(&mut self) -> Result<Vec<Stmt>, String> {

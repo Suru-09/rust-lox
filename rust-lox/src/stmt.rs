@@ -286,6 +286,17 @@ pub mod stmt {
             operator_node_index
         }
 
+        fn visit_call_expr(&mut self, callee: &Expr, paren: &Token, arguments: &Vec<Expr>) -> u64 {
+            let callee_node_index = callee.accept(self);
+            let paren_node_index = self.add_node(paren.token_type_value());
+            self.add_edge(paren_node_index, callee_node_index);
+            for argument in arguments {
+                let argument_node_index = argument.accept(self);
+                self.add_edge(paren_node_index, argument_node_index);
+            }
+            paren_node_index
+        }
+
     }
 
 }

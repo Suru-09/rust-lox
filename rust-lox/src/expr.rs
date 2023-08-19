@@ -10,6 +10,7 @@ pub mod expr {
     #[derive(Clone)]
     pub enum Expr {
         Binary(Box<Expr>, Token, Box<Expr>),
+        Call(Box<Expr>/*callee*/, Token/*parent*/, Vec<Expr>/*arguments*/),
         Logical(Box<Expr>, Token, Box<Expr>),
         Grouping(Box<Expr>),
         Literal(Token),
@@ -28,6 +29,7 @@ pub mod expr {
                 Expr::Variable(_) => "Variable".to_string(),
                 Expr::Assign(_, _) => "Assign".to_string(),
                 Expr::Logical(_, _, _) => "Logical".to_string(),
+                Expr::Call(_, _, _) => "Call".to_string(),
             }
         }
     }
@@ -42,6 +44,13 @@ pub mod expr {
                 Expr::Variable(token) => write!(f, "{}", token.token_type_value()),
                 Expr::Assign(token, expr) => write!(f, "{} = {}", token.token_type_value(), expr),
                 Expr::Logical(left, operator, right) => write!(f, "({} {} {})", left, operator.token_type_value(), right),
+                Expr::Call(calle, _, args) => {
+                    let mut args_str = String::new();
+                    for arg in args {
+                        args_str.push_str(&format!("{}, ", arg));
+                    }
+                    write!(f, "{}({})", calle, args_str)
+                },
             }
         }
     }
@@ -56,6 +65,7 @@ pub mod expr {
                 Expr::Variable(token) => visitor.visit_variable_expr(token),
                 Expr::Assign(token, expr) => visitor.visit_assign_expr(token, expr),
                 Expr::Logical(left, operator, right) => visitor.visit_logical_expr(left, operator, right),
+                Expr::Call(callee, paren, arguments) => visitor.visit_call_expr(callee, paren, arguments),
             }
         }
     }
@@ -68,6 +78,7 @@ pub mod expr {
         fn visit_variable_expr(&mut self, token: &Token) -> T;
         fn visit_assign_expr(&mut self, token: &Token, expr: &Expr) -> T;
         fn visit_logical_expr(&mut self, left: &Expr, operator: &Token, right: &Expr) -> T;
+        fn visit_call_expr(&mut self, callee: &Expr, paren: &Token, arguments: &Vec<Expr>) -> T;
     }
 
     impl Expr {
@@ -80,6 +91,7 @@ pub mod expr {
                 Expr::Variable(token) => visitor.visit_variable_expr(token),
                 Expr::Assign(token, expr) => visitor.visit_assign_expr(token, expr),
                 Expr::Logical(left, operator, right) => visitor.visit_logical_expr(left, operator, right),
+                Expr::Call(callee, paren, arguments) => visitor.visit_call_expr(callee, paren, arguments),
             }
         }
     }
@@ -117,6 +129,14 @@ pub mod expr {
             let left = left.accept(self);
             let right = right.accept(self);
             format!("({} {} {})", operator.token_type_value(), left, right)
+        }
+
+        fn visit_call_expr(&mut self, callee: &Expr, _: &Token, arguments: &Vec<Expr>) -> String {
+            let mut args_str = String::new();
+            for arg in arguments {
+                args_str.push_str(&format!("{}, ", arg.accept(self)));
+            }
+            format!("{}({})", callee.accept(self), args_str)
         }
     }
 }
