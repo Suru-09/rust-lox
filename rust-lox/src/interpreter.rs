@@ -7,7 +7,7 @@ pub mod interpreter {
     use std::any::Any;
     use std::rc::Rc;
     use std::cell::RefCell;
-    //use crate::rlox_callable::rlox_callable::RLoxCallable;
+    use crate::rlox_callable::rlox_callable::Clock;
     /**
      * ! Notes to my self:
      * ! No. 1:
@@ -16,6 +16,9 @@ pub mod interpreter {
      * * check the type of the literal.
      * ! No. 2:
      * * Could there be improvements in error handling? Everything seems too verbose.
+     * ! No. 3:
+     * TODO: At the moment it is not possible to keep track of the outermost environment,
+     * TODO: therefore it is not possible to use the environment to define variables in the global scope.
      */
 
  pub struct Interpreter {
@@ -24,8 +27,11 @@ pub mod interpreter {
 
  impl Interpreter {
     pub fn new() -> Interpreter {
+        let env = Rc::new(RefCell::new(EnvironmentStack::new()));
+        env.borrow_mut().define("clock".to_string(), Box::new(Clock{}));
+
         Interpreter {
-            environment: Rc::new(RefCell::new(EnvironmentStack::new())),
+            environment: env,
         }
     }
 
@@ -251,6 +257,10 @@ pub mod interpreter {
     fn retrieve_callable(&mut self, _callee: Box<dyn Any>) -> Result<Box<dyn Any>, String> {
         Err("The identifier provided seems to not be a valid callable.".to_string())
     }
+
+    fn retrieve_fn_arity(&mut self, _callee: Box<dyn Any>) -> Result<usize, String> {
+        Err("Function has not been implemented yet.".to_string())
+    }
  }
 
  impl Visitor<Result<Box<dyn Any>,  String>> for Interpreter {
@@ -346,6 +356,8 @@ pub mod interpreter {
 
     fn visit_call_expr(&mut self, callee: &Expr, _: &Token, arguments: &Vec<Expr>) -> Result<Box<dyn Any>,  String> {
         let calle_local = self.evaluate(callee)?;
+
+        // ! TODO: I will delay the arity check until I implement the functions.
 
         let mut args = Vec::new();
         for arg in arguments {
