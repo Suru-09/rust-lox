@@ -58,6 +58,12 @@ pub mod rlox_callable {
                 Stmt::Function(_, params, body) => {
                     // use GLOBAL_ENVIRONMENT from interpreter
                     for (_, param) in params.iter().enumerate() {
+                        /*
+                         * Note for future me: - Initially I am removing the first element,
+                         * but once removed the second element becomes the first element and so
+                         * on. Therefore, the correct way in order not to violate the bounds of the 
+                         * vector is to remove the first element every time.
+                         */
                         env.borrow_mut().define(param.get_token_type().to_string(), args.remove(0));
                     }
 
