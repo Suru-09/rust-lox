@@ -5,7 +5,7 @@ pub mod rlox_callable {
 
     pub trait RLoxCallable {
         fn arity(&self) -> usize;
-        fn call(&self, interpreter: &mut Interpreter, args: Vec<Box<dyn Any>>) -> Result<Box<dyn Any>, String>;
+        fn call(&self, interpreter: &mut Interpreter, args: &mut Vec<Box<dyn Any>>) -> Result<Box<dyn Any>, String>;
     }
 
     pub struct Clock {}
@@ -15,7 +15,7 @@ pub mod rlox_callable {
             0
         }
 
-        fn call(&self, _interpreter: &mut Interpreter, _args: Vec<Box<dyn Any>>) -> Result<Box<dyn Any>, String>{
+        fn call(&self, _interpreter: &mut Interpreter, _args: &mut Vec<Box<dyn Any>>) -> Result<Box<dyn Any>, String>{
             Ok(Box::new(std::time::SystemTime::now()
                 .duration_since(std::time::UNIX_EPOCH)
                 .unwrap_or_else(|_| panic!("Could not get time since epoch"))
@@ -23,6 +23,7 @@ pub mod rlox_callable {
         }
     }
 
+    #[derive(Clone)]
     pub struct RLoxFunction {
         pub declaration: Stmt,
     }
@@ -51,20 +52,23 @@ pub mod rlox_callable {
         }
             
 
-        fn call(&self, interpreter: &mut Interpreter, args: Vec<Box<dyn Any>>) -> Result<Box<dyn Any>, String> {
+        fn call(&self, interpreter: &mut Interpreter, args: &mut Vec<Box<dyn Any>>) -> Result<Box<dyn Any>, String> {
             let env = interpreter.get_global_environment().clone();
             match &self.declaration {
                 Stmt::Function(_, params, body) => {
                     // use GLOBAL_ENVIRONMENT from interpreter
-                    for (i, param) in params.iter().enumerate() {
-                        env.borrow_mut().define(param.get_token_type().to_string(), args[i]);
+                    for (_, param) in params.iter().enumerate() {
+                        env.borrow_mut().define(param.get_token_type().to_string(), args.remove(0));
                     }
 
-                    match env.borrow_mut().peek() {
-                        Some(last_env) => {
-                            interpreter.execute_block(&body, last_env)
-                        },
-                        None => panic!("No environment found")
+                    let env_clone = env.clone();
+                    let last_env = env_clone.borrow_mut().peek();
+
+                    match last_env {
+                        Some(last_env_val) => {
+                            interpreter.execute_block(body, last_env_val)
+                        }
+                        None => panic!("Could not get last environment")
                     }
                 },
                 _ => panic!("Cannot call non-function")

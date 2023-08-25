@@ -7,7 +7,8 @@ pub mod interpreter {
     use std::any::Any;
     use std::rc::Rc;
     use std::cell::RefCell;
-    use crate::rlox_callable::rlox_callable::{Clock, RLoxFunction};
+    use crate::rlox_callable::rlox_callable::{Clock, RLoxFunction, RLoxCallable};
+
     /**
      * ! Notes to my self:
      * ! No. 1:
@@ -33,6 +34,7 @@ static mut GLOBAL_ENVIRONMENT: Option<Rc<RefCell<EnvironmentStack>>> = None;
         let env = Rc::new(RefCell::new(EnvironmentStack::new()));
         // add the clock function to the global environment.
         // it will be available in all the scopes.
+        env.borrow_mut().push_env(Rc::new(RefCell::new(Environment::new())));
         env.borrow_mut().define("clock".to_string(), Box::new(Clock{}));
 
         unsafe {
@@ -270,24 +272,6 @@ static mut GLOBAL_ENVIRONMENT: Option<Rc<RefCell<EnvironmentStack>>> = None;
         Ok(Box::new(Token::new(TokenType::Nil, "".to_string(), 0, 0, 0)))
     }
 
-    fn retrieve_callable(&mut self, callee: &Box<dyn Any>) -> Result<Box<dyn Any + '_>, String> {
-        // implement for RLoxFunction and Clock
-        if let Some(func) = callee.downcast_ref::<RLoxFunction>() {
-            let func_clone = func.clone();
-            return Ok(Box::new(func_clone));
-        }
-
-        if let Some(clock) = callee.downcast_ref::<Clock>() {
-            let clock_clone = clock.clone();
-            return Ok(Box::new(clock_clone));
-        }
-
-        Err("Could not retrieve callable".to_string())
-    }
-
-    fn retrieve_fn_arity(&mut self, _callee: Box<dyn Any>) -> Result<usize, String> {
-        Err("Function has not been implemented yet.".to_string())
-    }
  }
 
  impl Visitor<Result<Box<dyn Any>,  String>> for Interpreter {
@@ -330,29 +314,26 @@ static mut GLOBAL_ENVIRONMENT: Option<Rc<RefCell<EnvironmentStack>>> = None;
     fn visit_variable_expr(&mut self, name: &Token) -> Result<Box<dyn Any>, String> {
         let mut binding = self.environment.as_ref().borrow_mut();
         let value = binding.get(name.get_token_type().to_string());
-        match value {
-            Some(value) => {
-                // try to downcast the value to a Token/Stmt/Expr and return it.
-                let val_downcast = value.downcast_ref::<Token>();
-                match val_downcast {
-                    Some(token) => return Ok(Box::new(token.clone())),
-                    None => {
-                        let val_downcast = value.downcast_ref::<Stmt>();
-                        match val_downcast {
-                            Some(stmt) => return Ok(Box::new(stmt.clone())),
-                            None => {
-                                let val_downcast = value.downcast_ref::<Expr>();
-                                match val_downcast {
-                                    Some(expr) => return Ok(Box::new(expr.clone())),
-                                    None => return Err("Could not downcast value".to_string())
-                                }
-                            }
-                        }
-                    }
-                }
-            },
-            None => Err(format!("Variable {} is not defined", name.get_token_type()))
+        
+        if let Some(value_some) = value {
+            if let Some(token) = value_some.downcast_ref::<Token>() {
+                return Ok(Box::new(token.clone()));
+            }
+
+            if let Some(expr) = value_some.downcast_ref::<Expr>() {
+                return Ok(Box::new(expr.clone()));
+            }
+
+            if let Some(stmt) = value_some.downcast_ref::<Stmt>() {
+                return Ok(Box::new(stmt.clone()));
+            }
+
+            if let Some(rlox_func) = value_some.downcast_ref::<RLoxFunction>() {
+                return Ok(Box::new(rlox_func.clone()));
+            }
         }
+
+        Err(format!("Variable '{}' is undefined.", name.get_token_type()))
     }
 
     fn visit_assign_expr(&mut self, name: &Token, value: &Expr) -> Result<Box<dyn Any>, String> {
@@ -391,8 +372,15 @@ static mut GLOBAL_ENVIRONMENT: Option<Rc<RefCell<EnvironmentStack>>> = None;
             args.push(self.evaluate(arg)?);
         }
 
-        let val = self.retrieve_callable(&calle_local);
-        val
+        if let Some(callee) = calle_local.downcast_ref::<RLoxFunction>() {
+            return callee.call(self, &mut args);
+        }
+
+        if let Some(callee) = calle_local.downcast_ref::<Clock>() {
+            return callee.call(self, &mut args);
+        }
+
+        Err("Function has not been implemented yet.".to_string())
     }
  }
 

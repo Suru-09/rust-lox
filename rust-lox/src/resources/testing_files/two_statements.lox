@@ -1,4 +1,4 @@
-{
+fun main() {
     var lox = 1 + 2 - 3 + 4 - 5 / 7 * 9 - 12.3 * (2.34 + 11);
     print lox;
 
@@ -26,3 +26,11 @@
 
     print lox + " se fini";
 }
+
+main();
+
+fun sayHi(first, last) {
+  print "Hi, " + first + " " + last + "!";
+}
+
+sayHi("Dear", "Reader");

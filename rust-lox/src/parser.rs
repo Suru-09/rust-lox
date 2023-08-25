@@ -246,14 +246,16 @@ pub mod parser {
                 TokenType::While => self.while_statement(),
                 TokenType::For => self.for_statement(),
                 TokenType::If => self.if_statement(),
-                TokenType::LeftBrace => Ok(Stmt::BlockStmt(self.block_statement()?)),
+                TokenType::LeftBrace => {
+                    self.advance();
+                    Ok(Stmt::BlockStmt(self.block_statement()?))
+                },
                 _ => self.expression_statement(),
             }
         }
 
         fn block_statement(&mut self) -> Result<Vec<Stmt>, String> {
             let mut statements: Vec<Stmt> = Vec::new();
-            self.advance();
             while !self.check(TokenType::RightBrace) && !self.is_at_end() {
                 statements.push(self.declaration()?);
             }
@@ -361,6 +363,7 @@ pub mod parser {
 
         fn function(&mut self, kind: String) -> Result<Stmt, String> {
             let name = self.cosnume_any_identifier(kind.clone());
+            self.consume(TokenType::LeftParen, format!("Expect '(' after {} name.", kind.clone()));
             let mut parameters: Vec<Token> = Vec::new();
             if !self.check(TokenType::RightParen) {
                 loop {
@@ -368,6 +371,7 @@ pub mod parser {
                         error(self.peek().get_line(), 0, "Can't have more than 255 parameters.".to_string());
                     }
                     parameters.push(self.cosnume_any_identifier("parameter".to_string()));
+
                     if !self.match_token(vec![TokenType::Comma]) {
                         break;
                     }
