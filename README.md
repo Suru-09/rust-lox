@@ -42,7 +42,7 @@ For example, the following code:
 }
 ```
 
-Generates the following two pngs:
+Generates the following png image:
 
 - This a block statement which containes everything else in this example,
   for more complex use cases we could have multiple images generated.

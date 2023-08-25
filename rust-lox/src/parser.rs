@@ -179,6 +179,14 @@ pub mod parser {
             is_identifier
         }
 
+        fn cosnume_any_identifier(&mut self, kind: String) -> Token {
+            if self.match_any_identifier() {
+                return self.previous();
+            }
+            error(self.peek().get_line(), self.peek().get_column(), format!("Expect {} name.", kind));
+            self.peek()
+        }
+
         fn primary(&mut self) -> Result<Expr, String> {
             debug!("{}", self.peek().get_token_type());
 
@@ -341,10 +349,34 @@ pub mod parser {
         }
 
         fn declaration(&mut self) -> Result<Stmt, String> {
+            if self.match_token(vec![TokenType::Fun]) {
+                return self.function("function".to_string());
+            }
+
             if self.match_token(vec![TokenType::Var]) {
                 return self.var_declaration();
             }
             self.statement()
+        }
+
+        fn function(&mut self, kind: String) -> Result<Stmt, String> {
+            let name = self.cosnume_any_identifier(kind.clone());
+            let mut parameters: Vec<Token> = Vec::new();
+            if !self.check(TokenType::RightParen) {
+                loop {
+                    if parameters.len() >= 255 {
+                        error(self.peek().get_line(), 0, "Can't have more than 255 parameters.".to_string());
+                    }
+                    parameters.push(self.cosnume_any_identifier("parameter".to_string()));
+                    if !self.match_token(vec![TokenType::Comma]) {
+                        break;
+                    }
+                }
+            }
+            self.consume(TokenType::RightParen, "Expect ')' after parameters.".to_string());
+            self.consume(TokenType::LeftBrace, format!("Expect '{{' before {} body.", kind.clone()));
+            let body = self.block_statement()?;
+            Ok(Stmt::Function(name, parameters, body))
         }
 
         fn var_declaration(&mut self) -> Result<Stmt, String> {

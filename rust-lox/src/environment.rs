@@ -54,8 +54,8 @@ pub mod environment {
             }
         }
 
-        pub fn push_env(&mut self) {
-            self.stack.push(Rc::new(RefCell::new(Environment::new())));
+        pub fn push_env(&mut self, env: Rc<RefCell<Environment>>) {
+            self.stack.push(env);
         }
 
         pub fn pop(&mut self) -> Option<Rc<RefCell<Environment>>> {

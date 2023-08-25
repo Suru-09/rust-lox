@@ -14,6 +14,7 @@ pub mod stmt {
         PrintStmt(Expr),
         VarStmt(Token, Expr),
         BlockStmt(Vec<Stmt>),
+        Function(Token, Vec<Token>, Vec<Stmt>),
         IfStmt(Expr, Box<Stmt>, Option<Box<Stmt>>),
         WhileStmt(Expr, Box<Stmt>),
     }
@@ -31,6 +32,19 @@ pub mod stmt {
                     }
                     write!(f, "{}", stmts_str)
                 },
+                Stmt::Function(name, params, body) => {
+                    let mut function_str = String::new();
+                    function_str.push_str(format!("(fun {} (", name.get_token_type()).as_str());
+                    for param in params {
+                        function_str.push_str(format!("{} ", param.get_token_type()).as_str());
+                    }
+                    function_str.push_str(") ");
+                    for stmt in body {
+                        function_str.push_str(format!("{}", stmt).as_str());
+                    }
+                    function_str.push_str(")");
+                    write!(f, "{}", function_str)
+                }
                 Stmt::IfStmt(expr, stmt, else_stmt) => {
                     let mut if_stmt_str = String::new();
                     if_stmt_str.push_str(format!("(if {} {} ", expr, stmt).as_str());
@@ -54,6 +68,7 @@ pub mod stmt {
         fn visit_print_stmt(&mut self, expr: &Expr) -> T;
         fn visit_var_stmt(&mut self, token: &Token, expr: &Expr) -> T;
         fn visit_block_stmt(&mut self, stmts: &Vec<Stmt>) -> T;
+        fn visit_function_stmt(&mut self, name: &Token, params: &Vec<Token>, body: &Vec<Stmt>) -> T;
         fn visit_if_stmt(&mut self, expr: &Expr, stmt: &Stmt, else_stmt: &Option<Box<Stmt>>) -> T;
         fn visit_while_stmt(&mut self, expr: &Expr, stmt: &Stmt) -> T;
     }
@@ -65,6 +80,7 @@ pub mod stmt {
                 Stmt::PrintStmt(expr) => visitor.visit_print_stmt(expr),
                 Stmt::VarStmt(token, expr) => visitor.visit_var_stmt(token, expr),
                 Stmt::BlockStmt(stmts) => visitor.visit_block_stmt(stmts),
+                Stmt::Function(name, params, body) => visitor.visit_function_stmt(name, params, body),
                 Stmt::IfStmt(expr, stmt, else_stmt) => visitor.visit_if_stmt(expr, stmt, else_stmt),
                 Stmt::WhileStmt(expr, stmt) => visitor.visit_while_stmt(expr, stmt),
             }
@@ -78,6 +94,7 @@ pub mod stmt {
                 Stmt::PrintStmt(expr) => visitor.visit_print_stmt(expr),
                 Stmt::VarStmt(token, expr) => visitor.visit_var_stmt(token, expr),
                 Stmt::BlockStmt(stmts) => visitor.visit_block_stmt(stmts),
+                Stmt::Function(name, params, body) => visitor.visit_function_stmt(name, params, body),
                 Stmt::IfStmt(expr, stmt, else_stmt) => visitor.visit_if_stmt(expr, stmt, else_stmt),
                 Stmt::WhileStmt(expr, stmt) => visitor.visit_while_stmt(expr, stmt),
             }
@@ -213,6 +230,21 @@ pub mod stmt {
                 self.add_edge(stmts_node_id, stmt_node_id);
             }
             stmts_node_id
+        }
+
+        fn visit_function_stmt(&mut self, name: &Token, params: &Vec<Token>, body: &Vec<Stmt>) -> u64 {
+            let function_node_id = self.add_node(String::from("function"));
+            let name_node_id = self.add_node(name.token_type_value());
+            self.add_edge(function_node_id, name_node_id);
+            for param in params {
+                let param_node_id = self.add_node(param.token_type_value());
+                self.add_edge(function_node_id, param_node_id);
+            }
+            for stmt in body {
+                let stmt_node_id = stmt.accept(self);
+                self.add_edge(function_node_id, stmt_node_id);
+            }
+            function_node_id
         }
 
         fn visit_if_stmt(&mut self, expr: &Expr, stmt: &Stmt, else_stmt: &Option<Box<Stmt>>) -> u64 {

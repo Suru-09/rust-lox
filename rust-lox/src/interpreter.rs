@@ -3,11 +3,11 @@ pub mod interpreter {
     use crate::expr::expr::{Expr, Visitor};
     use crate::stmt::stmt::{Stmt, StmtVisitor};
     use crate::scanner::scan::{Token, TokenType};
-    use crate::environment::environment::EnvironmentStack;
+    use crate::environment::environment::{EnvironmentStack, Environment};
     use std::any::Any;
     use std::rc::Rc;
     use std::cell::RefCell;
-    use crate::rlox_callable::rlox_callable::Clock;
+    use crate::rlox_callable::rlox_callable::{Clock, RLoxFunction};
     /**
      * ! Notes to my self:
      * ! No. 1:
@@ -21,6 +21,9 @@ pub mod interpreter {
      * TODO: therefore it is not possible to use the environment to define variables in the global scope.
      */
 
+
+static mut GLOBAL_ENVIRONMENT: Option<Rc<RefCell<EnvironmentStack>>> = None;
+
  pub struct Interpreter {
     pub environment: Rc<RefCell<EnvironmentStack>>,
  }
@@ -28,8 +31,14 @@ pub mod interpreter {
  impl Interpreter {
     pub fn new() -> Interpreter {
         let env = Rc::new(RefCell::new(EnvironmentStack::new()));
+        // add the clock function to the global environment.
+        // it will be available in all the scopes.
         env.borrow_mut().define("clock".to_string(), Box::new(Clock{}));
 
+        unsafe {
+            GLOBAL_ENVIRONMENT = Some(env.clone());
+        }
+        
         Interpreter {
             environment: env,
         }
@@ -37,6 +46,12 @@ pub mod interpreter {
 
     fn evaluate(&mut self, expr: &Expr) -> Result<Box<dyn Any>, String> {
         expr.accept(self)
+    }
+
+    pub fn get_global_environment(&mut self) -> Rc<RefCell<EnvironmentStack>> {
+        unsafe {
+            GLOBAL_ENVIRONMENT.as_ref().unwrap().clone()
+        }
     }
 
     fn is_truthy(&mut self, obj: Box<dyn Any>) -> Result<Box<dyn Any>, String> {
@@ -246,7 +261,8 @@ pub mod interpreter {
         Ok(vec)
     }
 
-    fn execute_block(&mut self, stmts: &Vec<Stmt>) -> Result<Box<dyn Any>, String> {
+    pub fn execute_block(&mut self, stmts: &Vec<Stmt>, env: Rc<RefCell<Environment>>) -> Result<Box<dyn Any>, String> {
+        self.environment.as_ref().borrow_mut().push_env(env);
         for stmt in stmts {
             self.execute(stmt.clone())?;
         }
@@ -254,8 +270,19 @@ pub mod interpreter {
         Ok(Box::new(Token::new(TokenType::Nil, "".to_string(), 0, 0, 0)))
     }
 
-    fn retrieve_callable(&mut self, _callee: Box<dyn Any>) -> Result<Box<dyn Any>, String> {
-        Err("The identifier provided seems to not be a valid callable.".to_string())
+    fn retrieve_callable(&mut self, callee: &Box<dyn Any>) -> Result<Box<dyn Any + '_>, String> {
+        // implement for RLoxFunction and Clock
+        if let Some(func) = callee.downcast_ref::<RLoxFunction>() {
+            let func_clone = func.clone();
+            return Ok(Box::new(func_clone));
+        }
+
+        if let Some(clock) = callee.downcast_ref::<Clock>() {
+            let clock_clone = clock.clone();
+            return Ok(Box::new(clock_clone));
+        }
+
+        Err("Could not retrieve callable".to_string())
     }
 
     fn retrieve_fn_arity(&mut self, _callee: Box<dyn Any>) -> Result<usize, String> {
@@ -364,7 +391,8 @@ pub mod interpreter {
             args.push(self.evaluate(arg)?);
         }
 
-        self.retrieve_callable(calle_local)
+        let val = self.retrieve_callable(&calle_local);
+        val
     }
  }
 
@@ -402,8 +430,14 @@ pub mod interpreter {
     }
 
     fn visit_block_stmt(&mut self, stmts: &Vec<Stmt>) -> Result<Box<dyn Any>, String> {
-        self.environment.as_ref().borrow_mut().push_env();
-        self.execute_block(stmts)
+        let env = Rc::new(RefCell::new(Environment::new()));
+        self.execute_block(stmts, env)
+    }
+
+    fn visit_function_stmt(&mut self, name: &Token, params: &Vec<Token>, body: &Vec<Stmt>) -> Result<Box<dyn Any>, String> {
+        let func: RLoxFunction = RLoxFunction::new(Stmt::Function(name.clone(), params.clone(), body.clone()));
+        self.environment.as_ref().borrow_mut().define(name.get_token_type().to_string(), Box::new(func));
+        Ok(Box::new(name.clone()))
     }
 
     fn visit_if_stmt(&mut self, expr: &Expr, stmt: &Stmt, else_stmt: &Option<Box<Stmt>>) -> Result<Box<dyn Any>, String> {
