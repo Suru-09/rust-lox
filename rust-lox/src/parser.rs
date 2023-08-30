@@ -243,6 +243,10 @@ pub mod parser {
         pub fn statement(&mut self) -> Result<Stmt, String> {
             match self.peek().get_token_type() {
                 TokenType::Print => self.print_statement(),
+                TokenType::Return => {
+                    self.advance();
+                    self.return_statement()
+                },
                 TokenType::While => self.while_statement(),
                 TokenType::For => self.for_statement(),
                 TokenType::If => self.if_statement(),
@@ -268,6 +272,16 @@ pub mod parser {
             let value = self.expression()?;
             self.consume(TokenType::Semicolon, "Expect ';' after value.".to_string());
             Ok(Stmt::PrintStmt(value))
+        }
+
+        pub fn return_statement(&mut self) -> Result<Stmt, String> {
+            let keyword = self.previous();
+            let mut value = Expr::Literal(Token::new(TokenType::Nil, String::from("nil"), 0, 0, 0));
+            if !self.check(TokenType::Semicolon) {
+                value = self.expression()?;
+            }
+            self.consume(TokenType::Semicolon, "Expect ';' after return value.".to_string());
+            Ok(Stmt::ReturnStmt(keyword, value))
         }
 
         fn while_statement(&mut self) -> Result<Stmt, String> {

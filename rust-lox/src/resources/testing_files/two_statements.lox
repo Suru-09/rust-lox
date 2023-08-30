@@ -25,9 +25,13 @@ fun main() {
     }
 
     print lox + " se fini";
+
+    return "Mario + calculator == " + "gucci++";
 }
 
-main();
+var stringMain = main();
+
+print stringMain;
 
 fun sayHi(first, last) {
   print "Hi, " + first + " " + last + "!";

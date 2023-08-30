@@ -266,7 +266,15 @@ static mut GLOBAL_ENVIRONMENT: Option<Rc<RefCell<EnvironmentStack>>> = None;
     pub fn execute_block(&mut self, stmts: &Vec<Stmt>, env: Rc<RefCell<Environment>>) -> Result<Box<dyn Any>, String> {
         self.environment.as_ref().borrow_mut().push_env(env);
         for stmt in stmts {
-            self.execute(stmt.clone())?;
+            match self.execute(stmt.clone())  {
+                Ok(_) => {},
+                Err(err_str) => {
+                    if err_str.starts_with("Return") {
+                        let value = err_str.split("[").collect::<Vec<&str>>()[1].split("]").collect::<Vec<&str>>()[0];
+                        return Ok(Box::new(Token::new(TokenType::String(value.to_string()), "".to_string(), 0, 0, 0)));
+                    }
+                }
+            };
         }
         self.environment.as_ref().borrow_mut().pop();
         Ok(Box::new(Token::new(TokenType::Nil, "".to_string(), 0, 0, 0)))
@@ -408,6 +416,21 @@ static mut GLOBAL_ENVIRONMENT: Option<Rc<RefCell<EnvironmentStack>>> = None;
         }
 
         Err("Could not print value.".to_string())
+    }
+
+    fn visit_return_stmt(&mut self, _keyword: &Token, expr: &Expr) -> Result<Box<dyn Any>, String> {
+        let value = self.evaluate(expr)?;
+        
+        if let Some(token) = value.downcast_ref::<Token>() {
+            return Err(format!("Return[{}]", token.get_token_type()));
+        }
+
+        if let Some(expr) = value.downcast_ref::<Expr>() {
+            return Err(format!("Return[{}]", expr));
+        }
+        
+
+        Err("Could not return value.".to_string())
     }
 
     fn visit_var_stmt(&mut self, name: &Token, initializer: &Expr) -> Result<Box<dyn Any>, String> {

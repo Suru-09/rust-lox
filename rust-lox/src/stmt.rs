@@ -12,6 +12,7 @@ pub mod stmt {
     pub enum Stmt {
         ExprStmt(Expr),
         PrintStmt(Expr),
+        ReturnStmt(Token, Expr),
         VarStmt(Token, Expr),
         BlockStmt(Vec<Stmt>),
         Function(Token, Vec<Token>, Vec<Stmt>),
@@ -23,6 +24,7 @@ pub mod stmt {
         fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
             match self {
                 Stmt::ExprStmt(expr) => write!(f, "{}", expr),
+                Stmt::ReturnStmt(_keyword, value) => write!(f, "(return {})", value),
                 Stmt::PrintStmt(expr) => write!(f, "(print {})", expr),
                 Stmt::VarStmt(token, expr) => write!(f, "(var {} {})", token.get_token_type(), expr),
                 Stmt::BlockStmt(stmts) => {
@@ -66,6 +68,7 @@ pub mod stmt {
     pub trait StmtVisitor<T> {
         fn visit_expr_stmt(&mut self, expr: &Expr) -> T;
         fn visit_print_stmt(&mut self, expr: &Expr) -> T;
+        fn visit_return_stmt(&mut self, keyword: &Token, expr: &Expr) -> T;
         fn visit_var_stmt(&mut self, token: &Token, expr: &Expr) -> T;
         fn visit_block_stmt(&mut self, stmts: &Vec<Stmt>) -> T;
         fn visit_function_stmt(&mut self, name: &Token, params: &Vec<Token>, body: &Vec<Stmt>) -> T;
@@ -78,6 +81,7 @@ pub mod stmt {
             match self {
                 Stmt::ExprStmt(expr) => visitor.visit_expr_stmt(expr),
                 Stmt::PrintStmt(expr) => visitor.visit_print_stmt(expr),
+                Stmt::ReturnStmt(keyword, expr) => visitor.visit_return_stmt(keyword, expr),
                 Stmt::VarStmt(token, expr) => visitor.visit_var_stmt(token, expr),
                 Stmt::BlockStmt(stmts) => visitor.visit_block_stmt(stmts),
                 Stmt::Function(name, params, body) => visitor.visit_function_stmt(name, params, body),
@@ -92,6 +96,7 @@ pub mod stmt {
             match self {
                 Stmt::ExprStmt(expr) => visitor.visit_expr_stmt(expr),
                 Stmt::PrintStmt(expr) => visitor.visit_print_stmt(expr),
+                Stmt::ReturnStmt(keyword, expr) => visitor.visit_return_stmt(keyword, expr),
                 Stmt::VarStmt(token, expr) => visitor.visit_var_stmt(token, expr),
                 Stmt::BlockStmt(stmts) => visitor.visit_block_stmt(stmts),
                 Stmt::Function(name, params, body) => visitor.visit_function_stmt(name, params, body),
@@ -214,6 +219,13 @@ pub mod stmt {
             let expr_node_id = expr.accept(self);
             self.add_edge(node_id, expr_node_id);
             node_id
+        }
+
+        fn visit_return_stmt(&mut self, keyword: &Token, expr: &Expr) -> u64 {
+            let expr_node_id = expr.accept(self);
+            let token_node_id = self.add_node(keyword.token_type_value());
+            self.add_edge(token_node_id, expr_node_id);
+            token_node_id
         }
 
         fn visit_var_stmt(&mut self, token: &Token, expr: &Expr) -> u64 {
