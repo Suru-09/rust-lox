@@ -71,5 +71,5 @@ var counter = makeCounter();
 counter(); // "1".
 counter(); // "2".
 
-print "Time: "
+print "Time: ";
 print clock() - time1;

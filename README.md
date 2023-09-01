@@ -17,7 +17,7 @@ This is a work in progress. I'm currently working on the interpreter, and I'll b
 - [ ] add tests for the interpreter.
 - [ ] add suppport for break and continue in loops.
 - [ ] add support for newlines and tabs in print statements(\n, \t).
-- [ ] add support for cleaning generated files before each run.
+- [x] add support for cleaning generated files before each run.
 - [x] add tests for the scanner.
 - [ ] add support for Date Time results from clock() function.
 

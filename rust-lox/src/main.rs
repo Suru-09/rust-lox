@@ -6,6 +6,7 @@ pub mod interpreter;
 pub mod stmt;
 pub mod environment;
 pub mod rlox_callable;
+pub mod utils;
 
 use log::{info, error};
 
@@ -93,6 +94,11 @@ fn run_prompt() {
 
 fn main() {
     env_logger::init();
+
+    // delete old generated files
+    if !utils::utils::clean_folder(utils::utils::GENERATED_FOLDER_PATH) {
+        error!("Could not clean generated folder");
+    }
 
     let args: Vec<String> = std::env::args().collect();
     match args.len() {
