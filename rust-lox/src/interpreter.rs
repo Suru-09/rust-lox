@@ -444,7 +444,16 @@ static mut GLOBAL_ENVIRONMENT: Option<Rc<RefCell<EnvironmentStack>>> = None;
             self.return_value = Some(Box::new(expr.clone()));
             return Err(format!("Return[{}]", expr));
         }
-        
+
+        if let Some(stmt) = value.downcast_ref::<Stmt>() {
+            self.return_value = Some(Box::new(stmt.clone()));
+            return Err(format!("Return[{}]", stmt));
+        }
+
+        if let Some(rlox_func) = value.downcast_ref::<RLoxFunction>() {
+            self.return_value = Some(Box::new(rlox_func.clone()));
+            return Err(format!("Return[{}]", "rlox_func"));
+        }
 
         Err("Could not return value.".to_string())
     }
