@@ -6,7 +6,7 @@ pub mod environment {
     use crate::expr::expr::Expr;
     use crate::stmt::stmt::Stmt;
     use crate::scanner::scan::Token;
-    use crate::rlox_callable::rlox_callable::RLoxFunction;
+    use crate::rlox_callable::rlox_callable::{RLoxFunction, Clock};
 
     pub struct Environment {
         values: HashMap<String, Box<dyn Any>>,
@@ -82,6 +82,10 @@ pub mod environment {
             
             if let Some(rlox_func) = value.downcast_ref::<RLoxFunction>() {
                 return Some(Box::new(rlox_func.clone()))
+            }
+
+            if let Some(clock_fun) = value.downcast_ref::<Clock>() {
+                return Some(Box::new(clock_fun.clone()))
             }
 
             None

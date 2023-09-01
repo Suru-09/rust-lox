@@ -34,6 +34,8 @@ fun main() {
     return "Mario + calculator == " + "gucci++";
 }
 
+var time1 = clock();
+
 var stringMain = main();
 
 print stringMain;
@@ -49,7 +51,7 @@ fun fib(n) {
     return n;
   }
   else {
-    return fib(n - 2) + fib(n - 1);
+    return fib(n - 1) + fib(n - 2);
   }
 }
 
@@ -68,3 +70,6 @@ fun makeCounter() {
 var counter = makeCounter();
 counter(); // "1".
 counter(); // "2".
+
+print "Time: "
+print clock() - time1;

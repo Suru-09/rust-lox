@@ -3,6 +3,7 @@ pub mod rlox_callable {
     use std::rc::Rc;
     use std::cell::RefCell;
     use crate::environment::environment::Environment;
+    use crate::scanner::scan::Token;
     use crate::{stmt::stmt::Stmt, interpreter::interpreter::Interpreter};
 
 
@@ -11,6 +12,7 @@ pub mod rlox_callable {
         fn call(&self, interpreter: &mut Interpreter, args: &mut Vec<Box<dyn Any>>) -> Result<Box<dyn Any>, String>;
     }
 
+    #[derive(Clone)]
     pub struct Clock {}
 
     impl RLoxCallable for Clock {
@@ -19,10 +21,11 @@ pub mod rlox_callable {
         }
 
         fn call(&self, _interpreter: &mut Interpreter, _args: &mut Vec<Box<dyn Any>>) -> Result<Box<dyn Any>, String>{
-            Ok(Box::new(std::time::SystemTime::now()
-                .duration_since(std::time::UNIX_EPOCH)
-                .unwrap_or_else(|_| panic!("Could not get time since epoch"))
-                .as_secs_f64()))
+            Ok(Box::new(Token::new(crate::scanner::scan::TokenType::Number(std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap_or_else(|_| panic!("Could not get time since epoch"))
+            .as_secs_f64()), "clock".to_string(), 0, 0, 0)
+            ))
         }
     }
 

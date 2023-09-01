@@ -266,6 +266,10 @@ static mut GLOBAL_ENVIRONMENT: Option<Rc<RefCell<EnvironmentStack>>> = None;
             return Ok(Box::new(rlox_func.clone()));
         }
 
+        if let Some(clock_fun) = ret_val.downcast_ref::<Clock>() {
+            return Ok(Box::new(clock_fun.clone()));
+        }
+
         Err("Could not extract return value".to_string())
     }
 
@@ -352,6 +356,10 @@ static mut GLOBAL_ENVIRONMENT: Option<Rc<RefCell<EnvironmentStack>>> = None;
 
             if let Some(rlox_func) = value_some.downcast_ref::<RLoxFunction>() {
                 return Ok(Box::new(rlox_func.clone()));
+            }
+
+            if let Some(clock_fun) = value_some.downcast_ref::<Clock>() {
+                return Ok(Box::new(clock_fun.clone()));
             }
         }
 
@@ -453,6 +461,11 @@ static mut GLOBAL_ENVIRONMENT: Option<Rc<RefCell<EnvironmentStack>>> = None;
         if let Some(rlox_func) = value.downcast_ref::<RLoxFunction>() {
             self.return_value = Some(Box::new(rlox_func.clone()));
             return Err(format!("Return[{}]", "rlox_func"));
+        }
+
+        if let Some(clock_fun) = value.downcast_ref::<Clock>() {
+            self.return_value = Some(Box::new(clock_fun.clone()));
+            return Err(format!("Return[{}]", "clock_fun"));
         }
 
         Err("Could not return value.".to_string())
