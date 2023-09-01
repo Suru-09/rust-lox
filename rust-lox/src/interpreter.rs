@@ -462,7 +462,7 @@ static mut GLOBAL_ENVIRONMENT: Option<Rc<RefCell<EnvironmentStack>>> = None;
     }
 
     fn visit_function_stmt(&mut self, name: &Token, params: &Vec<Token>, body: &Vec<Stmt>) -> Result<Box<dyn Any>, String> {
-        let func: RLoxFunction = RLoxFunction::new(Stmt::Function(name.clone(), params.clone(), body.clone()));
+        let func: RLoxFunction = RLoxFunction::new(Stmt::Function(name.clone(), params.clone(), body.clone()), self.environment.as_ref().borrow_mut().peek().unwrap());
         self.environment.as_ref().borrow_mut().define(name.get_token_type().to_string(), Box::new(func));
         Ok(Box::new(name.clone()))
     }

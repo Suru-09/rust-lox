@@ -1,5 +1,8 @@
 pub mod rlox_callable {
     use std::any::Any;
+    use std::rc::Rc;
+    use std::cell::RefCell;
+    use crate::environment::environment::Environment;
     use crate::{stmt::stmt::Stmt, interpreter::interpreter::Interpreter};
 
 
@@ -26,12 +29,14 @@ pub mod rlox_callable {
     #[derive(Clone)]
     pub struct RLoxFunction {
         pub declaration: Stmt,
+        pub closure: Rc<RefCell<Environment>>,
     }
 
     impl RLoxFunction {
-        pub fn new(declaration: Stmt) -> Self {
+        pub fn new(declaration: Stmt, closure: Rc<RefCell<Environment>>) -> Self {
             Self {
-                declaration
+                declaration,
+                closure,
             }
         }
 
@@ -53,10 +58,9 @@ pub mod rlox_callable {
             
 
         fn call(&self, interpreter: &mut Interpreter, args: &mut Vec<Box<dyn Any>>) -> Result<Box<dyn Any>, String> {
-            let env = interpreter.get_global_environment().clone();
+            let env = self.closure.clone();
             match &self.declaration {
                 Stmt::Function(_, params, body) => {
-                    // use GLOBAL_ENVIRONMENT from interpreter
                     for (_, param) in params.iter().enumerate() {
                         /*
                          * Note for future me: - Initially I am removing the first element,
@@ -67,29 +71,21 @@ pub mod rlox_callable {
                         env.borrow_mut().define(param.get_token_type().to_string(), args.remove(0));
                     }
 
-                    let env_clone = env.clone();
-                    let last_env = env_clone.borrow_mut().peek();
-
-                    match last_env {
-                        Some(last_env_val) => {
-                            match interpreter.execute_block(body, last_env_val) {
-                                Ok(return_val) => Ok(return_val),
-                                Err(err_str) => {
-                                    if err_str.starts_with("Return") && interpreter.return_value.is_some() {
-                                        let ret_val = interpreter.return_value.take().unwrap();
-                                        interpreter.return_value = None;
-                                        interpreter.environment.borrow_mut().pop();
-                                        return Interpreter::extract_return_value(ret_val);
-                                    } else {
-                                        return Err(err_str);
-                                    }
-                                }
+                    match interpreter.execute_block(body, env) {
+                        Ok(return_val) => Ok(return_val),
+                        Err(err_str) => {
+                            if err_str.starts_with("Return") && interpreter.return_value.is_some() {
+                                let ret_val = interpreter.return_value.take().unwrap();
+                                interpreter.return_value = None;
+                                return Interpreter::extract_return_value(ret_val);
+                            } else {
+                                return Err(err_str);
                             }
                         }
-                        None => panic!("Could not get last environment")
                     }
+                        
                 },
-                _ => panic!("Cannot call non-function")
+                _ => panic!("Cannot call non-function"),
             }
         }
     }

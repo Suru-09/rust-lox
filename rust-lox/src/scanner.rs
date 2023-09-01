@@ -196,11 +196,7 @@ pub mod scan {
                 c if c == ',' => self.add_token(TokenType::Comma),
                 c if c == '.' => self.add_token(TokenType::Dot),
                 c if c == '-' => {
-                    if self.peek().is_digit(10) {
-                        self.number();
-                    } else {
-                        self.add_token(TokenType::Minus)
-                    }
+                    self.add_token(TokenType::Minus)
                 },
                 c if c == '+' => self.add_token(TokenType::Plus),
                 c if c == ';' => self.add_token(TokenType::Semicolon),
