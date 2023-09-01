@@ -72,7 +72,19 @@ pub mod rlox_callable {
 
                     match last_env {
                         Some(last_env_val) => {
-                            interpreter.execute_block(body, last_env_val)
+                            match interpreter.execute_block(body, last_env_val) {
+                                Ok(return_val) => Ok(return_val),
+                                Err(err_str) => {
+                                    if err_str.starts_with("Return") && interpreter.return_value.is_some() {
+                                        let ret_val = interpreter.return_value.take().unwrap();
+                                        interpreter.return_value = None;
+                                        interpreter.environment.borrow_mut().pop();
+                                        return Interpreter::extract_return_value(ret_val);
+                                    } else {
+                                        return Err(err_str);
+                                    }
+                                }
+                            }
                         }
                         None => panic!("Could not get last environment")
                     }

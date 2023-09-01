@@ -26,6 +26,8 @@ fun main() {
 
     print lox + " se fini";
 
+    print 23;
+
     return "Mario + calculator == " + "gucci++";
 }
 
@@ -38,3 +40,14 @@ fun sayHi(first, last) {
 }
 
 sayHi("Dear", "Reader");
+
+fun fib(n) {
+  if (n <= 1) {
+    return 1;
+  }
+  var fib1 = fib(n - 1);
+  var fib2 = fib(n - 2);
+  return (fib1 + fib2);
+}
+
+print(fib(10));

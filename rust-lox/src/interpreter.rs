@@ -27,6 +27,7 @@ static mut GLOBAL_ENVIRONMENT: Option<Rc<RefCell<EnvironmentStack>>> = None;
 
  pub struct Interpreter {
     pub environment: Rc<RefCell<EnvironmentStack>>,
+    pub return_value: Option<Box<dyn Any>>,
  }
 
  impl Interpreter {
@@ -43,6 +44,7 @@ static mut GLOBAL_ENVIRONMENT: Option<Rc<RefCell<EnvironmentStack>>> = None;
         
         Interpreter {
             environment: env,
+            return_value: None,
         }
     }
 
@@ -251,6 +253,22 @@ static mut GLOBAL_ENVIRONMENT: Option<Rc<RefCell<EnvironmentStack>>> = None;
         Err("Could not compare(BangEqual) objects of different types".to_string())
     }
 
+    pub fn extract_return_value(ret_val: Box<dyn Any>) -> Result<Box<dyn Any>, String> {
+        if let Some(token) = ret_val.downcast_ref::<Token>() {
+            return Ok(Box::new(token.clone()));
+        }
+
+        if let Some(expr) = ret_val.downcast_ref::<Expr>() {
+            return Ok(Box::new(expr.clone()));
+        }
+
+        if let Some(rlox_func) = ret_val.downcast_ref::<RLoxFunction>() {
+            return Ok(Box::new(rlox_func.clone()));
+        }
+
+        Err("Could not extract return value".to_string())
+    }
+
     pub fn execute(&mut self, stmt: Stmt) -> Result<Box<dyn Any>, String> {
         stmt.accept(self)
     }
@@ -265,19 +283,15 @@ static mut GLOBAL_ENVIRONMENT: Option<Rc<RefCell<EnvironmentStack>>> = None;
 
     pub fn execute_block(&mut self, stmts: &Vec<Stmt>, env: Rc<RefCell<Environment>>) -> Result<Box<dyn Any>, String> {
         self.environment.as_ref().borrow_mut().push_env(env);
+        let mut block_return_value: Box<dyn Any> = Box::new(Token::new(TokenType::Nil, "".to_string(), 0, 0, 0));
         for stmt in stmts {
-            match self.execute(stmt.clone())  {
-                Ok(_) => {},
-                Err(err_str) => {
-                    if err_str.starts_with("Return") {
-                        let value = err_str.split("[").collect::<Vec<&str>>()[1].split("]").collect::<Vec<&str>>()[0];
-                        return Ok(Box::new(Token::new(TokenType::String(value.to_string()), "".to_string(), 0, 0, 0)));
-                    }
-                }
-            };
+            match stmt {
+                Stmt::ReturnStmt(_, _) => block_return_value = self.execute(stmt.clone())?,
+                _ => { self.execute(stmt.clone())?; },
+            }
         }
         self.environment.as_ref().borrow_mut().pop();
-        Ok(Box::new(Token::new(TokenType::Nil, "".to_string(), 0, 0, 0)))
+        Ok(block_return_value)
     }
 
  }
@@ -422,10 +436,12 @@ static mut GLOBAL_ENVIRONMENT: Option<Rc<RefCell<EnvironmentStack>>> = None;
         let value = self.evaluate(expr)?;
         
         if let Some(token) = value.downcast_ref::<Token>() {
+            self.return_value = Some(Box::new(token.clone()));
             return Err(format!("Return[{}]", token.get_token_type()));
         }
 
         if let Some(expr) = value.downcast_ref::<Expr>() {
+            self.return_value = Some(Box::new(expr.clone()));
             return Err(format!("Return[{}]", expr));
         }
         
