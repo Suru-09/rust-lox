@@ -7,6 +7,7 @@ pub mod stmt;
 pub mod environment;
 pub mod rlox_callable;
 pub mod utils;
+pub mod resolver;
 
 use log::{info, error};
 

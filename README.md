@@ -21,7 +21,6 @@ This is a work in progress. I'm currently working on the interpreter, and I'll b
 - [x] add tests for the scanner.
 - [ ] add support for Date Time results from clock() function.
 
-
 ## AST visualizer
 
 The AST visualizer in my case is a visitor that constructs a dot file, from which we generate a png/ multiple pngs representing the AST.
