@@ -147,6 +147,10 @@ pub mod scan {
         pub fn get_length(&self) -> u32 {
             self.length
         }
+
+        pub fn get_lexeme(&self) -> String {
+            self.lexeme.clone()
+        }
     }
 
     pub struct Scanner {
