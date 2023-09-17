@@ -1,17 +1,17 @@
-mod resolver {
+pub mod resolver {
 
     use crate::stmt::stmt::StmtVisitor;
     use crate::expr::expr::Visitor;
     use crate::interpreter::interpreter::Interpreter;
-    use std::collections::HashMap;
     use crate::expr::expr::Expr;
     use crate::stmt::stmt::Stmt;
     use crate::scanner::scan::Token;
+    use std::any::Any;
 
 
     pub struct Resolver<'a> {
-        interpreter: &'a mut Interpreter,
-        scopes: Vec<HashMap<String, bool>>,
+        pub interpreter: &'a mut Interpreter,
+        scopes: Vec<Vec<(String, bool)>>,
     }
 
 
@@ -24,7 +24,7 @@ mod resolver {
         }
 
         fn begin_scope(&mut self) {
-            self.scopes.push(HashMap::new());
+            self.scopes.push(Vec::new());
         }
 
         fn end_scope(&mut self) {
@@ -39,7 +39,7 @@ mod resolver {
             stmt.accept(self);
         }
 
-        fn resolve(&mut self, stmts: &Vec<Stmt>) {
+        pub fn resolve(&mut self, stmts: &Vec<Stmt>) {
             for stmt in stmts {
                 self.resolve_stmt(stmt);
             }
@@ -51,7 +51,7 @@ mod resolver {
             }
 
             if let Some(scope) = self.scopes.last_mut() {
-                scope.insert(name.get_token_type().to_string(), false);
+                scope.push((name.get_token_type().to_string(), false));
             }
         }
 
@@ -61,61 +61,95 @@ mod resolver {
             }
 
             if let Some(scope) = self.scopes.last_mut() {
-                scope.insert(name.get_token_type().to_string(), true);
+                scope.push((name.get_token_type().to_string(), true));
             }
         }
 
-        fn resolve_local(&mut self, expr: &Expr, name: &Token) {
+        fn contains_key(&self, name: &Token, scope: &Vec<(String, bool)>) -> bool {
+            for (key, _) in scope {
+                if key == &name.get_token_type().to_string() {
+                    return true;
+                }
+            }
+            false
+        }
+
+        fn get_scope_after_string(&self, name: &Token, scope: &Vec<(String, bool)>) -> Option<(String, bool)> {
+            for (i, (key, _)) in scope.iter().enumerate() {
+                if key == &name.get_token_type().to_string() {
+                    return Some(scope[i].clone());
+                }
+            }
+            None
+        }
+
+        fn resolve_local(&mut self, token: &Token, expr: Expr) {
             for (i, scope) in self.scopes.iter().enumerate().rev() {
-                if scope.contains_key(&name.get_token_type().to_string()) {
+                if self.contains_key(token, scope) {
                     self.interpreter.resolve(expr, scope.len() - 1 - i);
                     return;
                 }
             }
         }
+
+        fn resolve_function(&mut self, _name: &Token, params: &Vec<Token>, body: &Vec<Stmt>) {
+            self.begin_scope();
+            for param in params {
+                self.declare(param);
+                self.define(param);
+            }
+            self.resolve(body);
+            self.end_scope();
+        }
     }
 
     impl Visitor<()> for Resolver<'_> {
         fn visit_assign_expr(&mut self, token: &Token, expr: &Expr) -> () {
-            unimplemented!()
+            self.resolve_expr(expr);
+            self.resolve_local(token, expr.clone());
         }
 
-        fn visit_binary_expr(&mut self, left: &Expr, operator: &Token, right: &Expr) -> () {
-            unimplemented!()
+        fn visit_binary_expr(&mut self, left: &Expr, _operator: &Token, right: &Expr) -> () {
+            self.resolve_expr(left);
+            self.resolve_expr(right);
         }
 
-        fn visit_call_expr(&mut self, callee: &Expr, paren: &Token, arguments: &Vec<Expr>) -> () {
-            unimplemented!()
+        fn visit_call_expr(&mut self, callee: &Expr, _paren: &Token, arguments: &Vec<Expr>) -> () {
+            self.resolve_expr(callee);
+
+            for arg in arguments {
+                self.resolve_expr(arg);
+            }
         }
 
         fn visit_grouping_expr(&mut self, expression: &Expr) -> () {
-            unimplemented!()
+            self.resolve_expr(expression);
         }
 
-        fn visit_literal_expr(&mut self, value: &Token) -> () {
-            unimplemented!()
+        fn visit_literal_expr(&mut self, _: &Token) -> () {}
+
+        fn visit_unary_expr(&mut self, _operator: &Token, right: &Expr) -> () {
+            self.resolve_expr(right);
         }
 
-        fn visit_unary_expr(&mut self, operator: &Token, right: &Expr) -> () {
-            unimplemented!()
-        }
-
-        fn visit_logical_expr(&mut self, left: &Expr, operator: &Token, right: &Expr) -> () {
-            unimplemented!()
+        fn visit_logical_expr(&mut self, left: &Expr, _operator: &Token, right: &Expr) -> () {
+            self.resolve_expr(left);
+            self.resolve_expr(right);
         }
 
         fn visit_variable_expr(&mut self, token: &Token) -> () {
             if !self.scopes.is_empty() {
                 if let Some(scope) = self.scopes.last() {
-                    if let Some(defined) = scope.get(&token.get_token_type().to_string()) {
-                        if !defined {
-                            println!("Cannot read local variable in its own initializer.");
-                        }
+                    if let Some((_, is_defined)) = self.get_scope_after_string(token, scope) {
+                        // if !is_defined {
+                        //     panic!("Cannot read local variable in its own initializer.");
+                        // }
                     }
                 }
             }
 
-            self.resolve_local(token, token.get_token_type().to_string());
+            let expr = Expr::Variable(token.clone());
+            self.resolve_local(token, expr);
         }
     }
 
@@ -127,30 +161,39 @@ mod resolver {
         }
 
         fn visit_expr_stmt(&mut self, expr: &Expr) -> () {
-            unimplemented!()
+            self.resolve_expr(expr);
         }
 
         fn visit_function_stmt(&mut self, name: &Token, params: &Vec<Token>, body: &Vec<Stmt>) -> () {
-            unimplemented!()
+            self.declare(name);
+            self.define(name);
+            self.resolve_function(name, params, body);
         }
 
         fn visit_if_stmt(&mut self, expr: &Expr, stmt: &Stmt, else_stmt: &Option<Box<Stmt>>) -> () {
-            unimplemented!()
+            self.resolve_expr(expr);
+            self.resolve_stmt(stmt);
+            if let Some(else_stmt) = else_stmt {
+                self.resolve_stmt(else_stmt);
+            }
         }
 
-        fn visit_return_stmt(&mut self, keyword: &Token, expr: &Expr) -> () {
-            unimplemented!()
+        fn visit_return_stmt(&mut self, _keyword: &Token, expr: &Expr) -> () {
+            let ret_val: &Option<Box<dyn Any>> = &self.interpreter.return_value;
+            if !ret_val.is_none() {
+                self.resolve_expr(expr);
+            }
         }
 
         fn visit_print_stmt(&mut self, expr: &Expr) -> () {
-            unimplemented!()
+            self.resolve_expr(expr);
         }
 
         /**'
          * Resolve a variable declaration statement.
          * Split into two cases:
          *    1. Variable declaration. --> We put false in the hashmap.
-         *    2. Variable definition.  --> We put true in the hashmap.
+         *    2. Variable definition.  --> We put true in the hashmap.""
          */
         fn visit_var_stmt(&mut self, token: &Token, expr: &Expr) -> () {
             self.declare(token);
@@ -162,7 +205,8 @@ mod resolver {
         }
 
         fn visit_while_stmt(&mut self, expr: &Expr, stmt: &Stmt) -> () {
-            unimplemented!()
+            self.resolve_expr(expr);
+            self.resolve_stmt(stmt);
         }
     }
 

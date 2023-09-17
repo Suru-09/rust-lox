@@ -67,7 +67,7 @@ pub mod environment {
             self.stack.last().map(|env| env.clone())
         }
 
-        fn get_value(&self, value: &Box<dyn Any>) -> Option<Box<dyn Any>> {
+        pub fn get_value(value: &Box<dyn Any>) -> Option<Box<dyn Any>> {
             if let Some(token) = value.downcast_ref::<Token>() {
                 return Some(Box::new(token.clone()))
             }
@@ -94,10 +94,51 @@ pub mod environment {
         pub fn get(&mut self, name: String) -> Option<Box<dyn Any>> {
             for env in self.stack.iter().rev() {
                 if let Some(value) = env.as_ref().borrow_mut().get(name.clone()) {
-                    return self.get_value(value);
+                    return EnvironmentStack::get_value(value);
                 }
             }
             None
+        }
+
+        fn ancestor(&mut self, distance: usize) -> Option<Rc<RefCell<Environment>>> {
+            if distance >= self.stack.len() {
+                return None;
+            }
+            Some(self.stack[self.stack.len() - 1 - distance].clone())
+        }
+
+        pub fn get_at(&mut self, distance: usize, name: String) -> Option<Box<dyn Any>> {
+            if distance >= self.stack.len() {
+                return None;
+            }
+
+            if let Some(env) = self.ancestor(distance) {
+                if let Some(value) = env.as_ref().borrow_mut().get(name.clone()) {
+                    return EnvironmentStack::get_value(value);
+                }
+            }
+
+            None
+        }
+
+        pub fn assign_at(&mut self, distance: usize, name: String, value: Box<dyn Any>) -> Result<(), String> {
+            if distance >= self.stack.len() {
+                return Err(format!("Variable '{}' is undefined.", name));
+            }
+
+            if let Some(env) = self.ancestor(distance) {
+                let val_copied = match EnvironmentStack::get_value(&value) {
+                    Some(val) => {
+                        val
+                    },
+                    None => return Err(format!("Variable '{}' is undefined.", name)),
+                };
+
+                if let Ok(_) = env.as_ref().borrow_mut().assign(name.clone(), val_copied) {
+                    return Ok(());
+                }
+            }
+            Err(format!("Variable '{}' is undefined.", name))
         }
 
         pub fn define(&mut self, name: String, value: Box<dyn Any>) {
@@ -108,7 +149,7 @@ pub mod environment {
 
         pub fn assign(&mut self, name: String, value: Box<dyn Any>) -> Result<(), String> {
             for env in self.stack.iter().rev() {
-                let val_copied = match self.get_value(&value) {
+                let val_copied = match EnvironmentStack::get_value(&value) {
                     Some(val) => {
                         val
                     },

@@ -28,6 +28,7 @@ static mut GLOBAL_ENVIRONMENT: Option<Rc<RefCell<EnvironmentStack>>> = None;
  pub struct Interpreter {
     pub environment: Rc<RefCell<EnvironmentStack>>,
     pub return_value: Option<Box<dyn Any>>,
+    pub locals: Vec<(Expr, usize)>,
  }
 
  impl Interpreter {
@@ -45,6 +46,7 @@ static mut GLOBAL_ENVIRONMENT: Option<Rc<RefCell<EnvironmentStack>>> = None;
         Interpreter {
             environment: env,
             return_value: None,
+            locals: Vec::new(),
         }
     }
 
@@ -69,6 +71,41 @@ static mut GLOBAL_ENVIRONMENT: Option<Rc<RefCell<EnvironmentStack>>> = None;
                 }
             },
             Err(_) => Err("Could not downcast object to Token".to_string()),
+        }
+    }
+
+    pub fn resolve(&mut self, expr: Expr, depth: usize) {
+        self.locals.push((expr, depth));
+    }
+
+    fn get_depth(&mut self, token: &Token, expr: Expr) -> Result<usize, String> {
+        for (_, (e, depth)) in self.locals.iter().enumerate() {
+            if *e == expr {
+                return Ok(*depth);
+            }
+        }
+        Err("Could not find variable in the environment".to_string())
+    }
+
+    fn look_up_variable(&mut self, token: &Token, expr: Expr) -> Result<Box<dyn Any>, String> {
+        match self.get_depth(token, expr) {
+            Ok(depth) => {
+                 let value = self.get_at(depth, token.get_token_type().to_string())?;
+                 Ok(value)
+            },
+            Err(_) => Err(format!("Could not look up variable: {}", token.get_token_type().to_string()))
+        }
+        
+
+    }
+
+    fn get_at(&mut self, distance: usize, name: String) -> Result<Box<dyn Any>, String> {
+        let mut env = self.environment.as_ref().borrow_mut();
+        match env.get_at(distance, name.clone()) {
+            Some(value) => Ok(value),
+            None => {
+                Err(format!("Variable '{}' is undefined.", name))
+            }
         }
     }
 
@@ -338,37 +375,25 @@ static mut GLOBAL_ENVIRONMENT: Option<Rc<RefCell<EnvironmentStack>>> = None;
     }
 
     fn visit_variable_expr(&mut self, name: &Token) -> Result<Box<dyn Any>, String> {
-        let mut binding = self.environment.as_ref().borrow_mut();
-        let value = binding.get(name.get_token_type().to_string());
-        
-        if let Some(value_some) = value {
-            if let Some(token) = value_some.downcast_ref::<Token>() {
-                return Ok(Box::new(token.clone()));
-            }
-
-            if let Some(expr) = value_some.downcast_ref::<Expr>() {
-                return Ok(Box::new(expr.clone()));
-            }
-
-            if let Some(stmt) = value_some.downcast_ref::<Stmt>() {
-                return Ok(Box::new(stmt.clone()));
-            }
-
-            if let Some(rlox_func) = value_some.downcast_ref::<RLoxFunction>() {
-                return Ok(Box::new(rlox_func.clone()));
-            }
-
-            if let Some(clock_fun) = value_some.downcast_ref::<Clock>() {
-                return Ok(Box::new(clock_fun.clone()));
-            }
-        }
-
-        Err(format!("Variable '{}' is undefined.", name.get_token_type()))
+        return self.look_up_variable(name, Expr::Literal(Token::new(TokenType::Nil, "".to_string(), 0, 0, 0)));
     }
 
     fn visit_assign_expr(&mut self, name: &Token, value: &Expr) -> Result<Box<dyn Any>, String> {
-        let value = self.evaluate(value)?;
-        self.environment.as_ref().borrow_mut().assign(name.get_token_type().to_string(), value.into())?;
+        let value_evaluated = self.evaluate(value)?;
+        let distance = self.get_depth(name, value.clone());
+
+        match distance {
+            Ok(depth) => {
+                let mut env = self.environment.as_ref().borrow_mut();
+                env.assign_at(depth, name.get_token_type().to_string(), value_evaluated.into())?;
+            },
+            Err(_) => {
+                let mut env = self.environment.as_ref().borrow_mut();
+                env.assign(name.get_token_type().to_string(), value_evaluated.into())?;
+            }
+        }
+
+
         return self.visit_variable_expr(name);
     }
 

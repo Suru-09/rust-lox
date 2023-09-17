@@ -10,6 +10,7 @@ pub mod utils;
 pub mod resolver;
 
 use log::{info, error};
+use crate::resolver::resolver::Resolver;
 
 fn run(source: String) {
     let mut scanner = scanner::scan::Scanner::new(source);
@@ -35,7 +36,9 @@ fn run(source: String) {
             }
 
             let mut interpreter = interpreter::interpreter::Interpreter::new();
-            let interpreted_vec = interpreter.interpret(ast_val);
+            let mut resolver = Resolver::new(&mut interpreter);
+            resolver.resolve(&ast_val);
+            let interpreted_vec = resolver.interpreter.interpret(ast_val);
 
             match interpreted_vec {
                 Ok(interpreted_vec_val) => {

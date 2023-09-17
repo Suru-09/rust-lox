@@ -103,7 +103,7 @@ pub mod scan {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Clone, PartialEq, Debug)]
     pub struct Token {
         t_type: TokenType,
         lexeme: String,
