@@ -1,6 +1,5 @@
 pub mod utils {
 
-
 pub const GENERATED_FOLDER_PATH: &str = "/src/resources/generated/ast/";
 
 pub fn clean_folder(path: &str) -> bool {
@@ -10,9 +9,9 @@ pub fn clean_folder(path: &str) -> bool {
     };
 
     let path_string = format!("{}{}", current_dir.display(), path);
-    let path = std::path::Path::new(&path_string);
-    if path.exists() {
-        match std::fs::remove_dir_all(path) {
+    let path_final = std::path::Path::new(&path_string);
+    if path_final.exists() {
+        match std::fs::remove_dir_all(path_final) {
             Ok(_) => {},
             Err(_) => return false
         }

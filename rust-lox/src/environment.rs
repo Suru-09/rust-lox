@@ -104,7 +104,7 @@ pub mod environment {
             if distance >= self.stack.len() {
                 return None;
             }
-            Some(self.stack[self.stack.len() - 1 - distance].clone())
+            Some(self.stack[self.stack.len() - distance - 1].clone())
         }
 
         pub fn get_at(&mut self, distance: usize, name: String) -> Option<Box<dyn Any>> {

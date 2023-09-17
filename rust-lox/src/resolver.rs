@@ -17,9 +17,12 @@ pub mod resolver {
 
     impl<'a> Resolver<'a> {
         pub fn new(interpreter: &'a mut Interpreter) -> Self {
+            let mut scopes_local = Vec::new();
+            scopes_local.push(Vec::new());
+
             Self {
                 interpreter,
-                scopes: Vec::new(),
+                scopes: scopes_local,
             }
         }
 
@@ -60,8 +63,19 @@ pub mod resolver {
                 return;
             }
 
+            // find the old variable in the scope and set it to true.
             if let Some(scope) = self.scopes.last_mut() {
-                scope.push((name.get_token_type().to_string(), true));
+                // find index of old variable
+                let mut idx = -1;
+                for (i, (key, _)) in scope.iter().enumerate() {
+                    if key == &name.get_token_type().to_string() {
+                        idx = i as i64;
+                    }
+                }
+
+                if idx != -1 {
+                    scope[idx as usize].1 = true;
+                }
             }
         }
 
@@ -86,7 +100,7 @@ pub mod resolver {
         fn resolve_local(&mut self, token: &Token, expr: Expr) {
             for (i, scope) in self.scopes.iter().enumerate().rev() {
                 if self.contains_key(token, scope) {
-                    self.interpreter.resolve(expr, scope.len() - 1 - i);
+                    self.interpreter.resolve(Expr::Variable(token.clone()), i);       
                     return;
                 }
             }
@@ -138,15 +152,15 @@ pub mod resolver {
         }
 
         fn visit_variable_expr(&mut self, token: &Token) -> () {
-            if !self.scopes.is_empty() {
-                if let Some(scope) = self.scopes.last() {
-                    if let Some((_, is_defined)) = self.get_scope_after_string(token, scope) {
-                        // if !is_defined {
-                        //     panic!("Cannot read local variable in its own initializer.");
-                        // }
-                    }
-                }
-            }
+            // if !self.scopes.is_empty() {
+            //     if let Some(scope) = self.scopes.last() {
+            //         if let Some((_, is_defined)) = self.get_scope_after_string(token, scope) {
+            //             // if !is_defined {
+            //             //     panic!("Cannot read local variable in its own initializer.");
+            //             // }
+            //         }
+            //     }
+            // }
 
             let expr = Expr::Variable(token.clone());
             self.resolve_local(token, expr);
@@ -198,7 +212,9 @@ pub mod resolver {
         fn visit_var_stmt(&mut self, token: &Token, expr: &Expr) -> () {
             self.declare(token);
             match expr {
-                Expr::Call(_, _, _) => (),
+                Expr::Call(_, _, _) => {
+                    self.resolve_expr(expr);
+                },
                 _ => self.resolve_expr(expr),
             }
             self.define(token);

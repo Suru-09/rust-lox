@@ -84,16 +84,16 @@ static mut GLOBAL_ENVIRONMENT: Option<Rc<RefCell<EnvironmentStack>>> = None;
                 return Ok(*depth);
             }
         }
-        Err("Could not find variable in the environment".to_string())
+        Err(format!("Could not find variable '{}' in the environment", token.get_token_type().to_string()))
     }
 
     fn look_up_variable(&mut self, token: &Token, expr: Expr) -> Result<Box<dyn Any>, String> {
         match self.get_depth(token, expr) {
             Ok(depth) => {
-                 let value = self.get_at(depth, token.get_token_type().to_string())?;
-                 Ok(value)
+                let variable = self.get_at(depth, token.get_token_type().to_string())?;
+                Ok(variable)
             },
-            Err(_) => Err(format!("Could not look up variable: {}", token.get_token_type().to_string()))
+            Err(err) => Err(err)
         }
         
 
@@ -104,7 +104,10 @@ static mut GLOBAL_ENVIRONMENT: Option<Rc<RefCell<EnvironmentStack>>> = None;
         match env.get_at(distance, name.clone()) {
             Some(value) => Ok(value),
             None => {
-                Err(format!("Variable '{}' is undefined.", name))
+                match env.get(name.clone()) {
+                    Some(value) => Ok(value),
+                    None => Err(format!("Variable '{}' is undefined.", name))
+                }
             }
         }
     }
@@ -375,7 +378,8 @@ static mut GLOBAL_ENVIRONMENT: Option<Rc<RefCell<EnvironmentStack>>> = None;
     }
 
     fn visit_variable_expr(&mut self, name: &Token) -> Result<Box<dyn Any>, String> {
-        return self.look_up_variable(name, Expr::Literal(Token::new(TokenType::Nil, "".to_string(), 0, 0, 0)));
+        let expr = Expr::Variable(name.clone());
+        return self.look_up_variable(name, expr);
     }
 
     fn visit_assign_expr(&mut self, name: &Token, value: &Expr) -> Result<Box<dyn Any>, String> {
