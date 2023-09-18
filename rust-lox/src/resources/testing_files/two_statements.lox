@@ -34,7 +34,7 @@ fun main() {
     return "Mario + calculator == " + "gucci++";
 }
 
-//var time1 = clock();
+var time1 = clock();
 
 var stringMain = main();
 
@@ -46,30 +46,30 @@ print "Hi, " + first + " " + last + "!";
 
 sayHi("Dear", "Reader");
 
-// fun fib(n) {
-//   if (n <= 1) {
-//     return n;
-//   }
-//   else {
-//     return fib(n - 1) + fib(n - 2);
-//   }
-// }
+fun fib(n) {
+  if (n <= 1) {
+    return n;
+  }
+  else {
+    return fib(n - 1) + fib(n - 2);
+  }
+}
 
-// print(fib(7));
+print fib(10);
 
-// fun makeCounter() {
-//   var i = 0;
-//   fun count() {
-//     i = i + 1;
-//     print i;
-//   }
+fun makeCounter() {
+  var i = 0;
+  fun count() {
+    i = i + 1;
+    print i;
+  }
 
-//   return count;
-// }
+  return count;
+}
 
-// var counter = makeCounter();
-// counter(); // "1".
-// counter(); // "2".
+var counter = makeCounter();
+counter(); // "1".
+counter(); // "2".
 
-// print "Time: ";
-// print clock() - time1;
+print "Time: ";
+print clock() - time1;

@@ -39,6 +39,10 @@ static mut GLOBAL_ENVIRONMENT: Option<Rc<RefCell<EnvironmentStack>>> = None;
         env.borrow_mut().push_env(Rc::new(RefCell::new(Environment::new())));
         env.borrow_mut().define("clock".to_string(), Box::new(Clock{}));
 
+        // push clock into locals.
+        let mut locals = Vec::new();
+        locals.push((Expr::Variable(Token::new(TokenType::Identifier("clock".to_string()), "".to_string(), 0, 0, 0)), 0));
+
         unsafe {
             GLOBAL_ENVIRONMENT = Some(env.clone());
         }
@@ -46,7 +50,7 @@ static mut GLOBAL_ENVIRONMENT: Option<Rc<RefCell<EnvironmentStack>>> = None;
         Interpreter {
             environment: env,
             return_value: None,
-            locals: Vec::new(),
+            locals,
         }
     }
 

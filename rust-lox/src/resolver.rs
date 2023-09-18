@@ -18,8 +18,10 @@ pub mod resolver {
     impl<'a> Resolver<'a> {
         pub fn new(interpreter: &'a mut Interpreter) -> Self {
             let mut scopes_local = Vec::new();
+            let clock_fun = (String::from("clock"), true);
             scopes_local.push(Vec::new());
-
+            scopes_local.last_mut().unwrap().push(clock_fun);
+            
             Self {
                 interpreter,
                 scopes: scopes_local,
@@ -193,10 +195,7 @@ pub mod resolver {
         }
 
         fn visit_return_stmt(&mut self, _keyword: &Token, expr: &Expr) -> () {
-            let ret_val: &Option<Box<dyn Any>> = &self.interpreter.return_value;
-            if !ret_val.is_none() {
-                self.resolve_expr(expr);
-            }
+            self.resolve_expr(expr);
         }
 
         fn visit_print_stmt(&mut self, expr: &Expr) -> () {
