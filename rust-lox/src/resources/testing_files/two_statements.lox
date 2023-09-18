@@ -73,3 +73,5 @@ counter(); // "2".
 
 print "Time: ";
 print clock() - time1;
+
+var a = 2;

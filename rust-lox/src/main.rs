@@ -37,7 +37,17 @@ fn run(source: String) {
 
             let mut interpreter = interpreter::interpreter::Interpreter::new();
             let mut resolver = Resolver::new(&mut interpreter);
-            resolver.resolve(&ast_val);
+            match resolver.resolve(&ast_val)
+            {
+                Ok(_) => {
+                    info!("Resolver finished successfully");
+                }
+                Err(err) => {
+                    error!("{}", err);
+                    return;
+                }
+            }
+
             let interpreted_vec = resolver.interpreter.interpret(ast_val);
 
             match interpreted_vec {
