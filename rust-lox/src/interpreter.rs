@@ -478,27 +478,27 @@ static mut GLOBAL_ENVIRONMENT: Option<Rc<RefCell<EnvironmentStack>>> = None;
         
         if let Some(token) = value.downcast_ref::<Token>() {
             self.return_value = Some(Box::new(token.clone()));
-            return Err(format!("Return[{}]", token.get_token_type()));
+            return Err(format!("Returning {} at this level is not available", token.get_token_type()));
         }
 
         if let Some(expr) = value.downcast_ref::<Expr>() {
             self.return_value = Some(Box::new(expr.clone()));
-            return Err(format!("Return[{}]", expr));
+            return Err(format!("Returning {} at this level is not available", expr));
         }
 
         if let Some(stmt) = value.downcast_ref::<Stmt>() {
             self.return_value = Some(Box::new(stmt.clone()));
-            return Err(format!("Return[{}]", stmt));
+            return Err(format!("Returning {} at this level is not available", stmt));
         }
 
         if let Some(rlox_func) = value.downcast_ref::<RLoxFunction>() {
             self.return_value = Some(Box::new(rlox_func.clone()));
-            return Err(format!("Return[{}]", "rlox_func"));
+            return Err(format!("Returning {} at this level is not available", "rlox_func"));
         }
 
         if let Some(clock_fun) = value.downcast_ref::<Clock>() {
             self.return_value = Some(Box::new(clock_fun.clone()));
-            return Err(format!("Return[{}]", "clock_fun"));
+            return Err(format!("Returning {} at this level is not available", "clock_fun"));
         }
 
         Err("Could not return value.".to_string())
