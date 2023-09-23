@@ -200,6 +200,12 @@ pub mod resolver {
             Ok(())
         }
 
+        fn visit_class_stmt(&mut self, name: &Token, _: &Vec<Stmt>) -> Result<(), String> {
+            self.declare(name)?;
+            self.define(name);
+            Ok(())
+        }
+
         fn visit_expr_stmt(&mut self, expr: &Expr) -> Result<(), String> {
             self.resolve_expr(expr)?;
             Ok(())

@@ -92,5 +92,22 @@ pub mod rlox_callable {
             }
         }
     }
+
+    #[derive(Clone)]
+    pub struct RLoxClass {
+        pub name: String,
+    }
+
+    impl RLoxClass {
+        pub fn new(name: String) -> Self {
+            Self {
+                name,
+            }
+        }
+
+        pub fn to_string(&self) -> String {
+            format!("<class {}>", self.name)
+        }
+    }
 }
 

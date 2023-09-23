@@ -179,7 +179,7 @@ pub mod parser {
             is_identifier
         }
 
-        fn cosnume_any_identifier(&mut self, kind: String) -> Token {
+        fn consume_any_identifier(&mut self, kind: String) -> Token {
             if self.match_any_identifier() {
                 return self.previous();
             }
@@ -365,6 +365,10 @@ pub mod parser {
         }
 
         fn declaration(&mut self) -> Result<Stmt, String> {
+            if self.match_token(vec![TokenType::Class]) {
+                return self.class_declaration();
+            }
+
             if self.match_token(vec![TokenType::Fun]) {
                 return self.function("function".to_string());
             }
@@ -375,8 +379,22 @@ pub mod parser {
             self.statement()
         }
 
+        fn class_declaration(&mut self) -> Result<Stmt, String> {
+            let name: Token = self.consume_any_identifier("class".to_string());
+            self.consume(TokenType::LeftBrace, "Expect '{' before class body.".to_string());
+
+            let mut methods: Vec<Stmt> = Vec::new();
+            while !self.check(TokenType::RightBrace) && !self.is_at_end() {
+                methods.push(self.function("method".to_string())?);
+            }
+
+            self.consume(TokenType::RightBrace, "Expect '}' after class body.".to_string());
+
+            Ok(Stmt::ClassStmt(name, methods))
+        }
+
         fn function(&mut self, kind: String) -> Result<Stmt, String> {
-            let name = self.cosnume_any_identifier(kind.clone());
+            let name = self.consume_any_identifier(kind.clone());
             self.consume(TokenType::LeftParen, format!("Expect '(' after {} name.", kind.clone()));
             let mut parameters: Vec<Token> = Vec::new();
             if !self.check(TokenType::RightParen) {
@@ -384,7 +402,7 @@ pub mod parser {
                     if parameters.len() >= 255 {
                         error(self.peek().get_line(), 0, "Can't have more than 255 parameters.".to_string());
                     }
-                    parameters.push(self.cosnume_any_identifier("parameter".to_string()));
+                    parameters.push(self.consume_any_identifier("parameter".to_string()));
 
                     if !self.match_token(vec![TokenType::Comma]) {
                         break;

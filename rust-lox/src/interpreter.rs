@@ -7,7 +7,7 @@ pub mod interpreter {
     use std::any::Any;
     use std::rc::Rc;
     use std::cell::RefCell;
-    use crate::rlox_callable::rlox_callable::{Clock, RLoxFunction, RLoxCallable};
+    use crate::rlox_callable::rlox_callable::{Clock, RLoxFunction, RLoxCallable, RLoxClass};
 
     /**
      * ! Notes to my self:
@@ -470,6 +470,16 @@ static mut GLOBAL_ENVIRONMENT: Option<Rc<RefCell<EnvironmentStack>>> = None;
             return Ok(Box::new(stmt.clone()));
         }
 
+        if let Some(rlox_func) = value.downcast_ref::<RLoxFunction>() {
+            println!("{}", rlox_func.to_string());
+            return Ok(Box::new(rlox_func.clone()));
+        }
+
+        if let Some(rlox_class) = value.downcast_ref::<RLoxClass>() {
+            println!("{}", rlox_class.to_string());
+            return Ok(Box::new(rlox_class.clone()));
+        }
+
         Err("Could not print value.".to_string())
     }
 
@@ -514,6 +524,12 @@ static mut GLOBAL_ENVIRONMENT: Option<Rc<RefCell<EnvironmentStack>>> = None;
     fn visit_block_stmt(&mut self, stmts: &Vec<Stmt>) -> Result<Box<dyn Any>, String> {
         let env = Rc::new(RefCell::new(Environment::new()));
         self.execute_block(stmts, env)
+    }
+
+    fn visit_class_stmt(&mut self, name: &Token, _: &Vec<Stmt>) -> Result<Box<dyn Any>, String> {
+        let klass: RLoxClass = RLoxClass::new(name.get_token_type().to_string().clone());
+        self.environment.as_ref().borrow_mut().define(name.get_token_type().to_string(), Box::new(klass));
+        Ok(Box::new(name.clone()))
     }
 
     fn visit_function_stmt(&mut self, name: &Token, params: &Vec<Token>, body: &Vec<Stmt>) -> Result<Box<dyn Any>, String> {

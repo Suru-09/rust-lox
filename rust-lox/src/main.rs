@@ -11,6 +11,7 @@ pub mod resolver;
 
 use log::{info, error};
 use crate::resolver::resolver::Resolver;
+use crate::rlox_callable::rlox_callable::{RLoxFunction, RLoxClass};
 
 fn run(source: String) {
     let mut scanner = scanner::scan::Scanner::new(source);
@@ -71,7 +72,31 @@ fn run(source: String) {
                                                 println!("{}", expr_val.to_string());
                                             }
                                             None => {
-                                                error!("Could not downcast to any type(Token, Stmt, Expr)");
+                                                let string = interpreted.downcast_ref::<String>();
+                                                match string {
+                                                    Some(rlox_class_val) => {
+                                                        println!("{}", rlox_class_val.to_string());
+                                                    }
+                                                    None => {
+                                                        let rlox_class = interpreted.downcast_ref::<RLoxClass>();
+                                                        match rlox_class {
+                                                            Some(rlox_class_val) => {
+                                                                println!("{}", rlox_class_val.to_string());
+                                                            }
+                                                            None => {
+                                                                let rlox_func = interpreted.downcast_ref::<RLoxFunction>();
+                                                                match rlox_func {
+                                                                    Some(rlox_func_val) => {
+                                                                        println!("{}", rlox_func_val.to_string());
+                                                                    }
+                                                                    None => {
+                                                                        error!("Could not downcast to any type(Token, Stmt, Expr, String, RLoxClass, RLoxFunction)");
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                }
                                             }
                                         }
                                     }

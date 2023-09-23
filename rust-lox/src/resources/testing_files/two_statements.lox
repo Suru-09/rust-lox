@@ -75,3 +75,11 @@ print "Time: ";
 print clock() - time1;
 
 var a = 2;
+
+class DevonshireCream {
+  serveOn() {
+    return "Scones";
+  }
+}
+
+print DevonshireCream;
