@@ -1,17 +1,18 @@
-pub mod error_handling;
-pub mod scanner;
-pub mod expr;
-pub mod parser;
-pub mod interpreter;
-pub mod stmt;
 pub mod environment;
-pub mod rlox_callable;
-pub mod utils;
+pub mod error_handling;
+pub mod expr;
+pub mod interpreter;
+pub mod parser;
 pub mod resolver;
+pub mod rlox_callable;
+pub mod scanner;
+pub mod stmt;
+pub mod utils;
 
-use log::{info, error};
 use crate::resolver::resolver::Resolver;
-use crate::rlox_callable::rlox_callable::{RLoxFunction, RLoxClass};
+use crate::rlox_callable::rlox_callable::{RLoxClass, RLoxFunction};
+use log::{error, info};
+use std::path::Path;
 
 fn run(source: String) {
     let mut scanner = scanner::scan::Scanner::new(source);
@@ -38,8 +39,7 @@ fn run(source: String) {
 
             let mut interpreter = interpreter::interpreter::Interpreter::new();
             let mut resolver = Resolver::new(&mut interpreter);
-            match resolver.resolve(&ast_val)
-            {
+            match resolver.resolve(&ast_val) {
                 Ok(_) => {
                     info!("Resolver finished successfully");
                 }
@@ -78,16 +78,26 @@ fn run(source: String) {
                                                         println!("{}", rlox_class_val.to_string());
                                                     }
                                                     None => {
-                                                        let rlox_class = interpreted.downcast_ref::<RLoxClass>();
+                                                        let rlox_class =
+                                                            interpreted.downcast_ref::<RLoxClass>();
                                                         match rlox_class {
                                                             Some(rlox_class_val) => {
-                                                                println!("{}", rlox_class_val.to_string());
+                                                                println!(
+                                                                    "{}",
+                                                                    rlox_class_val.to_string()
+                                                                );
                                                             }
                                                             None => {
-                                                                let rlox_func = interpreted.downcast_ref::<RLoxFunction>();
+                                                                let rlox_func = interpreted
+                                                                    .downcast_ref::<RLoxFunction>(
+                                                                );
                                                                 match rlox_func {
                                                                     Some(rlox_func_val) => {
-                                                                        println!("{}", rlox_func_val.to_string());
+                                                                        println!(
+                                                                            "{}",
+                                                                            rlox_func_val
+                                                                                .to_string()
+                                                                        );
                                                                     }
                                                                     None => {
                                                                         error!("Could not downcast to any type(Token, Stmt, Expr, String, RLoxClass, RLoxFunction)");
@@ -114,19 +124,23 @@ fn run(source: String) {
             error!("{}", err);
         }
     }
-
 }
 
 fn run_file(path: String) {
-    let source = std::fs::read_to_string(path).expect("[run_file] Something went wrong reading the file");
-    run(source);
+    if Path::new(&path.clone()).exists() {
+        run(path);
+    } else {
+        panic!("Given path: {}, does not exist!!", path);
+    }
 }
 
 fn run_prompt() {
     loop {
         print!("> ");
         let mut input = String::new();
-        std::io::stdin().read_line(&mut input).expect("[run_prompt] Failed to read line");
+        std::io::stdin()
+            .read_line(&mut input)
+            .expect("[run_prompt] Failed to read line");
         run(input);
     }
 }
