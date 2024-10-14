@@ -183,6 +183,7 @@ pub mod scan {
         start: u32,
         current: u32,
         line: u32,
+        column: u32,
     }
 
     impl Scanner {
@@ -196,7 +197,8 @@ pub mod scan {
                 tokens: Vec::new(),
                 start: 0,
                 current: 0,
-                line: 0,
+                line: 1,
+                column: 1,
             }
         }
 
@@ -214,8 +216,8 @@ pub mod scan {
                 TokenType::EOF,
                 String::new(),
                 self.line,
+                self.column,
                 self.current,
-                0,
             ));
             self.tokens.clone()
         }
@@ -276,8 +278,17 @@ pub mod scan {
                     }
                 }
                 // skip all types of whitespaces.
-                c if c == ' ' || c == '\r' || c == '\t' => (),
-                c if c == '\n' => self.line += 1,
+                c if c == ' ' || c == '\r' || c == '\t' => {
+                    if c == ' ' {
+                        self.column += 1;
+                    } else if c == '\t' {
+                        self.column += 4;
+                    }
+                }
+                c if c == '\n' => {
+                    self.line += 1;
+                    self.column = 1;
+                }
                 c if c == '"' => self.string(),
                 _ => {
                     if c.is_digit(10) {
@@ -287,7 +298,7 @@ pub mod scan {
                     } else {
                         error(
                             self.line,
-                            self.current,
+                            self.column,
                             format!("Unexpected character: {}", c),
                             function_name!(),
                         );
@@ -362,7 +373,7 @@ pub mod scan {
             if self.is_last() {
                 error(
                     self.line,
-                    self.current,
+                    self.column,
                     String::from("Unterminated string!"),
                     function_name!(),
                 );
@@ -422,11 +433,16 @@ pub mod scan {
             };
             self.tokens.push(Token {
                 t_type: t_type,
-                lexeme: text,
+                lexeme: text.clone(),
                 line: self.line,
-                column: 0,
-                length: 0,
+                column: self.column,
+                length: text.clone().len() as u32,
             });
+
+            // !! IMPORTANT !! --> we should show the error to an user at the start
+            // of the variable, therefore increase self.column and only show it at
+            // the next token added.
+            self.column += text.clone().len() as u32;
         }
     }
 

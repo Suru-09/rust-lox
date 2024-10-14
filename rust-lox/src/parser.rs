@@ -166,7 +166,7 @@ pub mod parser {
                     if arguments.len() >= 255 {
                         error(
                             self.peek().get_line(),
-                            0,
+                            self.peek().get_column(),
                             "Can't have more than 255 arguments.".to_string(),
                             function_name!(),
                         );
@@ -286,7 +286,13 @@ pub mod parser {
                 self.advance();
                 return self.previous();
             }
-            error(self.current as u32, 0, message, function_name!());
+            let current_token = self.tokens.get(self.current as usize).unwrap();
+            error(
+                current_token.get_line(),
+                current_token.get_column(),
+                message,
+                function_name!(),
+            );
             self.peek()
         }
 
@@ -499,7 +505,7 @@ pub mod parser {
                     if parameters.len() >= 255 {
                         error(
                             self.peek().get_line(),
-                            0,
+                            self.peek().get_column(),
                             "Can't have more than 255 parameters.".to_string(),
                             function_name!(),
                         );

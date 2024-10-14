@@ -22,8 +22,8 @@ pub mod error_handling {
     impl RLoxError {
         fn report(&self) {
             error!(
-                "[line {} and column {}] Location: {} Error: {}",
-                self.line, self.column, self.location, self.message
+                "<{}> [line: {} & col: {}] msg: {}",
+                self.location, self.line, self.column, self.message
             );
         }
     }

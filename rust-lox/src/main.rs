@@ -11,9 +11,11 @@ pub mod utils;
 
 use crate::resolver::resolver::Resolver;
 use crate::rlox_callable::rlox_callable::{RLoxClass, RLoxFunction};
+use log::LevelFilter;
 use log::{error, info};
 use std::fs;
 use std::path::Path;
+use utils::utils::LOGGER;
 
 fn run(source: String) {
     let mut scanner = scanner::scan::Scanner::new(source);
@@ -147,7 +149,9 @@ fn run_prompt() {
 }
 
 fn main() {
-    env_logger::init();
+    log::set_logger(&LOGGER)
+        .map(|()| log::set_max_level(LevelFilter::Info))
+        .unwrap();
 
     // delete old generated files
     if !utils::utils::clean_folder(utils::utils::GENERATED_FOLDER_PATH) {
