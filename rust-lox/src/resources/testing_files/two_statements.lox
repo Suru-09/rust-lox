@@ -16,10 +16,10 @@ fun main() {
 
     if(condition or true)
     {
-        lox = " Hehehe another string in this block";
+        lox = "Hehehe another string in this block";
         print lox;
     }
-    else 
+    else
         print "Ciocanul lui Thor";
 
     for(var i = 0 ; i < 3; i = i + 1) {

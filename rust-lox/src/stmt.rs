@@ -2,11 +2,11 @@ pub mod stmt {
 
     use crate::expr::expr::{Expr, Visitor};
     use crate::scanner::scan::Token;
+    use log::debug;
     use std::fmt;
     use std::fs::File;
     use std::io::prelude::*;
     use std::process::Command;
-
 
     #[derive(Clone)]
     pub enum Stmt {
@@ -20,29 +20,36 @@ pub mod stmt {
         IfStmt(Expr, Box<Stmt>, Option<Box<Stmt>>),
         WhileStmt(Expr, Box<Stmt>),
     }
-    
+
     impl fmt::Display for Stmt {
         fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
             match self {
                 Stmt::ExprStmt(expr) => write!(f, "{}", expr),
                 Stmt::ReturnStmt(_keyword, value) => write!(f, "(return {})", value),
                 Stmt::PrintStmt(expr) => write!(f, "(print {})", expr),
-                Stmt::VarStmt(token, expr) => write!(f, "(var {} {})", token.get_token_type(), expr),
+                Stmt::VarStmt(token, expr) => {
+                    write!(f, "(var {} {})", token.get_token_type(), expr)
+                }
                 Stmt::BlockStmt(stmts) => {
                     let mut stmts_str = String::new();
                     for stmt in stmts {
                         stmts_str.push_str(format!("{}", stmt).as_str());
                     }
                     write!(f, "{}", stmts_str)
-                },
+                }
                 Stmt::ClassStmt(name, methods) => {
                     let mut methods_str = String::new();
                     // iterate over methods and add them to the string.
                     for method in methods {
                         methods_str.push_str(format!("{}, ", method).as_str());
                     }
-                    write!(f, "(class: <{}> methods: [{}])", name.get_token_type(), methods_str)
-                },
+                    write!(
+                        f,
+                        "(class: <{}> methods: [{}])",
+                        name.get_token_type(),
+                        methods_str
+                    )
+                }
                 Stmt::Function(name, params, body) => {
                     let mut function_str = String::new();
                     function_str.push_str(format!("(fun {} (", name.get_token_type()).as_str());
@@ -64,7 +71,7 @@ pub mod stmt {
                     }
                     if_stmt_str.push_str(")");
                     write!(f, "{}", if_stmt_str)
-                },
+                }
                 Stmt::WhileStmt(expr, stmt) => write!(f, "(while {} {})", expr, stmt),
             }
         }
@@ -81,7 +88,8 @@ pub mod stmt {
         fn visit_var_stmt(&mut self, token: &Token, expr: &Expr) -> T;
         fn visit_block_stmt(&mut self, stmts: &Vec<Stmt>) -> T;
         fn visit_class_stmt(&mut self, name: &Token, methods: &Vec<Stmt>) -> T;
-        fn visit_function_stmt(&mut self, name: &Token, params: &Vec<Token>, body: &Vec<Stmt>) -> T;
+        fn visit_function_stmt(&mut self, name: &Token, params: &Vec<Token>, body: &Vec<Stmt>)
+            -> T;
         fn visit_if_stmt(&mut self, expr: &Expr, stmt: &Stmt, else_stmt: &Option<Box<Stmt>>) -> T;
         fn visit_while_stmt(&mut self, expr: &Expr, stmt: &Stmt) -> T;
     }
@@ -95,7 +103,9 @@ pub mod stmt {
                 Stmt::VarStmt(token, expr) => visitor.visit_var_stmt(token, expr),
                 Stmt::BlockStmt(stmts) => visitor.visit_block_stmt(stmts),
                 Stmt::ClassStmt(name, methods) => visitor.visit_class_stmt(name, methods),
-                Stmt::Function(name, params, body) => visitor.visit_function_stmt(name, params, body),
+                Stmt::Function(name, params, body) => {
+                    visitor.visit_function_stmt(name, params, body)
+                }
                 Stmt::IfStmt(expr, stmt, else_stmt) => visitor.visit_if_stmt(expr, stmt, else_stmt),
                 Stmt::WhileStmt(expr, stmt) => visitor.visit_while_stmt(expr, stmt),
             }
@@ -111,7 +121,9 @@ pub mod stmt {
                 Stmt::VarStmt(token, expr) => visitor.visit_var_stmt(token, expr),
                 Stmt::BlockStmt(stmts) => visitor.visit_block_stmt(stmts),
                 Stmt::ClassStmt(name, methods) => visitor.visit_class_stmt(name, methods),
-                Stmt::Function(name, params, body) => visitor.visit_function_stmt(name, params, body),
+                Stmt::Function(name, params, body) => {
+                    visitor.visit_function_stmt(name, params, body)
+                }
                 Stmt::IfStmt(expr, stmt, else_stmt) => visitor.visit_if_stmt(expr, stmt, else_stmt),
                 Stmt::WhileStmt(expr, stmt) => visitor.visit_while_stmt(expr, stmt),
             }
@@ -145,17 +157,23 @@ pub mod stmt {
             self.increase_node_count();
             // special rule for escaping strings which contain " as first and last character.
             let formated_label = if label.starts_with("\"") && label.ends_with("\"") {
-                format!("\"{}\"", "\\".to_string() + (&label.clone()[..label.len() - 1]) + "\\\"")
+                format!(
+                    "\"{}\"",
+                    "\\".to_string() + (&label.clone()[..label.len() - 1]) + "\\\""
+                )
             } else {
                 format!("\"{}\"", label)
             };
 
-            self.graph.push_str(format!("\tnode_{} [label={}];\n", self.node_count, formated_label).as_str());
+            self.graph.push_str(
+                format!("\tnode_{} [label={}];\n", self.node_count, formated_label).as_str(),
+            );
             self.node_count
         }
 
         pub fn add_edge(&mut self, from: u64, to: u64) {
-            self.graph.push_str(format!("\tnode_{} -> node_{};\n", from, to).as_str());
+            self.graph
+                .push_str(format!("\tnode_{} -> node_{};\n", from, to).as_str());
         }
 
         pub fn to_string(&self) -> String {
@@ -171,7 +189,7 @@ pub mod stmt {
             };
 
             match file.write_all(self.graph.as_bytes()) {
-                Ok(_) => println!("successfully wrote to file"),
+                Ok(_) => {}
                 Err(why) => panic!("couldn't write to file: {}", why),
             }
         }
@@ -181,25 +199,24 @@ pub mod stmt {
                 Ok(dir) => dir,
                 Err(why) => panic!("couldn't get current dir: {}", why),
             };
-            println!("The current directory is {}", current_dir.display());
 
             // make sure bothh generated and ast directories exist, if not create them.
             let generated_dir = format!("{}/src/resources/generated/", current_dir.display());
             let ast_dir = format!("{}/src/resources/generated/ast/", current_dir.display());
+
             if !std::path::Path::new(&generated_dir).exists() {
                 match std::fs::create_dir(&generated_dir) {
-                    Ok(_) => println!("successfully created generated directory"),
+                    Ok(_) => debug!("Successfully created generated directory"),
                     Err(why) => panic!("couldn't create generated directory: {}", why),
                 }
             }
 
             if !std::path::Path::new(&ast_dir).exists() {
                 match std::fs::create_dir(&ast_dir) {
-                    Ok(_) => println!("successfully created ast directory"),
+                    Ok(_) => debug!("Successfully created ast directory"),
                     Err(why) => panic!("couldn't create ast directory: {}", why),
                 }
             }
-
             format!("{}/src/resources/generated/ast/", current_dir.display())
         }
 
@@ -214,7 +231,7 @@ pub mod stmt {
                 .arg(output_path)
                 .output()
                 .expect("failed to execute process");
-            println!("output: {}", String::from_utf8_lossy(&output.stdout));
+            debug!("Output: {}", String::from_utf8_lossy(&output.stdout));
         }
     }
 
@@ -267,7 +284,12 @@ pub mod stmt {
             class_node_id
         }
 
-        fn visit_function_stmt(&mut self, name: &Token, params: &Vec<Token>, body: &Vec<Stmt>) -> u64 {
+        fn visit_function_stmt(
+            &mut self,
+            name: &Token,
+            params: &Vec<Token>,
+            body: &Vec<Stmt>,
+        ) -> u64 {
             let function_node_id = self.add_node(String::from("function"));
             let name_node_id = self.add_node(name.token_type_value());
             self.add_edge(function_node_id, name_node_id);
@@ -282,7 +304,12 @@ pub mod stmt {
             function_node_id
         }
 
-        fn visit_if_stmt(&mut self, expr: &Expr, stmt: &Stmt, else_stmt: &Option<Box<Stmt>>) -> u64 {
+        fn visit_if_stmt(
+            &mut self,
+            expr: &Expr,
+            stmt: &Stmt,
+            else_stmt: &Option<Box<Stmt>>,
+        ) -> u64 {
             let expr_node_id = expr.accept(self);
             let stmt_node_id = stmt.accept(self);
             let if_node_id = self.add_node(String::from("if"));
@@ -361,7 +388,5 @@ pub mod stmt {
             }
             callee_node_index
         }
-
     }
-
 }

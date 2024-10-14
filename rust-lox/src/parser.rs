@@ -1,5 +1,8 @@
 pub mod parser {
 
+    use crate::error_handling::error_handling::error;
+    use crate::expr::expr::Expr;
+    use crate::function_name;
     /**
      * ! Notes to my self:
      * ! No. 1:
@@ -9,10 +12,7 @@ pub mod parser {
      * * * * (jokes on you) because it was changed, when match_token found the character it did current += 1.
      * *
      */
-
     use crate::scanner::scan::{Token, TokenType};
-    use crate::expr::expr::Expr;
-    use crate::error_handling::error_handling::error;
     use crate::stmt::stmt::Stmt;
     use log::debug;
 
@@ -65,7 +65,11 @@ pub mod parser {
             false
         }
 
-        fn binary_expr_loop(&mut self, operators: Vec<TokenType>, next_rule: fn(&mut Self) -> Result<Expr, String>) -> Result<Expr, String> {
+        fn binary_expr_loop(
+            &mut self,
+            operators: Vec<TokenType>,
+            next_rule: fn(&mut Self) -> Result<Expr, String>,
+        ) -> Result<Expr, String> {
             let mut expr = next_rule(self)?;
 
             while self.match_token(operators.clone()) {
@@ -76,7 +80,11 @@ pub mod parser {
             Ok(expr)
         }
 
-        fn logical_expr_loop(&mut self, operators: Vec<TokenType>, next_rule: fn(&mut Self) -> Result<Expr, String>) -> Result<Expr, String> {
+        fn logical_expr_loop(
+            &mut self,
+            operators: Vec<TokenType>,
+            next_rule: fn(&mut Self) -> Result<Expr, String>,
+        ) -> Result<Expr, String> {
             let mut expr = next_rule(self)?;
 
             while self.match_token(operators.clone()) {
@@ -87,7 +95,7 @@ pub mod parser {
             Ok(expr)
         }
 
-        fn expression(&mut self) -> Result<Expr, String>  {
+        fn expression(&mut self) -> Result<Expr, String> {
             self.assignment()
         }
 
@@ -100,11 +108,22 @@ pub mod parser {
         }
 
         fn equality(&mut self) -> Result<Expr, String> {
-            self.binary_expr_loop(vec![TokenType::BangEqual, TokenType::EqualEqual], Self::comparison)
+            self.binary_expr_loop(
+                vec![TokenType::BangEqual, TokenType::EqualEqual],
+                Self::comparison,
+            )
         }
 
         fn comparison(&mut self) -> Result<Expr, String> {
-            self.binary_expr_loop(vec![TokenType::Greater, TokenType::GreaterEqual, TokenType::Less, TokenType::LessEqual], Self::term)
+            self.binary_expr_loop(
+                vec![
+                    TokenType::Greater,
+                    TokenType::GreaterEqual,
+                    TokenType::Less,
+                    TokenType::LessEqual,
+                ],
+                Self::term,
+            )
         }
 
         fn term(&mut self) -> Result<Expr, String> {
@@ -145,7 +164,12 @@ pub mod parser {
             if !self.check(TokenType::RightParen) {
                 loop {
                     if arguments.len() >= 255 {
-                        error(self.peek().get_line(), 0, "Can't have more than 255 arguments.".to_string());
+                        error(
+                            self.peek().get_line(),
+                            0,
+                            "Can't have more than 255 arguments.".to_string(),
+                            function_name!(),
+                        );
                     }
                     arguments.push(self.expression()?);
                     if !self.match_token(vec![TokenType::Comma]) {
@@ -153,7 +177,10 @@ pub mod parser {
                     }
                 }
             }
-            let paren = self.consume(TokenType::RightParen, "Expect ')' after arguments.".to_string());
+            let paren = self.consume(
+                TokenType::RightParen,
+                "Expect ')' after arguments.".to_string(),
+            );
             Ok(Expr::Call(Box::new(expr), paren, arguments))
         }
 
@@ -183,7 +210,12 @@ pub mod parser {
             if self.match_any_identifier() {
                 return self.previous();
             }
-            error(self.peek().get_line(), self.peek().get_column(), format!("Expect {} name.", kind));
+            error(
+                self.peek().get_line(),
+                self.peek().get_column(),
+                format!("Expect {} name.", kind),
+                function_name!(),
+            );
             self.peek()
         }
 
@@ -191,15 +223,33 @@ pub mod parser {
             debug!("{}", self.peek().get_token_type());
 
             if self.match_token(vec![TokenType::False]) {
-                return Ok(Expr::Literal(Token::new(TokenType::False, String::from("false"), 0, 0, 0)));
+                return Ok(Expr::Literal(Token::new(
+                    TokenType::False,
+                    String::from("false"),
+                    0,
+                    0,
+                    0,
+                )));
             }
 
             if self.match_token(vec![TokenType::True]) {
-                return Ok(Expr::Literal(Token::new(TokenType::True, String::from("true"), 0, 0, 0)));
+                return Ok(Expr::Literal(Token::new(
+                    TokenType::True,
+                    String::from("true"),
+                    0,
+                    0,
+                    0,
+                )));
             }
 
             if self.match_token(vec![TokenType::Nil]) {
-                return Ok(Expr::Literal(Token::new(TokenType::Nil, String::from("nil"), 0, 0, 0)));
+                return Ok(Expr::Literal(Token::new(
+                    TokenType::Nil,
+                    String::from("nil"),
+                    0,
+                    0,
+                    0,
+                )));
             }
 
             if self.match_any_number_or_string() {
@@ -215,11 +265,19 @@ pub mod parser {
                     Ok(expr_val) => expr_val,
                     Err(e) => return Err(e),
                 };
-                self.consume(TokenType::RightParen, "Expect ')' after expression.".to_string());
+                self.consume(
+                    TokenType::RightParen,
+                    "Expect ')' after expression.".to_string(),
+                );
                 return Ok(Expr::Grouping(Box::new(expr)));
             }
 
-            error(self.peek().get_line(), self.peek().get_column(),"Expect expression.".to_string());
+            error(
+                self.peek().get_line(),
+                self.peek().get_column(),
+                "Expect expression.".to_string(),
+                function_name!(),
+            );
             Err("Expect Expression?".to_string())
         }
 
@@ -228,7 +286,7 @@ pub mod parser {
                 self.advance();
                 return self.previous();
             }
-            error(self.current as u32, 0, message);
+            error(self.current as u32, 0, message, function_name!());
             self.peek()
         }
 
@@ -246,14 +304,14 @@ pub mod parser {
                 TokenType::Return => {
                     self.advance();
                     self.return_statement()
-                },
+                }
                 TokenType::While => self.while_statement(),
                 TokenType::For => self.for_statement(),
                 TokenType::If => self.if_statement(),
                 TokenType::LeftBrace => {
                     self.advance();
                     Ok(Stmt::BlockStmt(self.block_statement()?))
-                },
+                }
                 _ => self.expression_statement(),
             }
         }
@@ -280,15 +338,27 @@ pub mod parser {
             if !self.check(TokenType::Semicolon) {
                 value = self.expression()?;
             }
-            self.consume(TokenType::Semicolon, "Expect ';' after return value.".to_string());
+            self.consume(
+                TokenType::Semicolon,
+                "Expect ';' after return value.".to_string(),
+            );
             Ok(Stmt::ReturnStmt(keyword, value))
         }
 
         fn while_statement(&mut self) -> Result<Stmt, String> {
-            self.consume(TokenType::While, "Expect 'while' after 'while'.".to_string());
-            self.consume(TokenType::LeftParen, "Expect '(' after 'while'.".to_string());
+            self.consume(
+                TokenType::While,
+                "Expect 'while' after 'while'.".to_string(),
+            );
+            self.consume(
+                TokenType::LeftParen,
+                "Expect '(' after 'while'.".to_string(),
+            );
             let condition = self.expression()?;
-            self.consume(TokenType::RightParen, "Expect ')' after condition.".to_string());
+            self.consume(
+                TokenType::RightParen,
+                "Expect ')' after condition.".to_string(),
+            );
             let body = self.statement()?;
             Ok(Stmt::WhileStmt(condition, Box::new(body)))
         }
@@ -309,28 +379,40 @@ pub mod parser {
             if !self.check(TokenType::RightParen) {
                 condition = Some(self.expression()?);
             }
-            self.consume(TokenType::Semicolon, "Expect ';' after loop condition.".to_string());
-            
+            self.consume(
+                TokenType::Semicolon,
+                "Expect ';' after loop condition.".to_string(),
+            );
+
             let mut increment = None;
             if !self.check(TokenType::RightParen) {
                 increment = Some(self.expression()?);
             }
-            self.consume(TokenType::RightParen, "Expect ')' after for clauses.".to_string());
+            self.consume(
+                TokenType::RightParen,
+                "Expect ')' after for clauses.".to_string(),
+            );
 
             let mut body = self.statement()?;
-            
+
             if let Some(increment_val) = increment {
                 body = Stmt::BlockStmt(vec![body, Stmt::ExprStmt(increment_val)]);
             }
 
             if let None = condition {
-                condition = Some(Expr::Literal(Token::new(TokenType::True, String::from("true"), 0, 0, 0)));
+                condition = Some(Expr::Literal(Token::new(
+                    TokenType::True,
+                    String::from("true"),
+                    0,
+                    0,
+                    0,
+                )));
             }
 
             match condition {
                 Some(condition_val) => body = Stmt::WhileStmt(condition_val, Box::new(body)),
                 None => (),
-            } 
+            }
 
             if let Some(initializer_val) = initializer {
                 body = Stmt::BlockStmt(vec![initializer_val, body]);
@@ -343,7 +425,10 @@ pub mod parser {
             self.consume(TokenType::If, "Expect 'if' after 'if'.".to_string());
             self.consume(TokenType::LeftParen, "Expect '(' after 'if'.".to_string());
             let expr = self.expression()?;
-            self.consume(TokenType::RightParen, "Expect ')' after if condition.".to_string());
+            self.consume(
+                TokenType::RightParen,
+                "Expect ')' after if condition.".to_string(),
+            );
             let then_branch = self.statement()?;
 
             let else_branch = if self.match_token(vec![TokenType::Else]) {
@@ -354,13 +439,16 @@ pub mod parser {
             } else {
                 None
             };
-            
+
             return Ok(Stmt::IfStmt(expr, Box::new(then_branch), else_branch));
         }
 
         pub fn expression_statement(&mut self) -> Result<Stmt, String> {
             let expr = self.expression()?;
-            self.consume(TokenType::Semicolon, "Expect ';' after expression.".to_string());
+            self.consume(
+                TokenType::Semicolon,
+                "Expect ';' after expression.".to_string(),
+            );
             Ok(Stmt::ExprStmt(expr))
         }
 
@@ -381,26 +469,40 @@ pub mod parser {
 
         fn class_declaration(&mut self) -> Result<Stmt, String> {
             let name: Token = self.consume_any_identifier("class".to_string());
-            self.consume(TokenType::LeftBrace, "Expect '{' before class body.".to_string());
+            self.consume(
+                TokenType::LeftBrace,
+                "Expect '{' before class body.".to_string(),
+            );
 
             let mut methods: Vec<Stmt> = Vec::new();
             while !self.check(TokenType::RightBrace) && !self.is_at_end() {
                 methods.push(self.function("method".to_string())?);
             }
 
-            self.consume(TokenType::RightBrace, "Expect '}' after class body.".to_string());
+            self.consume(
+                TokenType::RightBrace,
+                "Expect '}' after class body.".to_string(),
+            );
 
             Ok(Stmt::ClassStmt(name, methods))
         }
 
         fn function(&mut self, kind: String) -> Result<Stmt, String> {
             let name = self.consume_any_identifier(kind.clone());
-            self.consume(TokenType::LeftParen, format!("Expect '(' after {} name.", kind.clone()));
+            self.consume(
+                TokenType::LeftParen,
+                format!("Expect '(' after {} name.", kind.clone()),
+            );
             let mut parameters: Vec<Token> = Vec::new();
             if !self.check(TokenType::RightParen) {
                 loop {
                     if parameters.len() >= 255 {
-                        error(self.peek().get_line(), 0, "Can't have more than 255 parameters.".to_string());
+                        error(
+                            self.peek().get_line(),
+                            0,
+                            "Can't have more than 255 parameters.".to_string(),
+                            function_name!(),
+                        );
                     }
                     parameters.push(self.consume_any_identifier("parameter".to_string()));
 
@@ -409,24 +511,39 @@ pub mod parser {
                     }
                 }
             }
-            self.consume(TokenType::RightParen, "Expect ')' after parameters.".to_string());
-            self.consume(TokenType::LeftBrace, format!("Expect '{{' before {} body.", kind.clone()));
+            self.consume(
+                TokenType::RightParen,
+                "Expect ')' after parameters.".to_string(),
+            );
+            self.consume(
+                TokenType::LeftBrace,
+                format!("Expect '{{' before {} body.", kind.clone()),
+            );
             let body = self.block_statement()?;
             Ok(Stmt::Function(name, parameters, body))
         }
 
         fn var_declaration(&mut self) -> Result<Stmt, String> {
             if !self.match_any_identifier() {
-                error(self.peek().get_line(), self.peek().get_column(), "Expect variable name.".to_string());
+                error(
+                    self.peek().get_line(),
+                    self.peek().get_column(),
+                    "Expect variable name.".to_string(),
+                    function_name!(),
+                );
                 return Err("".to_string());
             }
             let name = self.previous();
-            let mut initializer = Expr::Literal(Token::new(TokenType::Nil, String::from("nil"), 0, 0, 0));
+            let mut initializer =
+                Expr::Literal(Token::new(TokenType::Nil, String::from("nil"), 0, 0, 0));
             if self.match_token(vec![TokenType::Equal]) {
                 initializer = self.expression()?;
             };
 
-            self.consume(TokenType::Semicolon, "Expect ';' after variable declaration.".to_string());
+            self.consume(
+                TokenType::Semicolon,
+                "Expect ';' after variable declaration.".to_string(),
+            );
             Ok(Stmt::VarStmt(name, initializer))
         }
 
@@ -437,21 +554,27 @@ pub mod parser {
              * * * Note: we enter the if statement only if we have an assignment,
              * * * otherwise we just return the expression, therefore for variable
              * * * declaration we return directly the value of expr.
-            */
+             */
             if self.match_token(vec![TokenType::Equal]) {
                 let equals = self.previous();
                 let value = self.assignment()?;
 
                 match expr {
-                    Expr::Literal(name) | Expr::Variable(name) | Expr::Assign(name, _) => return Ok(Expr::Assign(name, Box::new(value))),
+                    Expr::Literal(name) | Expr::Variable(name) | Expr::Assign(name, _) => {
+                        return Ok(Expr::Assign(name, Box::new(value)))
+                    }
                     _ => {
-                        error(equals.get_line(), equals.get_column(), "Invalid assignment target.".to_string());
+                        error(
+                            equals.get_line(),
+                            equals.get_column(),
+                            "Invalid assignment target.".to_string(),
+                            function_name!(),
+                        );
                         return Err("Invalid assignment target.".to_string());
                     }
                 }
             }
             Ok(expr)
         }
-
     }
 }

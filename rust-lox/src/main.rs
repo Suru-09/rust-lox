@@ -12,6 +12,7 @@ pub mod utils;
 use crate::resolver::resolver::Resolver;
 use crate::rlox_callable::rlox_callable::{RLoxClass, RLoxFunction};
 use log::{error, info};
+use std::fs;
 use std::path::Path;
 
 fn run(source: String) {
@@ -128,7 +129,7 @@ fn run(source: String) {
 
 fn run_file(path: String) {
     if Path::new(&path.clone()).exists() {
-        run(path);
+        run(fs::read_to_string(path).expect("Given path does not contain an OK file!!"));
     } else {
         panic!("Given path: {}, does not exist!!", path);
     }
