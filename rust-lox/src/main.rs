@@ -47,9 +47,10 @@ fn run(source: String, args: &Args) {
 }
 
 fn run_file(args: &Args) {
-    if Path::new(&args.src_path.clone()).exists() {
+    let path = Path::new(&args.src_path);
+    if path.exists() {
         run(
-            fs::read_to_string(&args.src_path).expect("Given path does not contain an OK file!!"),
+            fs::read_to_string(path).expect("Given path does not contain an OK file!!"),
             args,
         );
     } else {
@@ -77,7 +78,10 @@ fn main() {
 
     log::set_logger(&LOGGER)
         .map(|()| log::set_max_level(log_level))
-        .unwrap();
+        .expect(&format!(
+            "I should be able to set MAX log level to: {}!",
+            log_level.to_string()
+        ));
 
     // delete old generated files
     if !utils::utils::clean_folder(utils::utils::GENERATED_FOLDER_PATH) {
