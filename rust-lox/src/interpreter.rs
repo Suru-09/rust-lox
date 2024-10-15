@@ -23,9 +23,6 @@ pub mod interpreter {
      * TODO: At the moment it is not possible to keep track of the outermost environment,
      * TODO: therefore it is not possible to use the environment to define variables in the global scope.
      */
-
-    static mut GLOBAL_ENVIRONMENT: Option<Rc<RefCell<EnvironmentStack>>> = None;
-
     pub struct Interpreter {
         pub environment: Rc<RefCell<EnvironmentStack>>,
         pub return_value: Option<Box<dyn Any>>,
@@ -55,10 +52,6 @@ pub mod interpreter {
                 0,
             ));
 
-            unsafe {
-                GLOBAL_ENVIRONMENT = Some(env.clone());
-            }
-
             Interpreter {
                 environment: env,
                 return_value: None,
@@ -68,10 +61,6 @@ pub mod interpreter {
 
         fn evaluate(&mut self, expr: &Expr) -> Result<Box<dyn Any>, String> {
             expr.accept(self)
-        }
-
-        pub fn get_global_environment(&mut self) -> Rc<RefCell<EnvironmentStack>> {
-            unsafe { GLOBAL_ENVIRONMENT.as_ref().unwrap().clone() }
         }
 
         fn is_truthy(&mut self, obj: Box<dyn Any>) -> Result<Box<dyn Any>, String> {
@@ -543,11 +532,11 @@ pub mod interpreter {
             Err("Could not extract return value".to_string())
         }
 
-        pub fn execute(&mut self, stmt: Stmt) -> Result<Box<dyn Any>, String> {
+        pub fn execute(&mut self, stmt: &Stmt) -> Result<Box<dyn Any>, String> {
             stmt.accept(self)
         }
 
-        pub fn interpret(&mut self, statements: Vec<Stmt>) -> Result<Vec<Box<dyn Any>>, String> {
+        pub fn interpret(&mut self, statements: &Vec<Stmt>) -> Result<Vec<Box<dyn Any>>, String> {
             let mut vec = Vec::new();
             for stmt in statements {
                 vec.push(self.execute(stmt)?);
@@ -565,9 +554,9 @@ pub mod interpreter {
                 Box::new(Token::new(TokenType::Nil, "".to_string(), 0, 0, 0));
             for stmt in stmts {
                 match stmt {
-                    Stmt::ReturnStmt(_, _) => block_return_value = self.execute(stmt.clone())?,
+                    Stmt::ReturnStmt(_, _) => block_return_value = self.execute(stmt)?,
                     _ => {
-                        self.execute(stmt.clone())?;
+                        self.execute(stmt)?;
                     }
                 }
             }
@@ -845,10 +834,10 @@ pub mod interpreter {
             let is_truthy = self.is_truthy(value)?;
             if let Some(truth) = is_truthy.downcast_ref::<Token>() {
                 if truth.get_token_type() == TokenType::True {
-                    return self.execute(stmt.clone());
+                    return self.execute(stmt);
                 } else if truth.get_token_type() == TokenType::False {
                     if let Some(else_stmt) = else_stmt {
-                        return self.execute(*else_stmt.clone());
+                        return self.execute(&*else_stmt);
                     }
                     return Ok(Box::new(Token::new(
                         TokenType::Nil,
@@ -867,7 +856,7 @@ pub mod interpreter {
             let is_truthy = self.is_truthy(value)?;
             if let Some(truth) = is_truthy.downcast_ref::<Token>() {
                 if truth.get_token_type() == TokenType::True {
-                    self.execute(stmt.clone())?;
+                    self.execute(stmt)?;
                     return self.visit_while_stmt(expr, stmt);
                 } else if truth.get_token_type() == TokenType::False {
                     return Ok(Box::new(Token::new(

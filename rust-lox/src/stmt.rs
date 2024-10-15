@@ -145,6 +145,20 @@ pub mod stmt {
             }
         }
 
+        pub fn generate(ast_val: &Vec<Stmt>) {
+            let mut counter: u32 = 0;
+            for expr in ast_val {
+                // generate graph from AST both as a dot file and as a png image.
+                let graph_name = format!("graph_{}", counter);
+                let mut graph_printer = StmtGraphvizPrinter::new(graph_name);
+                counter += 1;
+                expr.accept(&mut graph_printer);
+                graph_printer.close_graph();
+                graph_printer.write_to_file();
+                graph_printer.generate_image();
+            }
+        }
+
         pub fn close_graph(&mut self) {
             self.graph.push_str("}");
         }
