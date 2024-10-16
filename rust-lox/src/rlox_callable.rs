@@ -1,15 +1,32 @@
 pub mod rlox_callable {
-    use std::any::Any;
-    use std::rc::Rc;
-    use std::cell::RefCell;
     use crate::environment::environment::Environment;
     use crate::scanner::scan::Token;
-    use crate::{stmt::stmt::Stmt, interpreter::interpreter::Interpreter};
+    use crate::{interpreter::interpreter::Interpreter, stmt::stmt::Stmt};
+    use std::any::Any;
+    use std::cell::RefCell;
+    use std::rc::Rc;
 
+    pub enum Callable {
+        Class(RLoxClass),
+        Function(RLoxFunction),
+    }
+
+    impl Clone for Callable {
+        fn clone(&self) -> Self {
+            match self {
+                Callable::Function(lox_function) => Callable::Function(lox_function.clone()),
+                Callable::Class(class) => Callable::Class(class.clone()),
+            }
+        }
+    }
 
     pub trait RLoxCallable {
         fn arity(&self) -> usize;
-        fn call(&self, interpreter: &mut Interpreter, args: &mut Vec<Box<dyn Any>>) -> Result<Box<dyn Any>, String>;
+        fn call(
+            &self,
+            interpreter: &mut Interpreter,
+            args: &mut Vec<Box<dyn Any>>,
+        ) -> Result<Box<dyn Any>, String>;
     }
 
     #[derive(Clone)]
@@ -20,12 +37,23 @@ pub mod rlox_callable {
             0
         }
 
-        fn call(&self, _interpreter: &mut Interpreter, _args: &mut Vec<Box<dyn Any>>) -> Result<Box<dyn Any>, String>{
-            Ok(Box::new(Token::new(crate::scanner::scan::TokenType::Number(std::time::SystemTime::now()
-            .duration_since(std::time::UNIX_EPOCH)
-            .unwrap_or_else(|_| panic!("Could not get time since epoch"))
-            .as_secs_f64()), "clock".to_string(), 0, 0, 0)
-            ))
+        fn call(
+            &self,
+            _interpreter: &mut Interpreter,
+            _args: &mut Vec<Box<dyn Any>>,
+        ) -> Result<Box<dyn Any>, String> {
+            Ok(Box::new(Token::new(
+                crate::scanner::scan::TokenType::Number(
+                    std::time::SystemTime::now()
+                        .duration_since(std::time::UNIX_EPOCH)
+                        .unwrap_or_else(|_| panic!("Could not get time since epoch"))
+                        .as_secs_f64(),
+                ),
+                "clock".to_string(),
+                0,
+                0,
+                0,
+            )))
         }
     }
 
@@ -46,7 +74,7 @@ pub mod rlox_callable {
         pub fn to_string(&self) -> String {
             match &self.declaration {
                 Stmt::Function(name, _, _) => format!("<fn {}>", name.get_token_type()),
-                _ => panic!("Cannot call non-function")
+                _ => panic!("Cannot call non-function"),
             }
         }
     }
@@ -54,13 +82,16 @@ pub mod rlox_callable {
     impl RLoxCallable for RLoxFunction {
         fn arity(&self) -> usize {
             match &self.declaration {
-                Stmt::Function(_, params, _ ) => params.len(),
-                _ => 0
-            }  
+                Stmt::Function(_, params, _) => params.len(),
+                _ => 0,
+            }
         }
-            
 
-        fn call(&self, interpreter: &mut Interpreter, args: &mut Vec<Box<dyn Any>>) -> Result<Box<dyn Any>, String> {
+        fn call(
+            &self,
+            interpreter: &mut Interpreter,
+            args: &mut Vec<Box<dyn Any>>,
+        ) -> Result<Box<dyn Any>, String> {
             let env = self.closure.clone();
             match &self.declaration {
                 Stmt::Function(_, params, body) => {
@@ -68,10 +99,11 @@ pub mod rlox_callable {
                         /*
                          * Note for future me: - Initially I am removing the first element,
                          * but once removed the second element becomes the first element and so
-                         * on. Therefore, the correct way in order not to violate the bounds of the 
+                         * on. Therefore, the correct way in order not to violate the bounds of the
                          * vector is to remove the first element every time.
                          */
-                        env.borrow_mut().define(param.get_token_type().to_string(), args.remove(0));
+                        env.borrow_mut()
+                            .define(param.get_token_type().to_string(), args.remove(0));
                     }
 
                     match interpreter.execute_block(body, env) {
@@ -86,8 +118,7 @@ pub mod rlox_callable {
                             }
                         }
                     }
-                        
-                },
+                }
                 _ => panic!("Cannot call non-function"),
             }
         }
@@ -100,9 +131,7 @@ pub mod rlox_callable {
 
     impl RLoxClass {
         pub fn new(name: String) -> Self {
-            Self {
-                name,
-            }
+            Self { name }
         }
 
         pub fn to_string(&self) -> String {
@@ -110,4 +139,3 @@ pub mod rlox_callable {
         }
     }
 }
-

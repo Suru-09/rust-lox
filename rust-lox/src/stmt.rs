@@ -1,6 +1,7 @@
 pub mod stmt {
 
     use crate::expr::expr::{Expr, Visitor};
+    use crate::rlox_callable::rlox_callable::Callable;
     use crate::scanner::scan::Token;
     use log::debug;
     use std::fmt;
@@ -19,6 +20,15 @@ pub mod stmt {
         Function(Token, Vec<Token>, Vec<Stmt>),
         IfStmt(Expr, Box<Stmt>, Option<Box<Stmt>>),
         WhileStmt(Expr, Box<Stmt>),
+    }
+
+    #[derive(Clone)]
+    pub enum LiteralValue {
+        Number(f64),
+        Bool(bool),
+        String(String),
+        Callable(Callable),
+        Nil,
     }
 
     impl fmt::Display for Stmt {
