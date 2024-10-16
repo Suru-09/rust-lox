@@ -1,13 +1,14 @@
 pub mod expr {
 
     use crate::scanner::scan::Token;
+    use crate::stmt::stmt::LiteralValue;
     use std::fmt;
 
     pub trait Visitable {
         fn accept<T>(&self, visitor: &mut dyn Visitor<T>) -> T;
     }
 
-    #[derive(Clone, Debug, PartialEq)]
+    #[derive(Clone, Debug)]
     pub enum Expr {
         Binary(Box<Expr>, Token, Box<Expr>),
         Call(
@@ -17,7 +18,7 @@ pub mod expr {
         ),
         Logical(Box<Expr>, Token, Box<Expr>),
         Grouping(Box<Expr>),
-        Literal(Token),
+        Literal(LiteralValue),
         Unary(Token, Box<Expr>),
         Variable(Token),
         Assign(Token, Box<Expr>),
@@ -49,7 +50,7 @@ pub mod expr {
                     right_expr
                 ),
                 Expr::Grouping(expression) => write!(f, "(group {})", expression),
-                Expr::Literal(value) => write!(f, "{}", value.token_type_value()),
+                Expr::Literal(value) => write!(f, "{:?}", value),
                 Expr::Unary(operand, right_expr) => {
                     write!(f, "({} {})", operand.token_type_value(), right_expr)
                 }
@@ -93,7 +94,7 @@ pub mod expr {
     pub trait Visitor<T> {
         fn visit_binary_expr(&mut self, left: &Expr, operator: &Token, right: &Expr) -> T;
         fn visit_grouping_expr(&mut self, expression: &Expr) -> T;
-        fn visit_literal_expr(&mut self, value: &Token) -> T;
+        fn visit_literal_expr(&mut self, value: &LiteralValue) -> T;
         fn visit_unary_expr(&mut self, operator: &Token, right: &Expr) -> T;
         fn visit_variable_expr(&mut self, token: &Token) -> T;
         fn visit_assign_expr(&mut self, token: &Token, expr: &Expr) -> T;
@@ -134,8 +135,8 @@ pub mod expr {
             format!("(group {})", expression.accept(self))
         }
 
-        fn visit_literal_expr(&mut self, value: &Token) -> String {
-            format!("{}", value.token_type_value())
+        fn visit_literal_expr(&mut self, value: &LiteralValue) -> String {
+            format!("{:?}", value)
         }
 
         fn visit_unary_expr(&mut self, operator: &Token, right: &Expr) -> String {

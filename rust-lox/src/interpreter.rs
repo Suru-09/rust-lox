@@ -4,7 +4,7 @@ pub mod interpreter {
     use crate::error_handling::error_handling::error;
     use crate::expr::expr::{Expr, Visitor};
     use crate::function_name;
-    use crate::rlox_callable::rlox_callable::{Clock, RLoxClass, RLoxFunction};
+    use crate::rlox_callable::rlox_callable::{Callable, RLoxCallable, RLoxClass, RLoxFunction};
     use crate::scanner::scan::{Token, TokenType};
     use crate::stmt::stmt::{LiteralValue, Stmt, StmtVisitor};
     use std::any::Any;
@@ -36,8 +36,12 @@ pub mod interpreter {
             // it will be available in all the scopes.
             env.borrow_mut()
                 .push_env(Rc::new(RefCell::new(Environment::new())));
-            env.borrow_mut()
-                .define("clock".to_string(), Box::new(Clock {}));
+
+            // TODO: add the clock function back...
+            // env.borrow_mut().define(
+            //     "clock".to_string(),
+            //     LiteralValue::Callable(Box::new(Clock {})),
+            // );
 
             // push clock into locals.
             let mut locals = Vec::new();
@@ -63,12 +67,22 @@ pub mod interpreter {
             expr.accept(self)
         }
 
-        fn is_truthy(self, token: &Token) -> Result<LiteralValue, String> {
-            match token.get_token_type() {
-                TokenType::Nil => Ok(LiteralValue::Nil),
-                TokenType::False => Ok(LiteralValue::Bool(true)),
-                TokenType::True => Ok(LiteralValue::Bool(true)),
-                _ => Err("Given token can't be considered as a boolean".to_string()),
+        fn is_truthy(expr: &Expr) -> bool {
+            match Interpreter::convert_expr_to_literal_value(expr) {
+                Ok(l_val) => match l_val {
+                    LiteralValue::Bool(b) => b,
+                    LiteralValue::Nil => false,
+                    _ => true,
+                },
+                Err(_) => false,
+            }
+        }
+
+        fn is_truthy_lval(l_val: &LiteralValue) -> bool {
+            match l_val {
+                LiteralValue::Bool(b) => *b,
+                LiteralValue::Nil => false,
+                _ => true,
             }
         }
 
@@ -97,7 +111,7 @@ pub mod interpreter {
             ))
         }
 
-        fn look_up_variable(&mut self, token: &Token, expr: Expr) -> Result<(), String> {
+        fn look_up_variable(&mut self, token: &Token, expr: Expr) -> Result<LiteralValue, String> {
             match self.get_depth(token, expr) {
                 Ok(depth) => {
                     let variable = self.get_at(depth, token.get_token_type().to_string())?;
@@ -107,7 +121,7 @@ pub mod interpreter {
             }
         }
 
-        fn get_at(&mut self, distance: usize, name: String) -> Result<(), String> {
+        fn get_at(&mut self, distance: usize, name: String) -> Result<LiteralValue, String> {
             let mut env = self.environment.as_ref().borrow_mut();
             match env.get_at(distance, name.clone()) {
                 Some(value) => Ok(value),
@@ -118,14 +132,14 @@ pub mod interpreter {
             }
         }
 
-        fn is_token_string(self, token: &Token) -> bool {
+        fn is_token_string(token: &Token) -> bool {
             match token.get_token_type() {
                 TokenType::String(_) => true,
                 _ => false,
             }
         }
 
-        fn is_token_number(self, token: &Token) -> bool {
+        fn is_token_number(token: &Token) -> bool {
             match token.get_token_type() {
                 TokenType::Number(_) => true,
                 _ => false,
@@ -133,7 +147,6 @@ pub mod interpreter {
         }
 
         fn substract(
-            self,
             operand1: &LiteralValue,
             operand2: &LiteralValue,
         ) -> Result<LiteralValue, String> {
@@ -145,11 +158,7 @@ pub mod interpreter {
             }
         }
 
-        fn add(
-            self,
-            operand1: &LiteralValue,
-            operand2: &LiteralValue,
-        ) -> Result<LiteralValue, String> {
+        fn add(operand1: &LiteralValue, operand2: &LiteralValue) -> Result<LiteralValue, String> {
             match (operand1, operand2) {
                 (LiteralValue::String(s1), LiteralValue::String(s2)) => {
                     Ok(LiteralValue::String(String::from(s1.to_string() + s2)))
@@ -164,7 +173,6 @@ pub mod interpreter {
         }
 
         fn multiply(
-            self,
             operand1: &LiteralValue,
             operand2: &LiteralValue,
         ) -> Result<LiteralValue, String> {
@@ -177,7 +185,6 @@ pub mod interpreter {
         }
 
         fn divide(
-            self,
             operand1: &LiteralValue,
             operand2: &LiteralValue,
         ) -> Result<LiteralValue, String> {
@@ -190,7 +197,6 @@ pub mod interpreter {
         }
 
         fn greater(
-            self,
             operand1: &LiteralValue,
             operand2: &LiteralValue,
         ) -> Result<LiteralValue, String> {
@@ -203,7 +209,6 @@ pub mod interpreter {
         }
 
         fn greater_equal(
-            self,
             operand1: &LiteralValue,
             operand2: &LiteralValue,
         ) -> Result<LiteralValue, String> {
@@ -215,11 +220,7 @@ pub mod interpreter {
             }
         }
 
-        fn less(
-            self,
-            operand1: &LiteralValue,
-            operand2: &LiteralValue,
-        ) -> Result<LiteralValue, String> {
+        fn less(operand1: &LiteralValue, operand2: &LiteralValue) -> Result<LiteralValue, String> {
             match (operand1, operand2) {
                 (LiteralValue::Number(number1), LiteralValue::Number(number2)) => {
                     Ok(LiteralValue::Bool(number1 < number2))
@@ -229,7 +230,6 @@ pub mod interpreter {
         }
 
         fn less_equal(
-            &mut self,
             operand1: &LiteralValue,
             operand2: &LiteralValue,
         ) -> Result<LiteralValue, String> {
@@ -242,7 +242,6 @@ pub mod interpreter {
         }
 
         fn equal_equal(
-            self,
             operand1: &LiteralValue,
             operand2: &LiteralValue,
         ) -> Result<LiteralValue, String> {
@@ -258,7 +257,6 @@ pub mod interpreter {
         }
 
         fn bang_equal(
-            self,
             operand1: &LiteralValue,
             operand2: &LiteralValue,
         ) -> Result<LiteralValue, String> {
@@ -270,6 +268,13 @@ pub mod interpreter {
                     Ok(LiteralValue::Bool(number1 != number2))
                 }
                 _ => Err("Could do perform != on object of different types".to_string()),
+            }
+        }
+
+        fn convert_expr_to_literal_value(expr: &Expr) -> Result<LiteralValue, String> {
+            match expr {
+                Expr::Literal(ltype) => Ok(ltype.clone()),
+                _ => Err("Expression has to be a literal!!!".to_string()),
             }
         }
 
@@ -302,7 +307,7 @@ pub mod interpreter {
     }
 
     impl Visitor<Result<LiteralValue, String>> for Interpreter {
-        fn visit_literal_expr(&mut self, value: &Token) -> Result<LiteralValue, String> {
+        fn visit_literal_expr(&mut self, value: &LiteralValue) -> Result<LiteralValue, String> {
             Ok(value.clone())
         }
 
@@ -313,20 +318,20 @@ pub mod interpreter {
             right: &Expr,
         ) -> Result<LiteralValue, String> {
             // ? is the try operator, used to propagate errors.
-            let left = self.evaluate(left)?;
-            let right = self.evaluate(right)?;
+            let left = self.evaluate(left)?.clone();
+            let right = self.evaluate(right)?.clone();
 
             match operator.get_token_type() {
-                TokenType::Greater => self.greater(left, right),
-                TokenType::GreaterEqual => self.greater_equal(left, right),
-                TokenType::Less => self.less(left, right),
-                TokenType::LessEqual => self.less_equal(left, right),
-                TokenType::BangEqual => self.bang_equal(left, right),
-                TokenType::EqualEqual => self.equal_equal(left, right),
-                TokenType::Minus => self.substract(left, right),
-                TokenType::Plus => self.add(left, right),
-                TokenType::Slash => self.divide(left, right),
-                TokenType::Star => self.multiply(left, right),
+                TokenType::Greater => Interpreter::greater(&left, &right),
+                TokenType::GreaterEqual => Interpreter::greater_equal(&left, &right),
+                TokenType::Less => Interpreter::less(&left, &right),
+                TokenType::LessEqual => Interpreter::less_equal(&left, &right),
+                TokenType::BangEqual => Interpreter::bang_equal(&left, &right),
+                TokenType::EqualEqual => Interpreter::equal_equal(&left, &right),
+                TokenType::Minus => Interpreter::substract(&left, &right),
+                TokenType::Plus => Interpreter::add(&left, &right),
+                TokenType::Slash => Interpreter::divide(&left, &right),
+                TokenType::Star => Interpreter::multiply(&left, &right),
                 _ => Err("The given operator is not a binary operator.".to_string()),
             }
         }
@@ -341,8 +346,14 @@ pub mod interpreter {
             right: &Expr,
         ) -> Result<LiteralValue, String> {
             match operator.get_token_type() {
-                TokenType::Minus => Ok(Box::new(right.clone())),
-                TokenType::Bang => Ok(Box::new(self.is_truthy(Box::new(right.clone())))),
+                TokenType::Minus => match right {
+                    Expr::Literal(ltype) => match ltype {
+                        LiteralValue::Number(number) => Ok(LiteralValue::Number(-number)),
+                        _ => Err("Operand must be a number!".to_string()),
+                    },
+                    _ => Err("Operand must be a number!".to_string()),
+                },
+                TokenType::Bang => Ok(LiteralValue::Bool(Interpreter::is_truthy(right))),
                 _ => Err("The given operator is not a unary operator.".to_string()),
             }
         }
@@ -385,23 +396,17 @@ pub mod interpreter {
             right: &Expr,
         ) -> Result<LiteralValue, String> {
             let left_val = self.evaluate(left)?;
-            let is_truthy = self.is_truthy(left_val)?;
-            if let Some(truth) = is_truthy.downcast_ref::<Token>() {
-                if truth.get_token_type() == TokenType::True {
-                    if operator.get_token_type() == TokenType::Or {
-                        return Ok(Box::new(truth.clone()));
-                    }
-                    return self.evaluate(right);
-                } else if truth.get_token_type() == TokenType::False {
-                    if operator.get_token_type() == TokenType::Or {
-                        return self.evaluate(right);
-                    }
-                    return Ok(Box::new(truth.clone()));
+            let is_truthy = Interpreter::is_truthy_lval(&left_val);
+
+            if let TokenType::Or = operator.get_token_type() {
+                if is_truthy {
+                    return Ok(left_val);
                 }
+            } else if !is_truthy {
+                return Ok(left_val);
             }
-            return Err(
-                "Could not visit Logical Expression, truthy might be a reason.".to_string(),
-            );
+
+            self.evaluate(right)
         }
 
         fn visit_call_expr(
@@ -419,13 +424,16 @@ pub mod interpreter {
                 args.push(self.evaluate(arg)?);
             }
 
-            if let Some(callee) = calle_local.downcast_ref::<RLoxFunction>() {
-                return callee.call(self, &mut args);
+            if let LiteralValue::Callable(callable_box) = calle_local {
+                if let Callable::Function(function) = *callable_box {
+                    return function.call(self, &mut args);
+                }
             }
 
-            if let Some(callee) = calle_local.downcast_ref::<Clock>() {
-                return callee.call(self, &mut args);
-            }
+            // to do !!! reimplement clock
+            // if let Some(callee) = calle_local.downcast_ref::<Clock>() {
+            //     return callee.call(self, &mut args);
+            // }
 
             Err("Function has not been implemented yet.".to_string())
         }
@@ -439,38 +447,13 @@ pub mod interpreter {
 
         fn visit_print_stmt(&mut self, expr: &Expr) -> Result<(), String> {
             let value = self.evaluate(expr)?;
-
-            if let Some(token) = value.downcast_ref::<Token>() {
-                println!("{}", token.get_token_type());
-                return Ok(Box::new(token.clone()));
-            }
-
-            if let Some(expr) = value.downcast_ref::<Expr>() {
-                println!("{}", expr);
-                return Ok(Box::new(expr.clone()));
-            }
-
-            if let Some(stmt) = value.downcast_ref::<Stmt>() {
-                println!("{}", stmt);
-                return Ok(Box::new(stmt.clone()));
-            }
-
-            if let Some(rlox_func) = value.downcast_ref::<RLoxFunction>() {
-                println!("{}", rlox_func.to_string());
-                return Ok(Box::new(rlox_func.clone()));
-            }
-
-            if let Some(rlox_class) = value.downcast_ref::<RLoxClass>() {
-                println!("{}", rlox_class.to_string());
-                return Ok(Box::new(rlox_class.clone()));
-            }
-
-            Err("Could not print value.".to_string())
+            println!("{:?}", value);
+            Ok(())
         }
 
         fn visit_return_stmt(&mut self, _keyword: &Token, expr: &Expr) -> Result<(), String> {
-            let _: Expr = self.evaluate(expr)?;
-            Err("Could not return value.".to_string())
+            let _ = self.evaluate(expr)?;
+            Ok(())
         }
 
         fn visit_var_stmt(&mut self, name: &Token, initializer: &Expr) -> Result<(), String> {
@@ -479,8 +462,8 @@ pub mod interpreter {
             self.environment
                 .as_ref()
                 .borrow_mut()
-                .define(name.get_token_type().to_string(), Box::new(value.clone()));
-            Ok(value)
+                .define(name.get_token_type().to_string(), value.clone());
+            Ok(())
         }
 
         fn visit_block_stmt(&mut self, stmts: &Vec<Stmt>) -> Result<(), String> {
@@ -490,11 +473,11 @@ pub mod interpreter {
 
         fn visit_class_stmt(&mut self, name: &Token, _: &Vec<Stmt>) -> Result<(), String> {
             let klass: RLoxClass = RLoxClass::new(name.get_token_type().to_string().clone());
-            self.environment
-                .as_ref()
-                .borrow_mut()
-                .define(name.get_token_type().to_string(), Box::new(klass));
-            Ok(Box::new(name.clone()))
+            self.environment.as_ref().borrow_mut().define(
+                name.get_token_type().to_string(),
+                LiteralValue::Callable(Box::new(Callable::Class(klass))),
+            );
+            Ok(())
         }
 
         fn visit_function_stmt(
@@ -507,11 +490,11 @@ pub mod interpreter {
                 Stmt::Function(name.clone(), params.clone(), body.clone()),
                 self.environment.as_ref().borrow_mut().peek().unwrap(),
             );
-            self.environment
-                .as_ref()
-                .borrow_mut()
-                .define(name.get_token_type().to_string(), Box::new(func));
-            Ok(Box::new(name.clone()))
+            self.environment.as_ref().borrow_mut().define(
+                name.get_token_type().to_string(),
+                LiteralValue::Callable(Box::new(Callable::Function(func))),
+            );
+            Ok(())
         }
 
         fn visit_if_stmt(
@@ -521,44 +504,45 @@ pub mod interpreter {
             else_stmt: &Option<Box<Stmt>>,
         ) -> Result<(), String> {
             let value = self.evaluate(expr)?;
-            let is_truthy = self.is_truthy(value)?;
-            if let Some(truth) = is_truthy.downcast_ref::<Token>() {
-                if truth.get_token_type() == TokenType::True {
-                    return self.execute(stmt);
-                } else if truth.get_token_type() == TokenType::False {
-                    if let Some(else_stmt) = else_stmt {
-                        return self.execute(&*else_stmt);
+            let is_truthy = Interpreter::is_truthy_lval(&value);
+            if is_truthy {
+                match value {
+                    LiteralValue::Bool(is_true) => {
+                        if is_true {
+                            return self.execute(stmt);
+                        } else {
+                            if let Some(else_) = else_stmt {
+                                return self.execute(&else_);
+                            }
+                        }
                     }
-                    return Ok(Box::new(Token::new(
-                        TokenType::Nil,
-                        "".to_string(),
-                        0,
-                        0,
-                        0,
-                    )));
+                    _ => {
+                        return Err(
+                            "Could not visit IF statement, truthy might be a reason.".to_string()
+                        )
+                    }
                 }
             }
-            return Err("Could not visit IF statement, truthy might be a reason.".to_string());
+            Err("Could not visit IF statement, truthy might be a reason.".to_string())
         }
 
         fn visit_while_stmt(&mut self, expr: &Expr, stmt: &Stmt) -> Result<(), String> {
             let value = self.evaluate(expr)?;
-            let is_truthy = self.is_truthy(value)?;
-            if let Some(truth) = is_truthy.downcast_ref::<Token>() {
-                if truth.get_token_type() == TokenType::True {
-                    self.execute(stmt)?;
-                    return self.visit_while_stmt(expr, stmt);
-                } else if truth.get_token_type() == TokenType::False {
-                    return Ok(Box::new(Token::new(
-                        TokenType::Nil,
-                        "".to_string(),
-                        0,
-                        0,
-                        0,
-                    )));
+            let is_truthy = Interpreter::is_truthy_lval(&value);
+            if is_truthy {
+                match value {
+                    LiteralValue::Bool(value_bool) => {
+                        if value_bool {
+                            self.execute(stmt)?;
+                            return self.visit_while_stmt(expr, stmt);
+                        } else {
+                            return Ok(());
+                        }
+                    }
+                    _ => return Err("While condition is not a boolean!".to_string()),
                 }
             }
-            return Err("Could not visit WHILE statement, truthy might be a reason.".to_string());
+            Err("Could not visit WHILE statement, truthy might be a reason.".to_string())
         }
     }
 }

@@ -9,7 +9,7 @@ pub mod stmt {
     use std::io::prelude::*;
     use std::process::Command;
 
-    #[derive(Clone)]
+    #[derive(Clone, Debug)]
     pub enum Stmt {
         ExprStmt(Expr),
         PrintStmt(Expr),
@@ -22,12 +22,12 @@ pub mod stmt {
         WhileStmt(Expr, Box<Stmt>),
     }
 
-    #[derive(Clone)]
+    #[derive(Clone, Debug)]
     pub enum LiteralValue {
         Number(f64),
         Bool(bool),
         String(String),
-        Callable(Callable),
+        Callable(Box<Callable>),
         Nil,
     }
 

@@ -1,11 +1,11 @@
 pub mod rlox_callable {
     use crate::environment::environment::Environment;
-    use crate::scanner::scan::Token;
+    use crate::stmt::stmt::LiteralValue;
     use crate::{interpreter::interpreter::Interpreter, stmt::stmt::Stmt};
-    use std::any::Any;
     use std::cell::RefCell;
     use std::rc::Rc;
 
+    #[derive(Debug)]
     pub enum Callable {
         Class(RLoxClass),
         Function(RLoxFunction),
@@ -25,39 +25,39 @@ pub mod rlox_callable {
         fn call(
             &self,
             interpreter: &mut Interpreter,
-            args: &mut Vec<Box<dyn Any>>,
-        ) -> Result<Box<dyn Any>, String>;
+            args: &mut Vec<LiteralValue>,
+        ) -> Result<LiteralValue, String>;
     }
 
-    #[derive(Clone)]
-    pub struct Clock {}
+    // #[derive(Clone)]
+    // pub struct Clock {}
 
-    impl RLoxCallable for Clock {
-        fn arity(&self) -> usize {
-            0
-        }
+    // impl RLoxCallable for Clock {
+    //     fn arity(&self) -> usize {
+    //         0
+    //     }
 
-        fn call(
-            &self,
-            _interpreter: &mut Interpreter,
-            _args: &mut Vec<Box<dyn Any>>,
-        ) -> Result<Box<dyn Any>, String> {
-            Ok(Box::new(Token::new(
-                crate::scanner::scan::TokenType::Number(
-                    std::time::SystemTime::now()
-                        .duration_since(std::time::UNIX_EPOCH)
-                        .unwrap_or_else(|_| panic!("Could not get time since epoch"))
-                        .as_secs_f64(),
-                ),
-                "clock".to_string(),
-                0,
-                0,
-                0,
-            )))
-        }
-    }
+    //     fn call(
+    //         &self,
+    //         _interpreter: &mut Interpreter,
+    //         _args: &mut Vec<LiteralValue>,
+    //     ) -> Result<LiteralValue, String> {
+    //         Ok(Box::new(Token::new(
+    //             crate::scanner::scan::TokenType::Number(
+    //                 std::time::SystemTime::now()
+    //                     .duration_since(std::time::UNIX_EPOCH)
+    //                     .unwrap_or_else(|_| panic!("Could not get time since epoch"))
+    //                     .as_secs_f64(),
+    //             ),
+    //             "clock".to_string(),
+    //             0,
+    //             0,
+    //             0,
+    //         )))
+    //     }
+    // }
 
-    #[derive(Clone)]
+    #[derive(Clone, Debug)]
     pub struct RLoxFunction {
         pub declaration: Stmt,
         pub closure: Rc<RefCell<Environment>>,
@@ -90,8 +90,8 @@ pub mod rlox_callable {
         fn call(
             &self,
             interpreter: &mut Interpreter,
-            args: &mut Vec<Box<dyn Any>>,
-        ) -> Result<Box<dyn Any>, String> {
+            args: &mut Vec<LiteralValue>,
+        ) -> Result<LiteralValue, String> {
             let env = self.closure.clone();
             match &self.declaration {
                 Stmt::Function(_, params, body) => {
@@ -106,25 +106,19 @@ pub mod rlox_callable {
                             .define(param.get_token_type().to_string(), args.remove(0));
                     }
 
-                    match interpreter.execute_block(body, env) {
-                        Ok(return_val) => Ok(return_val),
+                    let _ = match interpreter.execute_block(body, env) {
+                        Ok(return_val) => Ok(()),
                         Err(err_str) => {
-                            if err_str.starts_with("Return") && interpreter.return_value.is_some() {
-                                let ret_val = interpreter.return_value.take().unwrap();
-                                interpreter.return_value = None;
-                                return Interpreter::extract_return_value(ret_val);
-                            } else {
-                                return Err(err_str);
-                            }
+                            return Err(err_str);
                         }
-                    }
+                    };
                 }
                 _ => panic!("Cannot call non-function"),
             }
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Clone, Debug)]
     pub struct RLoxClass {
         pub name: String,
     }
