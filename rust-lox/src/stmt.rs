@@ -9,7 +9,7 @@ pub mod stmt {
     use std::io::prelude::*;
     use std::process::Command;
 
-    #[derive(Clone, Debug)]
+    #[derive(Clone, Debug, PartialEq)]
     pub enum Stmt {
         ExprStmt(Expr),
         PrintStmt(Expr),
@@ -22,7 +22,7 @@ pub mod stmt {
         WhileStmt(Expr, Box<Stmt>),
     }
 
-    #[derive(Clone, Debug)]
+    #[derive(Clone, Debug, PartialEq)]
     pub enum LiteralValue {
         Number(f64),
         Bool(bool),
@@ -373,8 +373,8 @@ pub mod stmt {
             grouping_node_index
         }
 
-        fn visit_literal_expr(&mut self, value: &Token) -> u64 {
-            self.add_node(value.token_type_value())
+        fn visit_literal_expr(&mut self, value: &LiteralValue) -> u64 {
+            self.add_node(format!("{:?}", value))
         }
 
         fn visit_unary_expr(&mut self, operator: &Token, right: &Expr) -> u64 {

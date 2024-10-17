@@ -13,7 +13,7 @@ pub mod parser {
      * *
      */
     use crate::scanner::scan::{Token, TokenType};
-    use crate::stmt::stmt::Stmt;
+    use crate::stmt::stmt::{Stmt, LiteralValue};
     use log::debug;
 
     pub struct Parser {
@@ -223,37 +223,30 @@ pub mod parser {
             debug!("{}", self.peek().get_token_type());
 
             if self.match_token(vec![TokenType::False]) {
-                return Ok(Expr::Literal(Token::new(
-                    TokenType::False,
-                    String::from("false"),
-                    0,
-                    0,
-                    0,
-                )));
+                return Ok(Expr::Literal(LiteralValue::Bool(false)));
             }
 
             if self.match_token(vec![TokenType::True]) {
-                return Ok(Expr::Literal(Token::new(
-                    TokenType::True,
-                    String::from("true"),
-                    0,
-                    0,
-                    0,
-                )));
+                return Ok(Expr::Literal(LiteralValue::Bool(true)));
             }
 
             if self.match_token(vec![TokenType::Nil]) {
-                return Ok(Expr::Literal(Token::new(
-                    TokenType::Nil,
-                    String::from("nil"),
-                    0,
-                    0,
-                    0,
-                )));
+                return Ok(Expr::Literal(LiteralValue::Nil));
             }
 
             if self.match_any_number_or_string() {
-                return Ok(Expr::Literal(self.previous()));
+                match self.previous().get_token_type() {
+                    TokenType::String(str) => {return Ok(Expr::Literal(LiteralValue::String(str)));},
+                    TokenType::Number(num) => {return Ok(Expr::Literal(LiteralValue::Number(num)));},
+                    _ => {
+                        error(
+                            self.previous().get_line(),
+                            self.previous().get_column(), 
+                            "It has to be either a string or a number at this point".to_string(),
+                            function_name!());
+                        return Err("It has to be either a string or a number at this point".to_string());
+                    }
+                }
             }
 
             if self.match_any_identifier() {
@@ -340,7 +333,7 @@ pub mod parser {
 
         pub fn return_statement(&mut self) -> Result<Stmt, String> {
             let keyword = self.previous();
-            let mut value = Expr::Literal(Token::new(TokenType::Nil, String::from("nil"), 0, 0, 0));
+            let mut value = Expr::Literal(LiteralValue::Nil);
             if !self.check(TokenType::Semicolon) {
                 value = self.expression()?;
             }
@@ -406,13 +399,7 @@ pub mod parser {
             }
 
             if let None = condition {
-                condition = Some(Expr::Literal(Token::new(
-                    TokenType::True,
-                    String::from("true"),
-                    0,
-                    0,
-                    0,
-                )));
+                condition = Some(Expr::Literal(LiteralValue::Bool(true)));
             }
 
             match condition {
@@ -540,8 +527,7 @@ pub mod parser {
                 return Err("".to_string());
             }
             let name = self.previous();
-            let mut initializer =
-                Expr::Literal(Token::new(TokenType::Nil, String::from("nil"), 0, 0, 0));
+            let mut initializer = Expr::Literal(LiteralValue::Nil);
             if self.match_token(vec![TokenType::Equal]) {
                 initializer = self.expression()?;
             };
@@ -566,9 +552,9 @@ pub mod parser {
                 let value = self.assignment()?;
 
                 match expr {
-                    Expr::Literal(name) | Expr::Variable(name) | Expr::Assign(name, _) => {
+                    Expr::Variable(name) | Expr::Assign(name, _) => {
                         return Ok(Expr::Assign(name, Box::new(value)))
-                    }
+                    },
                     _ => {
                         error(
                             equals.get_line(),

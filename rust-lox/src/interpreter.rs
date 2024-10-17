@@ -132,20 +132,6 @@ pub mod interpreter {
             }
         }
 
-        fn is_token_string(token: &Token) -> bool {
-            match token.get_token_type() {
-                TokenType::String(_) => true,
-                _ => false,
-            }
-        }
-
-        fn is_token_number(token: &Token) -> bool {
-            match token.get_token_type() {
-                TokenType::Number(_) => true,
-                _ => false,
-            }
-        }
-
         fn substract(
             operand1: &LiteralValue,
             operand2: &LiteralValue,

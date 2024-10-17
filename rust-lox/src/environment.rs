@@ -4,7 +4,7 @@ pub mod environment {
     use std::collections::HashMap;
     use std::rc::Rc;
 
-    #[derive(Debug)]
+    #[derive(Debug, PartialEq)]
     pub struct Environment {
         values: HashMap<String, LiteralValue>,
     }

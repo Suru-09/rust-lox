@@ -5,7 +5,7 @@ pub mod rlox_callable {
     use std::cell::RefCell;
     use std::rc::Rc;
 
-    #[derive(Debug)]
+    #[derive(Debug, PartialEq)]
     pub enum Callable {
         Class(RLoxClass),
         Function(RLoxFunction),
@@ -57,7 +57,7 @@ pub mod rlox_callable {
     //     }
     // }
 
-    #[derive(Clone, Debug)]
+    #[derive(Clone, Debug, PartialEq)]
     pub struct RLoxFunction {
         pub declaration: Stmt,
         pub closure: Rc<RefCell<Environment>>,
@@ -107,7 +107,7 @@ pub mod rlox_callable {
                     }
 
                     let _ = match interpreter.execute_block(body, env) {
-                        Ok(return_val) => Ok(()),
+                        Ok(_) => return Ok(LiteralValue::Nil),
                         Err(err_str) => {
                             return Err(err_str);
                         }
@@ -118,7 +118,7 @@ pub mod rlox_callable {
         }
     }
 
-    #[derive(Clone, Debug)]
+    #[derive(Clone, Debug, PartialEq)]
     pub struct RLoxClass {
         pub name: String,
     }
