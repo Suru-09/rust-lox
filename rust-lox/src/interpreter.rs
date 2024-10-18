@@ -24,8 +24,19 @@ pub mod interpreter {
      */
     pub struct Interpreter {
         pub environment: Rc<RefCell<EnvironmentStack>>,
-        pub return_value: Option<LiteralValue>,
         pub locals: Vec<(Expr, usize)>,
+    }
+
+    #[derive(Debug, PartialEq)]
+    pub enum Error {
+        LoxRuntimeError(String),
+        Return(LiteralValue)
+    }
+
+    impl Error {
+        pub fn from_string(str: &str) -> Error {
+            Error::LoxRuntimeError(String::from(str))
+        }
     }
 
     impl Interpreter {
@@ -57,12 +68,11 @@ pub mod interpreter {
 
             Interpreter {
                 environment: env,
-                return_value: None,
                 locals,
             }
         }
 
-        fn evaluate(&mut self, expr: &Expr) -> Result<LiteralValue, String> {
+        fn evaluate(&mut self, expr: &Expr) -> Result<LiteralValue, Error> {
             expr.accept(self)
         }
 
@@ -110,23 +120,23 @@ pub mod interpreter {
             ))
         }
 
-        fn look_up_variable(&mut self, token: &Token, expr: Expr) -> Result<LiteralValue, String> {
+        fn look_up_variable(&mut self, token: &Token, expr: Expr) -> Result<LiteralValue, Error> {
             match self.get_depth(token, expr) {
                 Ok(depth) => {
                     let variable = self.get_at(depth, token.get_token_type().to_string())?;
                     Ok(variable)
                 }
-                Err(err) => Err(err),
+                Err(err) => Err(Error::LoxRuntimeError(err)),
             }
         }
 
-        fn get_at(&mut self, distance: usize, name: String) -> Result<LiteralValue, String> {
+        fn get_at(&mut self, distance: usize, name: String) -> Result<LiteralValue, Error> {
             let mut env = self.environment.as_ref().borrow_mut();
             match env.get_at(distance, name.clone()) {
                 Some(value) => Ok(value),
                 None => match env.get(name.clone()) {
                     Some(value) => Ok(value),
-                    None => Err(format!("Variable '{}' is undefined.", name)),
+                    None => Err(Error::LoxRuntimeError(format!("Variable '{}' is undefined.", name))),
                 },
             }
         }
@@ -134,16 +144,16 @@ pub mod interpreter {
         fn substract(
             operand1: &LiteralValue,
             operand2: &LiteralValue,
-        ) -> Result<LiteralValue, String> {
+        ) -> Result<LiteralValue, Error> {
             match (operand1, operand2) {
                 (LiteralValue::Number(number1), LiteralValue::Number(number2)) => {
                     Ok(LiteralValue::Number(number1 - number2))
                 }
-                _ => Err("In order to substract two things they need to be numbers".to_string()),
+                _ => Err(Error::from_string("In order to substract two things they need to be numbers")),
             }
         }
 
-        fn add(operand1: &LiteralValue, operand2: &LiteralValue) -> Result<LiteralValue, String> {
+        fn add(operand1: &LiteralValue, operand2: &LiteralValue) -> Result<LiteralValue, Error> {
             match (operand1, operand2) {
                 (LiteralValue::String(s1), LiteralValue::String(s2)) => {
                     Ok(LiteralValue::String(String::from(s1.to_string() + s2)))
@@ -152,7 +162,7 @@ pub mod interpreter {
                     Ok(LiteralValue::Number(number1 + number2))
                 }
                 _ => {
-                    Err("In order to add two things they need to be numbers or strings".to_string())
+                    Err(Error::from_string("In order to add two things they need to be numbers or strings"))
                 }
             }
         }
@@ -160,76 +170,76 @@ pub mod interpreter {
         fn multiply(
             operand1: &LiteralValue,
             operand2: &LiteralValue,
-        ) -> Result<LiteralValue, String> {
+        ) -> Result<LiteralValue, Error> {
             match (operand1, operand2) {
                 (LiteralValue::Number(number1), LiteralValue::Number(number2)) => {
                     Ok(LiteralValue::Number(number1 * number2))
                 }
-                _ => Err("In order to multiply two things they need to be numbers".to_string()),
+                _ => Err(Error::from_string("In order to multiply two things they need to be numbers")),
             }
         }
 
         fn divide(
             operand1: &LiteralValue,
             operand2: &LiteralValue,
-        ) -> Result<LiteralValue, String> {
+        ) -> Result<LiteralValue, Error> {
             match (operand1, operand2) {
                 (LiteralValue::Number(number1), LiteralValue::Number(number2)) => {
                     Ok(LiteralValue::Number(number1 / number2))
                 }
-                _ => Err("In order to divide two things they need to be numbers".to_string()),
+                _ => Err(Error::from_string("In order to divide two things they need to be numbers")),
             }
         }
 
         fn greater(
             operand1: &LiteralValue,
             operand2: &LiteralValue,
-        ) -> Result<LiteralValue, String> {
+        ) -> Result<LiteralValue, Error> {
             match (operand1, operand2) {
                 (LiteralValue::Number(number1), LiteralValue::Number(number2)) => {
                     Ok(LiteralValue::Bool(number1 > number2))
                 }
-                _ => Err("In order to compare them, operands must be two numbers.".to_string()),
+                _ => Err(Error::from_string("In order to compare them, operands must be two numbers.")),
             }
         }
 
         fn greater_equal(
             operand1: &LiteralValue,
             operand2: &LiteralValue,
-        ) -> Result<LiteralValue, String> {
+        ) -> Result<LiteralValue, Error> {
             match (operand1, operand2) {
                 (LiteralValue::Number(number1), LiteralValue::Number(number2)) => {
                     Ok(LiteralValue::Bool(number1 >= number2))
                 }
-                _ => Err("In order to compare them, operands must be two numbers.".to_string()),
+                _ => Err(Error::from_string("In order to compare them, operands must be two numbers.")),
             }
         }
 
-        fn less(operand1: &LiteralValue, operand2: &LiteralValue) -> Result<LiteralValue, String> {
+        fn less(operand1: &LiteralValue, operand2: &LiteralValue) -> Result<LiteralValue, Error> {
             match (operand1, operand2) {
                 (LiteralValue::Number(number1), LiteralValue::Number(number2)) => {
                     Ok(LiteralValue::Bool(number1 < number2))
                 }
-                _ => Err("In order to compare them, operands must be two numbers.".to_string()),
+                _ => Err(Error::from_string("In order to compare them, operands must be two numbers.")),
             }
         }
 
         fn less_equal(
             operand1: &LiteralValue,
             operand2: &LiteralValue,
-        ) -> Result<LiteralValue, String> {
+        ) -> Result<LiteralValue, Error> {
             match (operand1, operand2) {
                 (LiteralValue::Number(number1), LiteralValue::Number(number2)) => {
                     Ok(LiteralValue::Bool(number1 < number2))
                 }
-                _ => Err("In order to compare them, operands must be two numbers.".to_string()),
+                _ => Err(Error::from_string("In order to compare them, operands must be two numbers.")),
             }
         }
 
         fn equal_equal(
             operand1: &LiteralValue,
             operand2: &LiteralValue,
-        ) -> Result<LiteralValue, String> {
+        ) -> Result<LiteralValue, Error> {
             match (operand1, operand2) {
                 (LiteralValue::String(s1), LiteralValue::String(s2)) => {
                     Ok(LiteralValue::Bool(s1 == s2))
@@ -237,14 +247,14 @@ pub mod interpreter {
                 (LiteralValue::Number(number1), LiteralValue::Number(number2)) => {
                     Ok(LiteralValue::Bool(number1 == number2))
                 }
-                _ => Err("Could do perform == on object of different types".to_string()),
+                _ => Err(Error::from_string("Could do perform == on object of different types")),
             }
         }
 
         fn bang_equal(
             operand1: &LiteralValue,
             operand2: &LiteralValue,
-        ) -> Result<LiteralValue, String> {
+        ) -> Result<LiteralValue, Error> {
             match (operand1, operand2) {
                 (LiteralValue::String(s1), LiteralValue::String(s2)) => {
                     Ok(LiteralValue::Bool(s1 != s2))
@@ -252,22 +262,22 @@ pub mod interpreter {
                 (LiteralValue::Number(number1), LiteralValue::Number(number2)) => {
                     Ok(LiteralValue::Bool(number1 != number2))
                 }
-                _ => Err("Could do perform != on object of different types".to_string()),
+                _ => Err(Error::from_string("Could do perform != on object of different types")),
             }
         }
 
-        fn convert_expr_to_literal_value(expr: &Expr) -> Result<LiteralValue, String> {
+        fn convert_expr_to_literal_value(expr: &Expr) -> Result<LiteralValue, Error> {
             match expr {
                 Expr::Literal(ltype) => Ok(ltype.clone()),
-                _ => Err("Expression has to be a literal!!!".to_string()),
+                _ => Err(Error::from_string("Expression has to be a literal!!!")),
             }
         }
 
-        pub fn execute(&mut self, stmt: &Stmt) -> Result<(), String> {
+        pub fn execute(&mut self, stmt: &Stmt) -> Result<(), Error> {
             stmt.accept(self)
         }
 
-        pub fn interpret(&mut self, statements: &Vec<Stmt>) -> Result<(), String> {
+        pub fn interpret(&mut self, statements: &Vec<Stmt>) -> Result<(), Error> {
             for stmt in statements {
                 self.execute(stmt)?;
             }
@@ -278,36 +288,18 @@ pub mod interpreter {
             &mut self,
             stmts: &Vec<Stmt>,
             env: Rc<RefCell<Environment>>,
-        ) -> Result<(), String> {
+        ) -> Result<(), Error> {
             self.environment.as_ref().borrow_mut().push_env(env);
             for stmt in stmts {
-                match stmt {
-                    Stmt::ReturnStmt(return_token, return_expr) => match return_expr {
-                        Expr::Literal(l_val) => {
-                            self.return_value = Some(l_val.clone());
-                            return Ok(())
-                        },
-                        _ => {
-                            error(
-                                return_token.get_line(),
-                                return_token.get_line(),
-                                "Return value must be a literal!".to_string(),
-                                function_name!());
-                            return Err("Return value must be a literal!".to_string());
-                        }
-                    },
-                    _ => {
-                        self.execute(stmt)?;
-                    },
-                }
+                self.execute(stmt)?;
             }
             self.environment.as_ref().borrow_mut().pop();
             Ok(())
         }
     }
 
-    impl Visitor<Result<LiteralValue, String>> for Interpreter {
-        fn visit_literal_expr(&mut self, value: &LiteralValue) -> Result<LiteralValue, String> {
+    impl Visitor<Result<LiteralValue, Error>> for Interpreter {
+        fn visit_literal_expr(&mut self, value: &LiteralValue) -> Result<LiteralValue, Error> {
             Ok(value.clone())
         }
 
@@ -316,7 +308,7 @@ pub mod interpreter {
             left: &Expr,
             operator: &Token,
             right: &Expr,
-        ) -> Result<LiteralValue, String> {
+        ) -> Result<LiteralValue, Error> {
             // ? is the try operator, used to propagate errors.
             let left = self.evaluate(left)?.clone();
             let right = self.evaluate(right)?.clone();
@@ -332,11 +324,11 @@ pub mod interpreter {
                 TokenType::Plus => Interpreter::add(&left, &right),
                 TokenType::Slash => Interpreter::divide(&left, &right),
                 TokenType::Star => Interpreter::multiply(&left, &right),
-                _ => Err("The given operator is not a binary operator.".to_string()),
+                _ => Err(Error::from_string("The given operator is not a binary operator.")),
             }
         }
 
-        fn visit_grouping_expr(&mut self, expr: &Expr) -> Result<LiteralValue, String> {
+        fn visit_grouping_expr(&mut self, expr: &Expr) -> Result<LiteralValue, Error> {
             self.evaluate(expr)
         }
 
@@ -344,21 +336,21 @@ pub mod interpreter {
             &mut self,
             operator: &Token,
             right: &Expr,
-        ) -> Result<LiteralValue, String> {
+        ) -> Result<LiteralValue, Error> {
             match operator.get_token_type() {
                 TokenType::Minus => match right {
                     Expr::Literal(ltype) => match ltype {
                         LiteralValue::Number(number) => Ok(LiteralValue::Number(-number)),
-                        _ => Err("Operand must be a number!".to_string()),
+                        _ => Err(Error::from_string("Operand must be a number!")),
                     },
-                    _ => Err("Operand must be a number!".to_string()),
+                    _ => Err(Error::from_string("Operand must be a number!")),
                 },
                 TokenType::Bang => Ok(LiteralValue::Bool(Interpreter::is_truthy(right))),
-                _ => Err("The given operator is not a unary operator.".to_string()),
+                _ => Err(Error::from_string("The given operator is not a unary operator.")),
             }
         }
 
-        fn visit_variable_expr(&mut self, name: &Token) -> Result<LiteralValue, String> {
+        fn visit_variable_expr(&mut self, name: &Token) -> Result<LiteralValue, Error> {
             let expr = Expr::Variable(name.clone());
             self.look_up_variable(name, expr)
         }
@@ -367,7 +359,7 @@ pub mod interpreter {
             &mut self,
             name: &Token,
             value: &Expr,
-        ) -> Result<LiteralValue, String> {
+        ) -> Result<LiteralValue, Error> {
             let value_evaluated = self.evaluate(value)?;
             //let distance = self.get_depth(name, value.clone());
 
@@ -398,7 +390,7 @@ pub mod interpreter {
             left: &Expr,
             operator: &Token,
             right: &Expr,
-        ) -> Result<LiteralValue, String> {
+        ) -> Result<LiteralValue, Error> {
             let left_val = self.evaluate(left)?;
             let is_truthy = Interpreter::is_truthy_lval(&left_val);
 
@@ -418,7 +410,7 @@ pub mod interpreter {
             callee: &Expr,
             _: &Token,
             arguments: &Vec<Expr>,
-        ) -> Result<LiteralValue, String> {
+        ) -> Result<LiteralValue, Error> {
             let calle_local = self.evaluate(callee)?;
 
             // ! TODO: I will delay the arity check until I implement the functions.
@@ -439,28 +431,28 @@ pub mod interpreter {
             //     return callee.call(self, &mut args);
             // }
 
-            Err("Function has not been implemented yet.".to_string())
+            Err(Error::from_string("Function has not been implemented yet."))
         }
     }
 
-    impl StmtVisitor<Result<(), String>> for Interpreter {
-        fn visit_expr_stmt(&mut self, expr: &Expr) -> Result<(), String> {
+    impl StmtVisitor<Result<(), Error>> for Interpreter {
+        fn visit_expr_stmt(&mut self, expr: &Expr) -> Result<(), Error> {
             self.evaluate(expr)?;
             Ok(())
         }
 
-        fn visit_print_stmt(&mut self, expr: &Expr) -> Result<(), String> {
+        fn visit_print_stmt(&mut self, expr: &Expr) -> Result<(), Error> {
             let value = self.evaluate(expr)?;
             println!("{:?}", value);
             Ok(())
         }
 
-        fn visit_return_stmt(&mut self, _keyword: &Token, expr: &Expr) -> Result<(), String> {
-            let _ = self.evaluate(expr)?;
-            Ok(())
+        fn visit_return_stmt(&mut self, _keyword: &Token, expr: &Expr) -> Result<(), Error> {
+            let return_val = self.evaluate(expr)?;
+            Err(Error::Return(return_val))
         }
 
-        fn visit_var_stmt(&mut self, name: &Token, initializer: &Expr) -> Result<(), String> {
+        fn visit_var_stmt(&mut self, name: &Token, initializer: &Expr) -> Result<(), Error> {
             let value = self.evaluate(initializer)?;
 
             let stack_len = self.environment.as_ref().borrow_mut().len();
@@ -473,12 +465,12 @@ pub mod interpreter {
             Ok(())
         }
 
-        fn visit_block_stmt(&mut self, stmts: &Vec<Stmt>) -> Result<(), String> {
+        fn visit_block_stmt(&mut self, stmts: &Vec<Stmt>) -> Result<(), Error> {
             let env = Rc::new(RefCell::new(Environment::new()));
             self.execute_block(stmts, env)
         }
 
-        fn visit_class_stmt(&mut self, name: &Token, _: &Vec<Stmt>) -> Result<(), String> {
+        fn visit_class_stmt(&mut self, name: &Token, _: &Vec<Stmt>) -> Result<(), Error> {
             let klass: RLoxClass = RLoxClass::new(name.get_token_type().to_string().clone());
             self.environment.as_ref().borrow_mut().define(
                 name.get_token_type().to_string(),
@@ -492,7 +484,7 @@ pub mod interpreter {
             name: &Token,
             params: &Vec<Token>,
             body: &Vec<Stmt>,
-        ) -> Result<(), String> {
+        ) -> Result<(), Error> {
             let func: RLoxFunction = RLoxFunction::new(
                 Stmt::Function(name.clone(), params.clone(), body.clone()),
                 self.environment.as_ref().borrow_mut().peek().unwrap(),
@@ -509,7 +501,7 @@ pub mod interpreter {
             expr: &Expr,
             stmt: &Stmt,
             else_stmt: &Option<Box<Stmt>>,
-        ) -> Result<(), String> {
+        ) -> Result<(), Error> {
             let value = self.evaluate(expr)?;
             let is_truthy = Interpreter::is_truthy_lval(&value);
             if is_truthy {
@@ -517,23 +509,24 @@ pub mod interpreter {
                     LiteralValue::Bool(is_true) => {
                         if is_true {
                             return self.execute(stmt);
-                        } else {
-                            if let Some(else_) = else_stmt {
-                                return self.execute(&else_);
-                            }
                         }
                     }
                     _ => {
                         return Err(
-                            "Could not visit IF statement, truthy might be a reason.".to_string()
+                            Error::from_string("Could not visit IF statement, truthy might be a reason.")
                         )
                     }
                 }
             }
-            Err("Could not visit IF statement, truthy might be a reason.".to_string())
+
+            if let Some(else_) = else_stmt {
+                return self.execute(&else_);
+            }
+
+            Ok(())
         }
 
-        fn visit_while_stmt(&mut self, expr: &Expr, stmt: &Stmt) -> Result<(), String> {
+        fn visit_while_stmt(&mut self, expr: &Expr, stmt: &Stmt) -> Result<(), Error> {
             let value = self.evaluate(expr)?;
             let is_truthy = Interpreter::is_truthy_lval(&value);
             if is_truthy {
@@ -546,7 +539,7 @@ pub mod interpreter {
                             return Ok(());
                         }
                     }
-                    _ => return Err("While condition is not a boolean!".to_string()),
+                    _ => return Err(Error::from_string("While condition is not a boolean!")),
                 }
             }
             Ok(())

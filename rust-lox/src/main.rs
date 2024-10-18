@@ -19,6 +19,7 @@ use log::LevelFilter;
 use std::fs;
 use std::path::Path;
 use stmt::stmt::StmtGraphvizPrinter;
+use interpreter::interpreter::Interpreter;
 
 fn run(source: String, args: &Args) {
     let mut scanner = scanner::scan::Scanner::new(source);
@@ -37,7 +38,7 @@ fn run(source: String, args: &Args) {
         // TO BE IMPLEMENTED
     }
 
-    let mut interpreter = interpreter::interpreter::Interpreter::new();
+    let mut interpreter = Interpreter::new();
     let mut resolver = Resolver::new(&mut interpreter);
     resolver
         .resolve(&ast)
@@ -45,7 +46,7 @@ fn run(source: String, args: &Args) {
 
     match resolver.interpreter.interpret(&ast) {
         Ok(_) => {},
-        Err(err) => {error!("{}", err)}
+        Err(err) => {error!("{:?}", err)}
     }
 }
 

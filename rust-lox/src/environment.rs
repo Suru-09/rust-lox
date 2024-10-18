@@ -3,6 +3,7 @@ pub mod environment {
     use std::cell::RefCell;
     use std::collections::HashMap;
     use std::rc::Rc;
+    use crate::interpreter::interpreter::Error;
 
     #[derive(Debug, PartialEq)]
     pub struct Environment {
@@ -31,12 +32,12 @@ pub mod environment {
          * ! Very important to note that using '?' is mandatory because on succeess it returns the value
          * ! is void and on failure it returns an error String which should be sent back to the caller.
          */
-        pub fn assign(&mut self, name: String, value: LiteralValue) -> Result<(), String> {
+        pub fn assign(&mut self, name: String, value: LiteralValue) -> Result<(), Error> {
             if self.values.contains_key(&name) {
                 self.values.insert(name, value);
                 return Ok(());
             }
-            Err(format!("Variable '{}' is undefined.", name))
+            Err(Error::from_string(&format!("Variable '{}' is undefined.", name)))
         }
     }
 
@@ -100,9 +101,9 @@ pub mod environment {
             distance: usize,
             name: String,
             value: LiteralValue,
-        ) -> Result<(), String> {
+        ) -> Result<(), Error> {
             if distance >= self.stack.len() {
-                return Err(format!("Variable '{}' is undefined.", name));
+                return Err(Error::from_string(&format!("Variable '{}' is undefined.", name)));
             }
 
             if let Some(env) = self.ancestor(distance) {
@@ -110,7 +111,7 @@ pub mod environment {
                     return Ok(());
                 }
             }
-            Err(format!("Variable '{}' is undefined.", name))
+            Err(Error::from_string(&format!("Variable '{}' is undefined.", name)))
         }
 
         pub fn define(&mut self, name: String, value: LiteralValue) {
@@ -119,7 +120,7 @@ pub mod environment {
             }
         }
 
-        pub fn assign(&mut self, name: String, value: LiteralValue) -> Result<(), String> {
+        pub fn assign(&mut self, name: String, value: LiteralValue) -> Result<(), Error> {
             for env in self.stack.iter().rev() {
                 if let Ok(_) = env
                     .as_ref()
@@ -129,7 +130,7 @@ pub mod environment {
                     return Ok(());
                 }
             }
-            Err(format!("Variable '{}' is undefined.", name))
+            Err(Error::from_string(&format!("Variable '{}' is undefined.", name)))
         }
     }
 }

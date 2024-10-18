@@ -1,11 +1,10 @@
 pub mod rlox_callable {
     use crate::environment::environment::Environment;
     use crate::stmt::stmt::LiteralValue;
-    use crate::{interpreter::interpreter::Interpreter, stmt::stmt::Stmt};
+    use crate::{interpreter::interpreter::{Interpreter, Error}, stmt::stmt::Stmt};
     use std::borrow::BorrowMut;
     use std::cell::RefCell;
     use std::rc::Rc;
-    use log::info;
 
     #[derive(Debug, PartialEq)]
     pub enum Callable {
@@ -28,7 +27,7 @@ pub mod rlox_callable {
             &self,
             interpreter: &mut Interpreter,
             args: &mut Vec<LiteralValue>,
-        ) -> Result<LiteralValue, String>;
+        ) -> Result<LiteralValue, Error>;
     }
 
     // #[derive(Clone)]
@@ -43,7 +42,7 @@ pub mod rlox_callable {
     //         &self,
     //         _interpreter: &mut Interpreter,
     //         _args: &mut Vec<LiteralValue>,
-    //     ) -> Result<LiteralValue, String> {
+    //     ) -> Result<LiteralValue, Error> {
     //         Ok(Box::new(Token::new(
     //             crate::scanner::scan::TokenType::Number(
     //                 std::time::SystemTime::now()
@@ -93,7 +92,7 @@ pub mod rlox_callable {
             &self,
             interpreter: &mut Interpreter,
             args: &mut Vec<LiteralValue>,
-        ) -> Result<LiteralValue, String> {
+        ) -> Result<LiteralValue, Error> {
             let env = self.closure.clone();
             match &self.declaration {
                 Stmt::Function(_, params, body) => {
@@ -105,12 +104,12 @@ pub mod rlox_callable {
                     }
 
                     match interpreter.execute_block(body, env) {
-                        Ok(_) => match interpreter.return_value.clone() {
-                            Some(return_val) => return Ok(return_val),
-                            None => return Ok(LiteralValue::Nil),
-                        },
-                        Err(err_str) => {
-                            return Err(err_str);
+                        Ok(_) => return Ok(LiteralValue::Nil),
+                        Err(err) => {
+                            match err {
+                                Error::Return(ret_val) => return Ok(ret_val),
+                                _ => return Err(err)
+                            }
                         }
                     };
                 }
