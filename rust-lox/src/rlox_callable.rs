@@ -2,8 +2,10 @@ pub mod rlox_callable {
     use crate::environment::environment::Environment;
     use crate::stmt::stmt::LiteralValue;
     use crate::{interpreter::interpreter::Interpreter, stmt::stmt::Stmt};
+    use std::borrow::BorrowMut;
     use std::cell::RefCell;
     use std::rc::Rc;
+    use log::info;
 
     #[derive(Debug, PartialEq)]
     pub enum Callable {
@@ -82,7 +84,7 @@ pub mod rlox_callable {
     impl RLoxCallable for RLoxFunction {
         fn arity(&self) -> usize {
             match &self.declaration {
-                Stmt::Function(_, params, _) => params.len(),
+            Stmt::Function(_, params, _) => params.len(),
                 _ => 0,
             }
         }
@@ -95,19 +97,18 @@ pub mod rlox_callable {
             let env = self.closure.clone();
             match &self.declaration {
                 Stmt::Function(_, params, body) => {
-                    for (_, param) in params.iter().enumerate() {
-                        /*
-                         * Note for future me: - Initially I am removing the first element,
-                         * but once removed the second element becomes the first element and so
-                         * on. Therefore, the correct way in order not to violate the bounds of the
-                         * vector is to remove the first element every time.
-                         */
-                        env.borrow_mut()
-                            .define(param.get_token_type().to_string(), args.remove(0));
+                    for (idx, param) in params.iter().enumerate() {
+                        env.clone().borrow_mut()
+                            .as_ref()
+                            .borrow_mut()
+                            .define(param.get_token_type().to_string(), args[idx].clone());
                     }
 
-                    let _ = match interpreter.execute_block(body, env) {
-                        Ok(_) => return Ok(LiteralValue::Nil),
+                    match interpreter.execute_block(body, env) {
+                        Ok(_) => match interpreter.return_value.clone() {
+                            Some(return_val) => return Ok(return_val),
+                            None => return Ok(LiteralValue::Nil),
+                        },
                         Err(err_str) => {
                             return Err(err_str);
                         }

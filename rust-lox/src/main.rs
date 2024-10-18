@@ -43,7 +43,10 @@ fn run(source: String, args: &Args) {
         .resolve(&ast)
         .expect("Expected to be able to resolve stuff without errors!");
 
-    let _ = resolver.interpreter.interpret(&ast);
+    match resolver.interpreter.interpret(&ast) {
+        Ok(_) => {},
+        Err(err) => {error!("{}", err)}
+    }
 }
 
 fn run_file(args: &Args) {
@@ -71,9 +74,9 @@ fn run_prompt(args: &Args) {
 
 fn main() {
     let log_level = if cfg!(debug_assertions) {
-        LevelFilter::Info
+        LevelFilter::Trace
     } else {
-        LevelFilter::Error
+        LevelFilter::Trace
     };
 
     log::set_logger(&LOGGER)

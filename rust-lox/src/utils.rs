@@ -2,7 +2,7 @@ pub mod utils {
     use std::env::current_dir;
     use std::fs::remove_dir_all;
 
-    pub const GENERATED_FOLDER_PATH: &str = "/src/resources/generated/ast/";
+    pub const GENERATED_FOLDER_PATH: &str = "rust-lox/src/resources/generated/ast/";
 
     pub fn clean_folder(path: &str) -> bool {
         let current_directory = match current_dir() {

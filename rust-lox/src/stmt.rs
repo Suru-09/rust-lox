@@ -35,7 +35,7 @@ pub mod stmt {
         fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
             match self {
                 Stmt::ExprStmt(expr) => write!(f, "{}", expr),
-                Stmt::ReturnStmt(_keyword, value) => write!(f, "(return {})", value),
+                Stmt::ReturnStmt(_keyword, value) => write!(f, "(return {:?})", value),
                 Stmt::PrintStmt(expr) => write!(f, "(print {})", expr),
                 Stmt::VarStmt(token, expr) => {
                     write!(f, "(var {} {})", token.get_token_type(), expr)
@@ -127,7 +127,7 @@ pub mod stmt {
             match self {
                 Stmt::ExprStmt(expr) => visitor.visit_expr_stmt(expr),
                 Stmt::PrintStmt(expr) => visitor.visit_print_stmt(expr),
-                Stmt::ReturnStmt(keyword, expr) => visitor.visit_return_stmt(keyword, expr),
+                Stmt::ReturnStmt(keyword, lval) => visitor.visit_return_stmt(keyword, lval),
                 Stmt::VarStmt(token, expr) => visitor.visit_var_stmt(token, expr),
                 Stmt::BlockStmt(stmts) => visitor.visit_block_stmt(stmts),
                 Stmt::ClassStmt(name, methods) => visitor.visit_class_stmt(name, methods),

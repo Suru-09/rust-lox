@@ -53,6 +53,10 @@ pub mod environment {
             self.stack.push(env);
         }
 
+        pub fn len(&mut self) -> usize {
+            self.stack.len()
+        }
+
         pub fn pop(&mut self) -> Option<Rc<RefCell<Environment>>> {
             self.stack.pop()
         }

@@ -7,7 +7,6 @@ pub mod interpreter {
     use crate::rlox_callable::rlox_callable::{Callable, RLoxCallable, RLoxClass, RLoxFunction};
     use crate::scanner::scan::{Token, TokenType};
     use crate::stmt::stmt::{LiteralValue, Stmt, StmtVisitor};
-    use std::any::Any;
     use std::cell::RefCell;
     use std::rc::Rc;
 
@@ -25,7 +24,7 @@ pub mod interpreter {
      */
     pub struct Interpreter {
         pub environment: Rc<RefCell<EnvironmentStack>>,
-        pub return_value: Option<Box<dyn Any>>,
+        pub return_value: Option<LiteralValue>,
         pub locals: Vec<(Expr, usize)>,
     }
 
@@ -283,12 +282,27 @@ pub mod interpreter {
             self.environment.as_ref().borrow_mut().push_env(env);
             for stmt in stmts {
                 match stmt {
-                    Stmt::ReturnStmt(_, _) => return Ok(()),
-                    _ => return Ok(self.execute(stmt)?),
+                    Stmt::ReturnStmt(return_token, return_expr) => match return_expr {
+                        Expr::Literal(l_val) => {
+                            self.return_value = Some(l_val.clone());
+                            return Ok(())
+                        },
+                        _ => {
+                            error(
+                                return_token.get_line(),
+                                return_token.get_line(),
+                                "Return value must be a literal!".to_string(),
+                                function_name!());
+                            return Err("Return value must be a literal!".to_string());
+                        }
+                    },
+                    _ => {
+                        self.execute(stmt)?;
+                    },
                 }
             }
             self.environment.as_ref().borrow_mut().pop();
-            Err("Block statement err".to_string())
+            Ok(())
         }
     }
 
@@ -346,7 +360,7 @@ pub mod interpreter {
 
         fn visit_variable_expr(&mut self, name: &Token) -> Result<LiteralValue, String> {
             let expr = Expr::Variable(name.clone());
-            return self.look_up_variable(name, expr);
+            self.look_up_variable(name, expr)
         }
 
         fn visit_assign_expr(
@@ -355,21 +369,25 @@ pub mod interpreter {
             value: &Expr,
         ) -> Result<LiteralValue, String> {
             let value_evaluated = self.evaluate(value)?;
-            let distance = self.get_depth(name, value.clone());
+            //let distance = self.get_depth(name, value.clone());
 
-            match distance {
-                Ok(depth) => {
-                    let mut env = self.environment.as_ref().borrow_mut();
-                    env.assign_at(
-                        depth,
-                        name.get_token_type().to_string(),
-                        value_evaluated.into(),
-                    )?;
-                }
-                Err(_) => {
-                    let mut env = self.environment.as_ref().borrow_mut();
-                    env.assign(name.get_token_type().to_string(), value_evaluated.into())?;
-                }
+            // match distance {
+            //     Ok(depth) => {
+            //         let mut env = self.environment.as_ref().borrow_mut();
+            //         env.assign_at(
+            //             depth,
+            //             name.get_token_type().to_string(),
+            //             value_evaluated.into(),
+            //         )?;
+            //     }
+            //     Err(_) => {
+            //         let mut env = self.environment.as_ref().borrow_mut();
+            //         env.assign(name.get_token_type().to_string(), value_evaluated.into())?;
+            //     }
+            // }
+            {
+                let mut env = self.environment.as_ref().borrow_mut();
+                env.assign(name.get_token_type().to_string(), value_evaluated.into())?;
             }
 
             return self.visit_variable_expr(name);
@@ -444,6 +462,9 @@ pub mod interpreter {
 
         fn visit_var_stmt(&mut self, name: &Token, initializer: &Expr) -> Result<(), String> {
             let value = self.evaluate(initializer)?;
+
+            let stack_len = self.environment.as_ref().borrow_mut().len();
+            self.resolve(initializer.clone(), stack_len);
 
             self.environment
                 .as_ref()
@@ -528,7 +549,7 @@ pub mod interpreter {
                     _ => return Err("While condition is not a boolean!".to_string()),
                 }
             }
-            Err("Could not visit WHILE statement, truthy might be a reason.".to_string())
+            Ok(())
         }
     }
 }
