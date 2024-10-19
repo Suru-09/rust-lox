@@ -1,6 +1,7 @@
 pub mod stmt {
 
     use crate::expr::expr::{Expr, Visitor};
+    use crate::rlox_callable::rlox_callable::Callable;
     use crate::scanner::scan::Token;
     use log::debug;
     use std::fmt;
@@ -8,7 +9,7 @@ pub mod stmt {
     use std::io::prelude::*;
     use std::process::Command;
 
-    #[derive(Clone)]
+    #[derive(Clone, Debug, PartialEq)]
     pub enum Stmt {
         ExprStmt(Expr),
         PrintStmt(Expr),
@@ -21,11 +22,20 @@ pub mod stmt {
         WhileStmt(Expr, Box<Stmt>),
     }
 
+    #[derive(Clone, Debug, PartialEq)]
+    pub enum LiteralValue {
+        Number(f64),
+        Bool(bool),
+        String(String),
+        Callable(Box<Callable>),
+        Nil,
+    }
+
     impl fmt::Display for Stmt {
         fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
             match self {
                 Stmt::ExprStmt(expr) => write!(f, "{}", expr),
-                Stmt::ReturnStmt(_keyword, value) => write!(f, "(return {})", value),
+                Stmt::ReturnStmt(_keyword, value) => write!(f, "(return {:?})", value),
                 Stmt::PrintStmt(expr) => write!(f, "(print {})", expr),
                 Stmt::VarStmt(token, expr) => {
                     write!(f, "(var {} {})", token.get_token_type(), expr)
@@ -117,7 +127,7 @@ pub mod stmt {
             match self {
                 Stmt::ExprStmt(expr) => visitor.visit_expr_stmt(expr),
                 Stmt::PrintStmt(expr) => visitor.visit_print_stmt(expr),
-                Stmt::ReturnStmt(keyword, expr) => visitor.visit_return_stmt(keyword, expr),
+                Stmt::ReturnStmt(keyword, lval) => visitor.visit_return_stmt(keyword, lval),
                 Stmt::VarStmt(token, expr) => visitor.visit_var_stmt(token, expr),
                 Stmt::BlockStmt(stmts) => visitor.visit_block_stmt(stmts),
                 Stmt::ClassStmt(name, methods) => visitor.visit_class_stmt(name, methods),
@@ -363,8 +373,8 @@ pub mod stmt {
             grouping_node_index
         }
 
-        fn visit_literal_expr(&mut self, value: &Token) -> u64 {
-            self.add_node(value.token_type_value())
+        fn visit_literal_expr(&mut self, value: &LiteralValue) -> u64 {
+            self.add_node(format!("{:?}", value))
         }
 
         fn visit_unary_expr(&mut self, operator: &Token, right: &Expr) -> u64 {

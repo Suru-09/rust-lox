@@ -1,6 +1,6 @@
 # rust-lox
 
-## A Rust implementation of the Lox language from the book [Crafting Interpreters](https://craftinginterpreters.com/).
+## A Rust implementation of the Lox language from the book [Crafting Interpreters](https://craftinginterpreters.com/)
 
 This is a work in progress. I'm currently working on the interpreter, and I'll be adding the compiler later.
 
@@ -11,7 +11,7 @@ This is a work in progress. I'm currently working on the interpreter, and I'll b
 
 ## TODO
 
-- [ ] add support for lines & columns where errors occur.
+- [x] add support for lines & columns where errors occur.
 - [ ] add support for block comments.
 - [ ] add support for error recovery & synchronization.
 - [ ] add tests for the interpreter.
@@ -20,6 +20,7 @@ This is a work in progress. I'm currently working on the interpreter, and I'll b
 - [x] add support for cleaning generated files before each run.
 - [x] add tests for the scanner.
 - [ ] add support for Date Time results from clock() function.
+- [ ] fix bug that causes wrong readings for negative numbers in the scanner.
 
 ## AST visualizer
 

@@ -1,6 +1,6 @@
 pub mod resolver {
 
-    use crate::stmt::stmt::StmtVisitor;
+    use crate::stmt::stmt::{LiteralValue, StmtVisitor};
     use crate::expr::expr::Visitor;
     use crate::interpreter::interpreter::Interpreter;
     use crate::expr::expr::Expr;
@@ -160,7 +160,7 @@ pub mod resolver {
             Ok(())
         }
 
-        fn visit_literal_expr(&mut self, _: &Token) -> Result<(), String> {
+        fn visit_literal_expr(&mut self, _: &LiteralValue) -> Result<(), String> {
             Ok(())
         }
 

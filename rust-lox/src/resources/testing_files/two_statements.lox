@@ -5,14 +5,16 @@ fun main() {
     var result = 1 - 3 - 4 - 5 + 6 + 8 - 8;
     print result;
 
-    //lox = "string";
+    lox = "string";
 
     var a = 2;
     var b = 3;
     var condition = false;
     if (a < b) {
-        condition = true;
+       print condition;
     }
+    else 
+      print "Condition is false";
 
     if(condition or true)
     {
@@ -22,19 +24,18 @@ fun main() {
     else
         print "Ciocanul lui Thor";
 
-    for(var i = 0 ; i < 5; i = i + 1) {
+    for(var i = 0 ; i < 15; i = i + 1) {
         lox = lox + "i";
         print lox;
     }
 
-    print lox + " se fini";
+    print " se fini";
+    print "wtf merhi bre";
 
-    print 23;
-
-    return "Mario + calculator == " + "gucci++";
+    return "Mario + calculator == gucci++";
 }
 
-var time1 = clock();
+//var time1 = clock();
 
 var stringMain = main();
 
@@ -55,6 +56,7 @@ fun fib(n) {
   }
 }
 
+print "Fibo: ";
 print fib(10);
 
 fun makeCounter() {
@@ -64,7 +66,7 @@ fun makeCounter() {
     print i;
   }
 
-  return count;
+  return count();
 }
 
 var counter = makeCounter();
@@ -72,9 +74,9 @@ counter(); // "1".
 counter(); // "2".
 
 print "Time: ";
-print clock() - time1;
+//print clock() - time1;
 
-var a = 2;
+// var a = 2;
 
 class DevonshireCream {
   serveOn() {
