@@ -35,7 +35,9 @@ fun main() {
     return "Mario + calculator == gucci++";
 }
 
-//var time1 = clock();
+print clock();
+var t1 = unixClock();
+print t1;
 
 var stringMain = main();
 
@@ -48,16 +50,17 @@ print "Hi, " + first + " " + last + "!";
 sayHi("Dear", "Reader");
 
 fun fib(n) {
+  print "N-ul lui fibo: " + n;
   if (n <= 1) {
-    return n;
+    return 1;
   }
-  else {
+  else 
     return fib(n - 1) + fib(n - 2);
-  }
 }
 
-print "Fibo: ";
-print fib(10);
+for (var i = 2; i < 5; i = i + 1) {
+  print "Fibo<" + i + "> == " + fib(i);
+}
 
 fun makeCounter() {
   var i = 0;
@@ -66,7 +69,7 @@ fun makeCounter() {
     print i;
   }
 
-  return count();
+  return count;
 }
 
 var counter = makeCounter();
@@ -74,7 +77,13 @@ counter(); // "1".
 counter(); // "2".
 
 print "Time: ";
-//print clock() - time1;
+print clock();
+var t2 = unixClock();
+print t2;
+
+print "All this took: ";
+var resultTime = t2 - t1;
+print resultTime;
 
 // var a = 2;
 

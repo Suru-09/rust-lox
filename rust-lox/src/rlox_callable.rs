@@ -5,11 +5,14 @@ pub mod rlox_callable {
     use std::borrow::BorrowMut;
     use std::cell::RefCell;
     use std::rc::Rc;
+    use chrono;
 
     #[derive(Debug, PartialEq)]
     pub enum Callable {
         Class(RLoxClass),
         Function(RLoxFunction),
+        Clock(Clock),
+        UnixTClock(UnixTClock),
     }
 
     impl Clone for Callable {
@@ -17,6 +20,8 @@ pub mod rlox_callable {
             match self {
                 Callable::Function(lox_function) => Callable::Function(lox_function.clone()),
                 Callable::Class(class) => Callable::Class(class.clone()),
+                Callable::Clock(clock) => Callable::Clock(clock.clone()),
+                Callable::UnixTClock(unix_t_clock) => Callable::UnixTClock(unix_t_clock.clone()),
             }
         }
     }
@@ -30,33 +35,43 @@ pub mod rlox_callable {
         ) -> Result<LiteralValue, Error>;
     }
 
-    // #[derive(Clone)]
-    // pub struct Clock {}
+    #[derive(Clone, Debug, PartialEq)]
+    pub struct Clock {}
 
-    // impl RLoxCallable for Clock {
-    //     fn arity(&self) -> usize {
-    //         0
-    //     }
+    impl RLoxCallable for Clock {
+        fn arity(&self) -> usize {
+            0
+        }
 
-    //     fn call(
-    //         &self,
-    //         _interpreter: &mut Interpreter,
-    //         _args: &mut Vec<LiteralValue>,
-    //     ) -> Result<LiteralValue, Error> {
-    //         Ok(Box::new(Token::new(
-    //             crate::scanner::scan::TokenType::Number(
-    //                 std::time::SystemTime::now()
-    //                     .duration_since(std::time::UNIX_EPOCH)
-    //                     .unwrap_or_else(|_| panic!("Could not get time since epoch"))
-    //                     .as_secs_f64(),
-    //             ),
-    //             "clock".to_string(),
-    //             0,
-    //             0,
-    //             0,
-    //         )))
-    //     }
-    // }
+        fn call(
+            &self,
+            _interpreter: &mut Interpreter,
+            _args: &mut Vec<LiteralValue>,
+        ) -> Result<LiteralValue, Error> {
+            Ok(
+                LiteralValue::String(chrono::offset::Local::now().to_string())
+            )
+        }
+    }
+
+    #[derive(Clone, Debug, PartialEq)]
+    pub struct UnixTClock {}
+
+    impl RLoxCallable for UnixTClock {
+        fn arity(&self) -> usize {
+            0
+        }
+
+        fn call(
+            &self,
+            _interpreter: &mut Interpreter,
+            _args: &mut Vec<LiteralValue>,
+        ) -> Result<LiteralValue, Error> {
+            Ok(
+                LiteralValue::Number(chrono::offset::Local::now().timestamp_millis() as f64)
+            )
+        }
+    }
 
     #[derive(Clone, Debug, PartialEq)]
     pub struct RLoxFunction {

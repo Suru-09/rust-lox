@@ -4,7 +4,7 @@ pub mod interpreter {
     use crate::error_handling::error_handling::error;
     use crate::expr::expr::{Expr, Visitor};
     use crate::function_name;
-    use crate::rlox_callable::rlox_callable::{Callable, RLoxCallable, RLoxClass, RLoxFunction};
+    use crate::rlox_callable::rlox_callable::{Callable, RLoxCallable, RLoxClass, RLoxFunction, Clock, UnixTClock};
     use crate::scanner::scan::{Token, TokenType};
     use crate::stmt::stmt::{LiteralValue, Stmt, StmtVisitor};
     use std::cell::RefCell;
@@ -47,17 +47,32 @@ pub mod interpreter {
             env.borrow_mut()
                 .push_env(Rc::new(RefCell::new(Environment::new())));
 
-            // TODO: add the clock function back...
-            // env.borrow_mut().define(
-            //     "clock".to_string(),
-            //     LiteralValue::Callable(Box::new(Clock {})),
-            // );
+            env.borrow_mut().define(
+                "clock".to_string(),
+                LiteralValue::Callable(Box::new(Callable::Clock(Clock {}))),
+            );
+
+            env.borrow_mut().define(
+                "unixClock".to_string(),
+                LiteralValue::Callable(Box::new(Callable::UnixTClock(UnixTClock {}))),
+            );
 
             // push clock into locals.
             let mut locals = Vec::new();
             locals.push((
                 Expr::Variable(Token::new(
-                    TokenType::Identifier("clock".to_string()),
+                TokenType::Identifier("clock".to_string()),
+                    "".to_string(),
+                    0,
+                    0,
+                    0,
+                )),
+                0,
+            ));
+
+            locals.push((
+                Expr::Variable(Token::new(
+                    TokenType::Identifier("unixClock".to_string()),
                     "".to_string(),
                     0,
                     0,
@@ -161,6 +176,12 @@ pub mod interpreter {
                 (LiteralValue::Number(number1), LiteralValue::Number(number2)) => {
                     Ok(LiteralValue::Number(number1 + number2))
                 }
+                (LiteralValue::String(str), LiteralValue::Number(num)) => {
+                    Ok(LiteralValue::String(str.clone() + &num.to_string()))
+                }
+                (LiteralValue::Number(num), LiteralValue::String(str)) => {
+                    Ok(LiteralValue::String(str.clone() + &num.to_string()))
+                }
                 _ => {
                     Err(Error::from_string("In order to add two things they need to be numbers or strings"))
                 }
@@ -230,7 +251,8 @@ pub mod interpreter {
         ) -> Result<LiteralValue, Error> {
             match (operand1, operand2) {
                 (LiteralValue::Number(number1), LiteralValue::Number(number2)) => {
-                    Ok(LiteralValue::Bool(number1 < number2))
+                    println!("Comparing {} <= {}", number1, number2);
+                    Ok(LiteralValue::Bool(number1 <= number2))
                 }
                 _ => Err(Error::from_string("In order to compare them, operands must be two numbers.")),
             }
@@ -420,7 +442,7 @@ pub mod interpreter {
                 args.push(self.evaluate(arg)?);
             }
 
-            if let LiteralValue::Callable(callable_box) = calle_local {
+            if let LiteralValue::Callable(callable_box) = calle_local.clone() {
                 if let Callable::Function(function) = *callable_box {
                     return function.call(self, &mut args);
                 }
@@ -431,6 +453,19 @@ pub mod interpreter {
             //     return callee.call(self, &mut args);
             // }
 
+            if let LiteralValue::Callable(callable_box) = calle_local.clone() {
+                if let Callable::Clock(function) = *callable_box {
+                    return function.call(self, &mut args);
+                }
+            }
+
+            if let LiteralValue::Callable(callable_box) = calle_local.clone() {
+                if let Callable::UnixTClock(function) = *callable_box {
+                    return function.call(self, &mut args);
+                }
+            }
+
+            println!("calle_local: {:?}", calle_local);
             Err(Error::from_string("Function has not been implemented yet."))
         }
     }

@@ -18,8 +18,10 @@ pub mod resolver {
         pub fn new(interpreter: &'a mut Interpreter) -> Self {
             let mut scopes_local = Vec::new();
             let clock_fun = (String::from("clock"), true);
+            let unix_clock_fun = (String::from("unixClock"), true);
             scopes_local.push(Vec::new());
             scopes_local.last_mut().unwrap().push(clock_fun);
+            scopes_local.last_mut().unwrap().push(unix_clock_fun);
             
             Self {
                 interpreter,
