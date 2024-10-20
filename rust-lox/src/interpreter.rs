@@ -251,7 +251,6 @@ pub mod interpreter {
         ) -> Result<LiteralValue, Error> {
             match (operand1, operand2) {
                 (LiteralValue::Number(number1), LiteralValue::Number(number2)) => {
-                    println!("Comparing {} <= {}", number1, number2);
                     Ok(LiteralValue::Bool(number1 <= number2))
                 }
                 _ => Err(Error::from_string("In order to compare them, operands must be two numbers.")),

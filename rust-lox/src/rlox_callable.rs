@@ -108,11 +108,11 @@ pub mod rlox_callable {
             interpreter: &mut Interpreter,
             args: &mut Vec<LiteralValue>,
         ) -> Result<LiteralValue, Error> {
-            let env = self.closure.clone();
+            let mut env = self.closure.clone();
             match &self.declaration {
                 Stmt::Function(_, params, body) => {
                     for (idx, param) in params.iter().enumerate() {
-                        env.clone().borrow_mut()
+                        env.borrow_mut()
                             .as_ref()
                             .borrow_mut()
                             .define(param.get_token_type().to_string(), args[idx].clone());
@@ -122,7 +122,12 @@ pub mod rlox_callable {
                         Ok(_) => return Ok(LiteralValue::Nil),
                         Err(err) => {
                             match err {
-                                Error::Return(ret_val) => return Ok(ret_val),
+                                Error::Return(ret_val) => {
+                                    // if we throw an error, execute_block's control flow is
+                                    // intrerrupted, therefore we need to do the cleanup here...
+                                    interpreter.environment.as_ref().borrow_mut().pop();
+                                    return Ok(ret_val)
+                                },
                                 _ => return Err(err)
                             }
                         }
