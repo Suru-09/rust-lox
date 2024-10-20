@@ -4,6 +4,9 @@ pub mod environment {
     use std::collections::HashMap;
     use std::rc::Rc;
     use crate::interpreter::interpreter::Error;
+    use crate::scanner::scan::Token;
+    use crate::error_handling::error_handling::error;
+    use crate::function_name;
 
     #[derive(Debug, PartialEq)]
     pub struct Environment {
@@ -17,13 +20,14 @@ pub mod environment {
             }
         }
 
-        pub fn define(&mut self, name: String, value: LiteralValue) {
-            self.values.insert(name, value);
+        pub fn define(&mut self, token: &Token, value: LiteralValue) {
+            self.values.insert(token.get_token_type().to_string().clone(), value);
         }
 
-        pub fn get(&mut self, name: String) -> Option<&LiteralValue> {
-            if self.values.contains_key(&name) {
-                return self.values.get(&name);
+        pub fn get(&mut self, token: &Token) -> Option<&LiteralValue> {
+            let token_name = token.get_token_type().to_string().clone();
+            if self.values.contains_key(&token_name) {
+                return self.values.get(&token_name);
             }
             None
         }
@@ -32,12 +36,13 @@ pub mod environment {
          * ! Very important to note that using '?' is mandatory because on succeess it returns the value
          * ! is void and on failure it returns an error String which should be sent back to the caller.
          */
-        pub fn assign(&mut self, name: String, value: LiteralValue) -> Result<(), Error> {
-            if self.values.contains_key(&name) {
-                self.values.insert(name, value);
+        pub fn assign(&mut self, token: &Token, value: LiteralValue) -> Result<(), Error> {
+            let token_name = token.get_token_type().to_string().clone();
+            if self.values.contains_key(&token_name) {
+                self.values.insert(token_name, value);
                 return Ok(());
             }
-            Err(Error::from_string(&format!("Variable '{}' is undefined.", name)))
+            Err(Error::from_string(&format!("Variable '{}' is undefined.", token_name)))
         }
     }
 
@@ -66,9 +71,9 @@ pub mod environment {
             self.stack.last().map(|env| env.clone())
         }
 
-        pub fn get(&mut self, name: String) -> Option<LiteralValue> {
+        pub fn get(&mut self, token: &Token) -> Option<LiteralValue> {
             for env in self.stack.iter().rev() {
-                if let Some(value) = env.as_ref().borrow_mut().get(name.clone()) {
+                if let Some(value) = env.as_ref().borrow_mut().get(token) {
                     return Some(value.clone());
                 }
             }
@@ -82,13 +87,13 @@ pub mod environment {
             Some(self.stack[self.stack.len() - distance - 1].clone())
         }
 
-        pub fn get_at(&mut self, distance: usize, name: String) -> Option<LiteralValue> {
+        pub fn get_at(&mut self, distance: usize, token: &Token) -> Option<LiteralValue> {
             if distance >= self.stack.len() {
                 return None;
             }
 
             if let Some(env) = self.ancestor(distance) {
-                if let Some(value) = env.as_ref().borrow_mut().get(name.clone()) {
+                if let Some(value) = env.as_ref().borrow_mut().get(token) {
                     return Some(value.clone());
                 }
             }
@@ -99,38 +104,68 @@ pub mod environment {
         pub fn assign_at(
             &mut self,
             distance: usize,
-            name: String,
+            token: &Token,
             value: LiteralValue,
         ) -> Result<(), Error> {
             if distance >= self.stack.len() {
-                return Err(Error::from_string(&format!("Variable '{}' is undefined.", name)));
+                error(
+                    token.get_line(),
+                    token.get_column(),
+                    format!(
+                        "Variable '{}' is undefined.",
+                        token.get_token_type().to_string()
+                    ),
+                    function_name!(),
+                );
+                return Err(Error::from_string(&format!("Variable '{}' is undefined.", token.get_token_type().to_string().clone())));
             }
 
             if let Some(env) = self.ancestor(distance) {
-                if let Ok(_) = env.as_ref().borrow_mut().assign(name.clone(), value) {
+                if let Ok(_) = env.as_ref().borrow_mut().assign(token, value) {
                     return Ok(());
                 }
             }
-            Err(Error::from_string(&format!("Variable '{}' is undefined.", name)))
+
+            error(
+                token.get_line(),
+                token.get_column(),
+                format!(
+                    "Variable '{}' is undefined.",
+                    token.get_token_type().to_string()
+                ),
+                function_name!(),
+            );
+            Err(Error::from_string(&format!("Variable '{}' is undefined.", token.get_token_type().to_string().clone())))
         }
 
-        pub fn define(&mut self, name: String, value: LiteralValue) {
+        pub fn define(&mut self, token: &Token, value: LiteralValue) {
             if let Some(env) = self.stack.last() {
-                env.as_ref().borrow_mut().define(name, value);
+                env.as_ref().borrow_mut().define(token, value);
             }
         }
 
-        pub fn assign(&mut self, name: String, value: LiteralValue) -> Result<(), Error> {
+        pub fn assign(&mut self, token: &Token, value: LiteralValue) -> Result<(), Error> {
             for env in self.stack.iter().rev() {
                 if let Ok(_) = env
                     .as_ref()
                     .borrow_mut()
-                    .assign(name.clone(), value.clone())
+                    .assign(token, value.clone())
                 {
                     return Ok(());
                 }
             }
-            Err(Error::from_string(&format!("Variable '{}' is undefined.", name)))
+
+
+            error(
+                token.get_line(),
+                token.get_column(),
+                format!(
+                    "Variable '{}' is undefined.",
+                    token.get_token_type().to_string()
+                ),
+                function_name!(),
+            );
+            Err(Error::from_string(&format!("Variable '{}' is undefined.", token.get_token_type().to_string().clone())))
         }
     }
 }

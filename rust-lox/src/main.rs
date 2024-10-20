@@ -46,7 +46,9 @@ fn run(source: String, args: &Args) {
 
     match resolver.interpreter.interpret(&ast) {
         Ok(_) => {},
-        Err(err) => {error!("{:?}", err)}
+        Err(_) => {
+            std::process::exit(1);
+        }
     }
 }
 

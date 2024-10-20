@@ -48,12 +48,12 @@ pub mod interpreter {
                 .push_env(Rc::new(RefCell::new(Environment::new())));
 
             env.borrow_mut().define(
-                "clock".to_string(),
+                &Token::new(TokenType::Identifier("clock".to_string()), "clock".to_string(), 999, 999, 999),
                 LiteralValue::Callable(Box::new(Callable::Clock(Clock {}))),
             );
 
             env.borrow_mut().define(
-                "unixClock".to_string(),
+                &Token::new(TokenType::Identifier("unixClock".to_string()), "unixClock".to_string(), 999, 999, 999),
                 LiteralValue::Callable(Box::new(Callable::UnixTClock(UnixTClock {}))),
             );
 
@@ -138,20 +138,31 @@ pub mod interpreter {
         fn look_up_variable(&mut self, token: &Token, expr: Expr) -> Result<LiteralValue, Error> {
             match self.get_depth(token, expr) {
                 Ok(depth) => {
-                    let variable = self.get_at(depth, token.get_token_type().to_string())?;
+                    let variable = self.get_at(depth, token)?;
                     Ok(variable)
                 }
                 Err(err) => Err(Error::LoxRuntimeError(err)),
             }
         }
 
-        fn get_at(&mut self, distance: usize, name: String) -> Result<LiteralValue, Error> {
+        fn get_at(&mut self, distance: usize, token: &Token) -> Result<LiteralValue, Error> {
             let mut env = self.environment.as_ref().borrow_mut();
-            match env.get_at(distance, name.clone()) {
+            match env.get_at(distance, token) {
                 Some(value) => Ok(value),
-                None => match env.get(name.clone()) {
+                None => match env.get(token) {
                     Some(value) => Ok(value),
-                    None => Err(Error::LoxRuntimeError(format!("Variable '{}' is undefined.", name))),
+                    None => {
+                        error(
+                            token.get_line(),
+                            token.get_column(),
+                            format!(
+                                "Could not find variable '{}' in the environment",
+                                token.get_token_type().to_string()
+                            ),
+                            function_name!(),
+                        );
+                        Err(Error::LoxRuntimeError(format!("Variable '{}' is undefined.", token.get_token_type().to_string().clone())))
+                    }
                 },
             }
         }
@@ -400,7 +411,7 @@ pub mod interpreter {
             // }
             {
                 let mut env = self.environment.as_ref().borrow_mut();
-                env.assign(name.get_token_type().to_string(), value_evaluated.into())?;
+                env.assign(name, value_evaluated.into())?;
             }
 
             return self.visit_variable_expr(name);
@@ -495,7 +506,7 @@ pub mod interpreter {
             self.environment
                 .as_ref()
                 .borrow_mut()
-                .define(name.get_token_type().to_string(), value.clone());
+                .define(name, value.clone());
             Ok(())
         }
 
@@ -507,7 +518,7 @@ pub mod interpreter {
         fn visit_class_stmt(&mut self, name: &Token, _: &Vec<Stmt>) -> Result<(), Error> {
             let klass: RLoxClass = RLoxClass::new(name.get_token_type().to_string().clone());
             self.environment.as_ref().borrow_mut().define(
-                name.get_token_type().to_string(),
+                name,
                 LiteralValue::Callable(Box::new(Callable::Class(klass))),
             );
             Ok(())
@@ -524,7 +535,7 @@ pub mod interpreter {
                 self.environment.as_ref().borrow_mut().peek().unwrap(),
             );
             self.environment.as_ref().borrow_mut().define(
-                name.get_token_type().to_string(),
+                name,
                 LiteralValue::Callable(Box::new(Callable::Function(func))),
             );
             Ok(())

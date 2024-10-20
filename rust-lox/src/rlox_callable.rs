@@ -115,7 +115,7 @@ pub mod rlox_callable {
                         env.borrow_mut()
                             .as_ref()
                             .borrow_mut()
-                            .define(param.get_token_type().to_string(), args[idx].clone());
+                            .define(param, args[idx].clone());
                     }
 
                     match interpreter.execute_block(body, env) {
