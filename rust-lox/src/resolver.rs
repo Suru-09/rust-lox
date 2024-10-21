@@ -1,18 +1,16 @@
 pub mod resolver {
 
-    use crate::stmt::stmt::{LiteralValue, StmtVisitor};
+    use crate::expr::expr::Expr;
     use crate::expr::expr::Visitor;
     use crate::interpreter::interpreter::Interpreter;
-    use crate::expr::expr::Expr;
-    use crate::stmt::stmt::Stmt;
     use crate::scanner::scan::Token;
-
+    use crate::stmt::stmt::Stmt;
+    use crate::stmt::stmt::{LiteralValue, StmtVisitor};
 
     pub struct Resolver<'a> {
         pub interpreter: &'a mut Interpreter,
         scopes: Vec<Vec<(String, bool)>>,
     }
-
 
     impl<'a> Resolver<'a> {
         pub fn new(interpreter: &'a mut Interpreter) -> Self {
@@ -22,7 +20,7 @@ pub mod resolver {
             scopes_local.push(Vec::new());
             scopes_local.last_mut().unwrap().push(clock_fun);
             scopes_local.last_mut().unwrap().push(unix_clock_fun);
-            
+
             Self {
                 interpreter,
                 scopes: scopes_local,
@@ -38,7 +36,7 @@ pub mod resolver {
         }
 
         fn resolve_expr(&mut self, expr: &Expr) -> Result<(), String> {
-            expr.accept(self) 
+            expr.accept(self)
         }
 
         fn resolve_stmt(&mut self, stmt: &Stmt) -> Result<(), String> {
@@ -60,7 +58,10 @@ pub mod resolver {
             // check if the variable is already declared in the current scope.
             if let Some(scope) = self.scopes.last() {
                 if self.contains_key(name, scope) {
-                    return Err(format!("Variable '{}' has already been declared in this scope.", name.get_token_type().to_string()));
+                    return Err(format!(
+                        "Variable '{}' has already been declared in this scope.",
+                        name.get_token_type().to_string()
+                    ));
                 }
             }
 
@@ -101,8 +102,11 @@ pub mod resolver {
             false
         }
 
-     
-        fn _get_scope_after_string(&self, name: &Token, scope: &Vec<(String, bool)>) -> Option<(String, bool)> {
+        fn _get_scope_after_string(
+            &self,
+            name: &Token,
+            scope: &Vec<(String, bool)>,
+        ) -> Option<(String, bool)> {
             for (i, (key, _)) in scope.iter().enumerate() {
                 if key == &name.get_token_type().to_string() {
                     return Some(scope[i].clone());
@@ -114,13 +118,19 @@ pub mod resolver {
         fn resolve_local(&mut self, token: &Token, _: Expr) {
             for (i, scope) in self.scopes.iter().enumerate().rev() {
                 if self.contains_key(token, scope) {
-                    self.interpreter.resolve(Expr::Variable(token.clone()), i);       
+                    self.interpreter
+                        .resolve(Expr::Variable(token.clone()), self.scopes.len() - 1 - i);
                     return;
                 }
             }
         }
 
-        fn resolve_function(&mut self, _name: &Token, params: &Vec<Token>, body: &Vec<Stmt>) -> Result<(), String> {
+        fn resolve_function(
+            &mut self,
+            _name: &Token,
+            params: &Vec<Token>,
+            body: &Vec<Stmt>,
+        ) -> Result<(), String> {
             self.begin_scope();
             for param in params {
                 self.declare(param)?;
@@ -138,16 +148,25 @@ pub mod resolver {
             self.resolve_expr(expr)?;
             self.resolve_local(token, expr.clone());
             Ok(())
-
         }
 
-        fn visit_binary_expr(&mut self, left: &Expr, _operator: &Token, right: &Expr) -> Result<(), String> {
+        fn visit_binary_expr(
+            &mut self,
+            left: &Expr,
+            _operator: &Token,
+            right: &Expr,
+        ) -> Result<(), String> {
             self.resolve_expr(left)?;
             self.resolve_expr(right)?;
             Ok(())
         }
 
-        fn visit_call_expr(&mut self, callee: &Expr, _paren: &Token, arguments: &Vec<Expr>) -> Result<(), String> {
+        fn visit_call_expr(
+            &mut self,
+            callee: &Expr,
+            _paren: &Token,
+            arguments: &Vec<Expr>,
+        ) -> Result<(), String> {
             self.resolve_expr(callee)?;
 
             for arg in arguments {
@@ -171,7 +190,12 @@ pub mod resolver {
             Ok(())
         }
 
-        fn visit_logical_expr(&mut self, left: &Expr, _operator: &Token, right: &Expr) -> Result<(), String> {
+        fn visit_logical_expr(
+            &mut self,
+            left: &Expr,
+            _operator: &Token,
+            right: &Expr,
+        ) -> Result<(), String> {
             self.resolve_expr(left)?;
             self.resolve_expr(right)?;
             Ok(())
@@ -213,14 +237,24 @@ pub mod resolver {
             Ok(())
         }
 
-        fn visit_function_stmt(&mut self, name: &Token, params: &Vec<Token>, body: &Vec<Stmt>) -> Result<(), String> {
+        fn visit_function_stmt(
+            &mut self,
+            name: &Token,
+            params: &Vec<Token>,
+            body: &Vec<Stmt>,
+        ) -> Result<(), String> {
             self.declare(name)?;
             self.define(name);
             self.resolve_function(name, params, body)?;
             Ok(())
         }
 
-        fn visit_if_stmt(&mut self, expr: &Expr, stmt: &Stmt, else_stmt: &Option<Box<Stmt>>) -> Result<(), String> {
+        fn visit_if_stmt(
+            &mut self,
+            expr: &Expr,
+            stmt: &Stmt,
+            else_stmt: &Option<Box<Stmt>>,
+        ) -> Result<(), String> {
             self.resolve_expr(expr)?;
             self.resolve_stmt(stmt)?;
             if let Some(else_stmt) = else_stmt {
@@ -250,7 +284,7 @@ pub mod resolver {
             match expr {
                 Expr::Call(_, _, _) => {
                     self.resolve_expr(expr)?;
-                },
+                }
                 _ => self.resolve_expr(expr)?,
             }
             self.define(token);
@@ -264,6 +298,4 @@ pub mod resolver {
             Ok(())
         }
     }
-
-
 }

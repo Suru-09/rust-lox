@@ -1,11 +1,14 @@
 pub mod rlox_callable {
     use crate::environment::environment::Environment;
     use crate::stmt::stmt::LiteralValue;
-    use crate::{interpreter::interpreter::{Interpreter, Error}, stmt::stmt::Stmt};
+    use crate::{
+        interpreter::interpreter::{Error, Interpreter},
+        stmt::stmt::Stmt,
+    };
+    use chrono;
     use std::borrow::BorrowMut;
     use std::cell::RefCell;
     use std::rc::Rc;
-    use chrono;
 
     #[derive(Debug, PartialEq)]
     pub enum Callable {
@@ -48,9 +51,9 @@ pub mod rlox_callable {
             _interpreter: &mut Interpreter,
             _args: &mut Vec<LiteralValue>,
         ) -> Result<LiteralValue, Error> {
-            Ok(
-                LiteralValue::String(chrono::offset::Local::now().to_string())
-            )
+            Ok(LiteralValue::String(
+                chrono::offset::Local::now().to_string(),
+            ))
         }
     }
 
@@ -67,9 +70,9 @@ pub mod rlox_callable {
             _interpreter: &mut Interpreter,
             _args: &mut Vec<LiteralValue>,
         ) -> Result<LiteralValue, Error> {
-            Ok(
-                LiteralValue::Number(chrono::offset::Local::now().timestamp_millis() as f64)
-            )
+            Ok(LiteralValue::Number(
+                chrono::offset::Local::now().timestamp_millis() as f64,
+            ))
         }
     }
 
@@ -98,7 +101,7 @@ pub mod rlox_callable {
     impl RLoxCallable for RLoxFunction {
         fn arity(&self) -> usize {
             match &self.declaration {
-            Stmt::Function(_, params, _) => params.len(),
+                Stmt::Function(_, params, _) => params.len(),
                 _ => 0,
             }
         }
@@ -108,29 +111,21 @@ pub mod rlox_callable {
             interpreter: &mut Interpreter,
             args: &mut Vec<LiteralValue>,
         ) -> Result<LiteralValue, Error> {
-            let mut env = self.closure.clone();
+            let mut env = Environment::new(self.closure.clone());
             match &self.declaration {
                 Stmt::Function(_, params, body) => {
                     for (idx, param) in params.iter().enumerate() {
-                        env.borrow_mut()
-                            .as_ref()
-                            .borrow_mut()
-                            .define(param, args[idx].clone());
+                        env.borrow_mut().define(param, args[idx].clone());
                     }
 
                     match interpreter.execute_block(body, env) {
                         Ok(_) => return Ok(LiteralValue::Nil),
-                        Err(err) => {
-                            match err {
-                                Error::Return(ret_val) => {
-                                    // if we throw an error, execute_block's control flow is
-                                    // intrerrupted, therefore we need to do the cleanup here...
-                                    interpreter.environment.as_ref().borrow_mut().pop();
-                                    return Ok(ret_val)
-                                },
-                                _ => return Err(err)
+                        Err(err) => match err {
+                            Error::Return(ret_val) => {
+                                return Ok(ret_val);
                             }
-                        }
+                            _ => return Err(err),
+                        },
                     };
                 }
                 _ => panic!("Cannot call non-function"),

@@ -19,3 +19,6 @@ rust-lox/src/resources/generated/*
 # ignore vscode files
 .vscode/*
 .DS_Store
+
+# ignore clion/rustrover
+.idea

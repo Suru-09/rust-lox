@@ -1,10 +1,10 @@
 pub mod interpreter {
 
-    use crate::environment::environment::{Environment, EnvironmentStack};
-    use crate::error_handling::error_handling::error;
+    use crate::environment::environment::Environment;
     use crate::expr::expr::{Expr, Visitor};
-    use crate::function_name;
-    use crate::rlox_callable::rlox_callable::{Callable, RLoxCallable, RLoxClass, RLoxFunction, Clock, UnixTClock};
+    use crate::rlox_callable::rlox_callable::{
+        Callable, Clock, RLoxCallable, RLoxClass, RLoxFunction, UnixTClock,
+    };
     use crate::scanner::scan::{Token, TokenType};
     use crate::stmt::stmt::{LiteralValue, Stmt, StmtVisitor};
     use std::cell::RefCell;
@@ -23,14 +23,15 @@ pub mod interpreter {
      * TODO: therefore it is not possible to use the environment to define variables in the global scope.
      */
     pub struct Interpreter {
-        pub environment: Rc<RefCell<EnvironmentStack>>,
+        pub environment: Rc<RefCell<Environment>>,
         pub locals: Vec<(Expr, usize)>,
+        pub globals: Rc<RefCell<Environment>>,
     }
 
     #[derive(Debug, PartialEq)]
     pub enum Error {
         LoxRuntimeError(String),
-        Return(LiteralValue)
+        Return(LiteralValue),
     }
 
     impl Error {
@@ -41,19 +42,26 @@ pub mod interpreter {
 
     impl Interpreter {
         pub fn new() -> Interpreter {
-            let env = Rc::new(RefCell::new(EnvironmentStack::new()));
-            // add the clock function to the global environment.
-            // it will be available in all the scopes.
-            env.borrow_mut()
-                .push_env(Rc::new(RefCell::new(Environment::new())));
-
-            env.borrow_mut().define(
-                &Token::new(TokenType::Identifier("clock".to_string()), "clock".to_string(), 999, 999, 999),
+            let globals = Rc::new(RefCell::new(Environment::new_without_enclosing()));
+            globals.borrow_mut().define(
+                &Token::new(
+                    TokenType::Identifier("clock".to_string()),
+                    "clock".to_string(),
+                    999,
+                    999,
+                    999,
+                ),
                 LiteralValue::Callable(Box::new(Callable::Clock(Clock {}))),
             );
 
-            env.borrow_mut().define(
-                &Token::new(TokenType::Identifier("unixClock".to_string()), "unixClock".to_string(), 999, 999, 999),
+            globals.borrow_mut().define(
+                &Token::new(
+                    TokenType::Identifier("unixClock".to_string()),
+                    "unixClock".to_string(),
+                    999,
+                    999,
+                    999,
+                ),
                 LiteralValue::Callable(Box::new(Callable::UnixTClock(UnixTClock {}))),
             );
 
@@ -61,7 +69,7 @@ pub mod interpreter {
             let mut locals = Vec::new();
             locals.push((
                 Expr::Variable(Token::new(
-                TokenType::Identifier("clock".to_string()),
+                    TokenType::Identifier("clock".to_string()),
                     "".to_string(),
                     0,
                     0,
@@ -82,8 +90,9 @@ pub mod interpreter {
             ));
 
             Interpreter {
-                environment: env,
+                environment: Rc::clone(&globals),
                 locals,
+                globals: globals,
             }
         }
 
@@ -114,56 +123,22 @@ pub mod interpreter {
             self.locals.push((expr, depth));
         }
 
-        fn get_depth(&mut self, token: &Token, expr: Expr) -> Result<usize, String> {
+        fn get_depth(&mut self, token: &Token) -> Option<usize> {
             for (_, (e, depth)) in self.locals.iter().enumerate() {
-                if *e == expr {
-                    return Ok(*depth);
+                if Expr::Variable(token.clone()) == *e {
+                    return Some(*depth);
                 }
             }
-            error(
-                token.get_line(),
-                token.get_column(),
-                format!(
-                    "Could not find variable '{}' in the environment",
-                    token.get_token_type().to_string()
-                ),
-                function_name!(),
-            );
-            Err(format!(
-                "Could not find variable '{}' in the environment",
-                token.get_token_type().to_string()
-            ))
+            None
         }
 
-        fn look_up_variable(&mut self, token: &Token, expr: Expr) -> Result<LiteralValue, Error> {
-            match self.get_depth(token, expr) {
-                Ok(depth) => {
-                    let variable = self.get_at(depth, token)?;
-                    Ok(variable)
+        fn look_up_variable(&mut self, token: &Token) -> Result<LiteralValue, Error> {
+            match self.get_depth(token) {
+                Some(depth) => {
+                    let mut env = self.environment.as_ref().borrow_mut();
+                    env.get_at(depth, token)
                 }
-                Err(err) => Err(Error::LoxRuntimeError(err)),
-            }
-        }
-
-        fn get_at(&mut self, distance: usize, token: &Token) -> Result<LiteralValue, Error> {
-            let mut env = self.environment.as_ref().borrow_mut();
-            match env.get_at(distance, token) {
-                Some(value) => Ok(value),
-                None => match env.get(token) {
-                    Some(value) => Ok(value),
-                    None => {
-                        error(
-                            token.get_line(),
-                            token.get_column(),
-                            format!(
-                                "Could not find variable '{}' in the environment",
-                                token.get_token_type().to_string()
-                            ),
-                            function_name!(),
-                        );
-                        Err(Error::LoxRuntimeError(format!("Variable '{}' is undefined.", token.get_token_type().to_string().clone())))
-                    }
-                },
+                None => self.globals.borrow_mut().get(token),
             }
         }
 
@@ -175,7 +150,9 @@ pub mod interpreter {
                 (LiteralValue::Number(number1), LiteralValue::Number(number2)) => {
                     Ok(LiteralValue::Number(number1 - number2))
                 }
-                _ => Err(Error::from_string("In order to substract two things they need to be numbers")),
+                _ => Err(Error::from_string(
+                    "In order to substract two things they need to be numbers",
+                )),
             }
         }
 
@@ -193,9 +170,9 @@ pub mod interpreter {
                 (LiteralValue::Number(num), LiteralValue::String(str)) => {
                     Ok(LiteralValue::String(str.clone() + &num.to_string()))
                 }
-                _ => {
-                    Err(Error::from_string("In order to add two things they need to be numbers or strings"))
-                }
+                _ => Err(Error::from_string(
+                    "In order to add two things they need to be numbers or strings",
+                )),
             }
         }
 
@@ -207,19 +184,20 @@ pub mod interpreter {
                 (LiteralValue::Number(number1), LiteralValue::Number(number2)) => {
                     Ok(LiteralValue::Number(number1 * number2))
                 }
-                _ => Err(Error::from_string("In order to multiply two things they need to be numbers")),
+                _ => Err(Error::from_string(
+                    "In order to multiply two things they need to be numbers",
+                )),
             }
         }
 
-        fn divide(
-            operand1: &LiteralValue,
-            operand2: &LiteralValue,
-        ) -> Result<LiteralValue, Error> {
+        fn divide(operand1: &LiteralValue, operand2: &LiteralValue) -> Result<LiteralValue, Error> {
             match (operand1, operand2) {
                 (LiteralValue::Number(number1), LiteralValue::Number(number2)) => {
                     Ok(LiteralValue::Number(number1 / number2))
                 }
-                _ => Err(Error::from_string("In order to divide two things they need to be numbers")),
+                _ => Err(Error::from_string(
+                    "In order to divide two things they need to be numbers",
+                )),
             }
         }
 
@@ -231,7 +209,9 @@ pub mod interpreter {
                 (LiteralValue::Number(number1), LiteralValue::Number(number2)) => {
                     Ok(LiteralValue::Bool(number1 > number2))
                 }
-                _ => Err(Error::from_string("In order to compare them, operands must be two numbers.")),
+                _ => Err(Error::from_string(
+                    "In order to compare them, operands must be two numbers.",
+                )),
             }
         }
 
@@ -243,7 +223,9 @@ pub mod interpreter {
                 (LiteralValue::Number(number1), LiteralValue::Number(number2)) => {
                     Ok(LiteralValue::Bool(number1 >= number2))
                 }
-                _ => Err(Error::from_string("In order to compare them, operands must be two numbers.")),
+                _ => Err(Error::from_string(
+                    "In order to compare them, operands must be two numbers.",
+                )),
             }
         }
 
@@ -252,7 +234,9 @@ pub mod interpreter {
                 (LiteralValue::Number(number1), LiteralValue::Number(number2)) => {
                     Ok(LiteralValue::Bool(number1 < number2))
                 }
-                _ => Err(Error::from_string("In order to compare them, operands must be two numbers.")),
+                _ => Err(Error::from_string(
+                    "In order to compare them, operands must be two numbers.",
+                )),
             }
         }
 
@@ -264,7 +248,9 @@ pub mod interpreter {
                 (LiteralValue::Number(number1), LiteralValue::Number(number2)) => {
                     Ok(LiteralValue::Bool(number1 <= number2))
                 }
-                _ => Err(Error::from_string("In order to compare them, operands must be two numbers.")),
+                _ => Err(Error::from_string(
+                    "In order to compare them, operands must be two numbers.",
+                )),
             }
         }
 
@@ -279,7 +265,9 @@ pub mod interpreter {
                 (LiteralValue::Number(number1), LiteralValue::Number(number2)) => {
                     Ok(LiteralValue::Bool(number1 == number2))
                 }
-                _ => Err(Error::from_string("Could do perform == on object of different types")),
+                _ => Err(Error::from_string(
+                    "Could do perform == on object of different types",
+                )),
             }
         }
 
@@ -294,7 +282,9 @@ pub mod interpreter {
                 (LiteralValue::Number(number1), LiteralValue::Number(number2)) => {
                     Ok(LiteralValue::Bool(number1 != number2))
                 }
-                _ => Err(Error::from_string("Could do perform != on object of different types")),
+                _ => Err(Error::from_string(
+                    "Could do perform != on object of different types",
+                )),
             }
         }
 
@@ -316,17 +306,14 @@ pub mod interpreter {
             Ok(())
         }
 
-        pub fn execute_block(
-            &mut self,
-            stmts: &Vec<Stmt>,
-            env: Rc<RefCell<Environment>>,
-        ) -> Result<(), Error> {
-            self.environment.as_ref().borrow_mut().push_env(env);
-            for stmt in stmts {
-                self.execute(stmt)?;
-            }
-            self.environment.as_ref().borrow_mut().pop();
-            Ok(())
+        pub fn execute_block(&mut self, stmts: &Vec<Stmt>, env: Environment) -> Result<(), Error> {
+            let previous = Rc::clone(&self.environment);
+            self.environment = Rc::new(RefCell::new(env));
+
+            let result = stmts.iter().try_for_each(|stmt| self.execute(stmt));
+
+            self.environment = previous;
+            result
         }
     }
 
@@ -356,7 +343,9 @@ pub mod interpreter {
                 TokenType::Plus => Interpreter::add(&left, &right),
                 TokenType::Slash => Interpreter::divide(&left, &right),
                 TokenType::Star => Interpreter::multiply(&left, &right),
-                _ => Err(Error::from_string("The given operator is not a binary operator.")),
+                _ => Err(Error::from_string(
+                    "The given operator is not a binary operator.",
+                )),
             }
         }
 
@@ -378,40 +367,30 @@ pub mod interpreter {
                     _ => Err(Error::from_string("Operand must be a number!")),
                 },
                 TokenType::Bang => Ok(LiteralValue::Bool(Interpreter::is_truthy(right))),
-                _ => Err(Error::from_string("The given operator is not a unary operator.")),
+                _ => Err(Error::from_string(
+                    "The given operator is not a unary operator.",
+                )),
             }
         }
 
         fn visit_variable_expr(&mut self, name: &Token) -> Result<LiteralValue, Error> {
-            let expr = Expr::Variable(name.clone());
-            self.look_up_variable(name, expr)
+            self.look_up_variable(name)
         }
 
-        fn visit_assign_expr(
-            &mut self,
-            name: &Token,
-            value: &Expr,
-        ) -> Result<LiteralValue, Error> {
+        fn visit_assign_expr(&mut self, name: &Token, value: &Expr) -> Result<LiteralValue, Error> {
             let value_evaluated = self.evaluate(value)?;
-            //let distance = self.get_depth(name, value.clone());
+            let distance = self.get_depth(name);
 
-            // match distance {
-            //     Ok(depth) => {
-            //         let mut env = self.environment.as_ref().borrow_mut();
-            //         env.assign_at(
-            //             depth,
-            //             name.get_token_type().to_string(),
-            //             value_evaluated.into(),
-            //         )?;
-            //     }
-            //     Err(_) => {
-            //         let mut env = self.environment.as_ref().borrow_mut();
-            //         env.assign(name.get_token_type().to_string(), value_evaluated.into())?;
-            //     }
-            // }
-            {
-                let mut env = self.environment.as_ref().borrow_mut();
-                env.assign(name, value_evaluated.into())?;
+            match distance {
+                Some(depth) => {
+                    let mut env = self.environment.as_ref().borrow_mut();
+                    env.assign_at(depth, name, value_evaluated.into());
+                }
+                None => {
+                    self.globals
+                        .borrow_mut()
+                        .assign(name, value_evaluated.into())?;
+                }
             }
 
             return self.visit_variable_expr(name);
@@ -458,11 +437,6 @@ pub mod interpreter {
                 }
             }
 
-            // to do !!! reimplement clock
-            // if let Some(callee) = calle_local.downcast_ref::<Clock>() {
-            //     return callee.call(self, &mut args);
-            // }
-
             if let LiteralValue::Callable(callable_box) = calle_local.clone() {
                 if let Callable::Clock(function) = *callable_box {
                     return function.call(self, &mut args);
@@ -498,20 +472,14 @@ pub mod interpreter {
         }
 
         fn visit_var_stmt(&mut self, name: &Token, initializer: &Expr) -> Result<(), Error> {
-            let value = self.evaluate(initializer)?;
+            let value: LiteralValue = self.evaluate(initializer)?;
 
-            let stack_len = self.environment.as_ref().borrow_mut().len();
-            self.resolve(initializer.clone(), stack_len);
-
-            self.environment
-                .as_ref()
-                .borrow_mut()
-                .define(name, value.clone());
+            self.environment.as_ref().borrow_mut().define(name, value);
             Ok(())
         }
 
         fn visit_block_stmt(&mut self, stmts: &Vec<Stmt>) -> Result<(), Error> {
-            let env = Rc::new(RefCell::new(Environment::new()));
+            let env = Environment::new(Rc::clone(&self.environment));
             self.execute_block(stmts, env)
         }
 
@@ -532,7 +500,7 @@ pub mod interpreter {
         ) -> Result<(), Error> {
             let func: RLoxFunction = RLoxFunction::new(
                 Stmt::Function(name.clone(), params.clone(), body.clone()),
-                self.environment.as_ref().borrow_mut().peek().unwrap(),
+                Rc::clone(&self.environment),
             );
             self.environment.as_ref().borrow_mut().define(
                 name,
@@ -557,9 +525,9 @@ pub mod interpreter {
                         }
                     }
                     _ => {
-                        return Err(
-                            Error::from_string("Could not visit IF statement, truthy might be a reason.")
-                        )
+                        return Err(Error::from_string(
+                            "Could not visit IF statement, truthy might be a reason.",
+                        ))
                     }
                 }
             }

@@ -1,171 +1,106 @@
 pub mod environment {
+    use crate::error_handling::error_handling::error;
+    use crate::function_name;
+    use crate::interpreter::interpreter::Error;
+    use crate::scanner::scan::Token;
     use crate::stmt::stmt::LiteralValue;
     use std::cell::RefCell;
     use std::collections::HashMap;
     use std::rc::Rc;
-    use crate::interpreter::interpreter::Error;
-    use crate::scanner::scan::Token;
-    use crate::error_handling::error_handling::error;
-    use crate::function_name;
 
-    #[derive(Debug, PartialEq)]
+    #[derive(Debug, PartialEq, Clone, Default)]
     pub struct Environment {
         values: HashMap<String, LiteralValue>,
+        enclosing: Option<Rc<RefCell<Environment>>>,
     }
 
     impl Environment {
-        pub fn new() -> Environment {
+        pub fn new(enclosing: Rc<RefCell<Environment>>) -> Self {
             Environment {
                 values: HashMap::new(),
+                enclosing: Some(enclosing),
+            }
+        }
+
+        pub fn new_without_enclosing() -> Self {
+            Environment {
+                values: HashMap::new(),
+                enclosing: None,
             }
         }
 
         pub fn define(&mut self, token: &Token, value: LiteralValue) {
-            self.values.insert(token.get_token_type().to_string().clone(), value);
+            self.values
+                .insert(token.get_token_type().to_string().clone(), value);
         }
 
-        pub fn get(&mut self, token: &Token) -> Option<&LiteralValue> {
+        pub fn get(&mut self, token: &Token) -> Result<LiteralValue, Error> {
             let token_name = token.get_token_type().to_string().clone();
             if self.values.contains_key(&token_name) {
-                return self.values.get(&token_name);
-            }
-            None
-        }
-
-        /**
-         * ! Very important to note that using '?' is mandatory because on succeess it returns the value
-         * ! is void and on failure it returns an error String which should be sent back to the caller.
-         */
-        pub fn assign(&mut self, token: &Token, value: LiteralValue) -> Result<(), Error> {
-            let token_name = token.get_token_type().to_string().clone();
-            if self.values.contains_key(&token_name) {
-                self.values.insert(token_name, value);
-                return Ok(());
-            }
-            Err(Error::from_string(&format!("Variable '{}' is undefined.", token_name)))
-        }
-    }
-
-    pub struct EnvironmentStack {
-        stack: Vec<Rc<RefCell<Environment>>>,
-    }
-
-    impl EnvironmentStack {
-        pub fn new() -> EnvironmentStack {
-            EnvironmentStack { stack: Vec::new() }
-        }
-
-        pub fn push_env(&mut self, env: Rc<RefCell<Environment>>) {
-            self.stack.push(env);
-        }
-
-        pub fn len(&mut self) -> usize {
-            self.stack.len()
-        }
-
-        pub fn pop(&mut self) -> Option<Rc<RefCell<Environment>>> {
-            self.stack.pop()
-        }
-
-        pub fn peek(&mut self) -> Option<Rc<RefCell<Environment>>> {
-            self.stack.last().map(|env| env.clone())
-        }
-
-        pub fn get(&mut self, token: &Token) -> Option<LiteralValue> {
-            for env in self.stack.iter().rev() {
-                if let Some(value) = env.as_ref().borrow_mut().get(token) {
-                    return Some(value.clone());
-                }
-            }
-            None
-        }
-
-        fn ancestor(&mut self, distance: usize) -> Option<Rc<RefCell<Environment>>> {
-            if distance >= self.stack.len() {
-                return None;
-            }
-            Some(self.stack[self.stack.len() - distance - 1].clone())
-        }
-
-        pub fn get_at(&mut self, distance: usize, token: &Token) -> Option<LiteralValue> {
-            if distance >= self.stack.len() {
-                return None;
-            }
-
-            if let Some(env) = self.ancestor(distance) {
-                if let Some(value) = env.as_ref().borrow_mut().get(token) {
-                    return Some(value.clone());
-                }
-            }
-
-            None
-        }
-
-        pub fn assign_at(
-            &mut self,
-            distance: usize,
-            token: &Token,
-            value: LiteralValue,
-        ) -> Result<(), Error> {
-            if distance >= self.stack.len() {
+                return Ok(self.values.get(&token_name).unwrap().clone());
+            } else if let Some(enclosing) = &self.enclosing {
+                Ok(enclosing.as_ref().borrow_mut().get(&token.clone())?)
+            } else {
                 error(
                     token.get_line(),
                     token.get_column(),
                     format!(
-                        "Variable '{}' is undefined.",
+                        "Variable '{}' is not defined",
                         token.get_token_type().to_string()
                     ),
                     function_name!(),
                 );
-                return Err(Error::from_string(&format!("Variable '{}' is undefined.", token.get_token_type().to_string().clone())));
-            }
-
-            if let Some(env) = self.ancestor(distance) {
-                if let Ok(_) = env.as_ref().borrow_mut().assign(token, value) {
-                    return Ok(());
-                }
-            }
-
-            error(
-                token.get_line(),
-                token.get_column(),
-                format!(
-                    "Variable '{}' is undefined.",
+                Err(Error::from_string(&format!(
+                    "Variable '{}' is not defined",
                     token.get_token_type().to_string()
-                ),
-                function_name!(),
-            );
-            Err(Error::from_string(&format!("Variable '{}' is undefined.", token.get_token_type().to_string().clone())))
-        }
-
-        pub fn define(&mut self, token: &Token, value: LiteralValue) {
-            if let Some(env) = self.stack.last() {
-                env.as_ref().borrow_mut().define(token, value);
+                )))
             }
         }
 
         pub fn assign(&mut self, token: &Token, value: LiteralValue) -> Result<(), Error> {
-            for env in self.stack.iter().rev() {
-                if let Ok(_) = env
-                    .as_ref()
-                    .borrow_mut()
-                    .assign(token, value.clone())
-                {
-                    return Ok(());
-                }
-            }
-
-
-            error(
-                token.get_line(),
-                token.get_column(),
-                format!(
+            let token_name = token.get_token_type().to_string().clone();
+            if self.values.contains_key(&token_name) {
+                self.values.insert(token_name, value);
+                Ok(())
+            } else if let Some(enclosing) = &self.enclosing {
+                enclosing.as_ref().borrow_mut().assign(token, value)?;
+                Ok(())
+            } else {
+                error(
+                    token.get_line(),
+                    token.get_column(),
+                    format!("Variable '{}' is undefined.", token_name),
+                    function_name!(),
+                );
+                Err(Error::from_string(&format!(
                     "Variable '{}' is undefined.",
-                    token.get_token_type().to_string()
-                ),
-                function_name!(),
-            );
-            Err(Error::from_string(&format!("Variable '{}' is undefined.", token.get_token_type().to_string().clone())))
+                    token_name
+                )))
+            }
+        }
+
+        pub fn get_at(&mut self, distance: usize, token: &Token) -> Result<LiteralValue, Error> {
+            if distance == 0 {
+                self.get(&token)
+            } else {
+                self.enclosing
+                    .as_ref()
+                    .unwrap()
+                    .borrow_mut()
+                    .get_at(distance - 1, token)
+            }
+        }
+
+        pub fn assign_at(&mut self, distance: usize, token: &Token, value: LiteralValue) {
+            if distance == 0 {
+                self.define(token, value);
+            } else {
+                self.enclosing
+                    .as_ref()
+                    .unwrap()
+                    .borrow_mut()
+                    .assign_at(distance - 1, token, value);
+            }
         }
     }
 }
