@@ -1,5 +1,5 @@
 pub mod environment {
-    use crate::error_handling::error_handling::error;
+    use crate::error_handling::error_handling::{error, RLoxErrorType};
     use crate::function_name;
     use crate::interpreter::interpreter::Error;
     use crate::scanner::scan::Token;
@@ -49,6 +49,7 @@ pub mod environment {
                         token.get_token_type().to_string()
                     ),
                     function_name!(),
+                    Some(RLoxErrorType::RuntimeError),
                 );
                 Err(Error::from_string(&format!(
                     "Variable '{}' is not defined",
@@ -71,6 +72,7 @@ pub mod environment {
                     token.get_column(),
                     format!("Variable '{}' is undefined.", token_name),
                     function_name!(),
+                    Some(RLoxErrorType::RuntimeError),
                 );
                 Err(Error::from_string(&format!(
                     "Variable '{}' is undefined.",

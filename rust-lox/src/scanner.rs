@@ -1,7 +1,7 @@
 pub mod scan {
     #![allow(dead_code)]
 
-    use crate::error_handling::error_handling::error;
+    use crate::error_handling::error_handling::{error, RLoxErrorType};
     use crate::function_name;
     use std::collections::HashMap;
     use std::fmt;
@@ -301,6 +301,7 @@ pub mod scan {
                             self.column,
                             format!("Unexpected character: {}", c),
                             function_name!(),
+                            Some(RLoxErrorType::ScannerError),
                         );
                     }
                 }
@@ -376,6 +377,7 @@ pub mod scan {
                     self.column,
                     String::from("Unterminated string!"),
                     function_name!(),
+                    Some(RLoxErrorType::ScannerError),
                 );
                 return;
             }

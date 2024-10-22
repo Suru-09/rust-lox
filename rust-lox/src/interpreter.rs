@@ -1,7 +1,9 @@
 pub mod interpreter {
 
     use crate::environment::environment::Environment;
+    use crate::error_handling::error_handling::{error, RLoxErrorType};
     use crate::expr::expr::{Expr, Visitor};
+    use crate::function_name;
     use crate::rlox_callable::rlox_callable::{
         Callable, Clock, RLoxCallable, RLoxClass, RLoxFunction, UnixTClock,
     };
@@ -10,18 +12,6 @@ pub mod interpreter {
     use std::cell::RefCell;
     use std::rc::Rc;
 
-    /**
-     * ! Notes to my self:
-     * ! No. 1:
-     * * The final result of the interpretor visitor is a Literal, therefore If I try to downcast the result of the
-     * * f64 or String for example, I will fail miserably, I would need to downcast the result to a Literal and then
-     * * check the type of the literal.
-     * ! No. 2:
-     * * Could there be improvements in error handling? Everything seems too verbose.
-     * ! No. 3:
-     * TODO: At the moment it is not possible to keep track of the outermost environment,
-     * TODO: therefore it is not possible to use the environment to define variables in the global scope.
-     */
     pub struct Interpreter {
         pub environment: Rc<RefCell<Environment>>,
         pub locals: Vec<(Expr, usize)>,
@@ -419,37 +409,63 @@ pub mod interpreter {
         fn visit_call_expr(
             &mut self,
             callee: &Expr,
-            _: &Token,
+            parent: &Token,
             arguments: &Vec<Expr>,
         ) -> Result<LiteralValue, Error> {
             let calle_local = self.evaluate(callee)?;
-
-            // ! TODO: I will delay the arity check until I implement the functions.
-
             let mut args = Vec::new();
+
             for arg in arguments {
                 args.push(self.evaluate(arg)?);
             }
 
+            let handle_arity = |arguments: usize, arity: usize| -> Result<(), Error> {
+                if arguments != arity {
+                    error(
+                        parent.get_line(),
+                        parent.get_column(),
+                        format!(
+                            "Function signature has {} parameters, however {} args are received",
+                            arity, arguments
+                        ),
+                        function_name!(),
+                        Some(RLoxErrorType::RuntimeError),
+                    );
+                    return Err(Error::from_string(&format!(
+                        "Function signature has {} parameters, however {} args are received",
+                        arity, arguments
+                    )));
+                }
+                Ok(())
+            };
+
             if let LiteralValue::Callable(callable_box) = calle_local.clone() {
                 if let Callable::Function(function) = *callable_box {
-                    return function.call(self, &mut args);
+                    match handle_arity(arguments.len(), function.arity()) {
+                        Ok(_) => return function.call(self, &mut args),
+                        Err(err) => return Err(err),
+                    }
                 }
             }
 
             if let LiteralValue::Callable(callable_box) = calle_local.clone() {
                 if let Callable::Clock(function) = *callable_box {
-                    return function.call(self, &mut args);
+                    match handle_arity(arguments.len(), function.arity()) {
+                        Ok(_) => return function.call(self, &mut args),
+                        Err(err) => return Err(err),
+                    }
                 }
             }
 
             if let LiteralValue::Callable(callable_box) = calle_local.clone() {
                 if let Callable::UnixTClock(function) = *callable_box {
-                    return function.call(self, &mut args);
+                    match handle_arity(arguments.len(), function.arity()) {
+                        Ok(_) => return function.call(self, &mut args),
+                        Err(err) => return Err(err),
+                    }
                 }
             }
 
-            println!("calle_local: {:?}", calle_local);
             Err(Error::from_string("Function has not been implemented yet."))
         }
     }
@@ -516,19 +532,16 @@ pub mod interpreter {
             else_stmt: &Option<Box<Stmt>>,
         ) -> Result<(), Error> {
             let value = self.evaluate(expr)?;
-            let is_truthy = Interpreter::is_truthy_lval(&value);
-            if is_truthy {
-                match value {
-                    LiteralValue::Bool(is_true) => {
-                        if is_true {
-                            return self.execute(stmt);
-                        }
+            match value {
+                LiteralValue::Bool(is_true) => {
+                    if is_true {
+                        return self.execute(stmt);
                     }
-                    _ => {
-                        return Err(Error::from_string(
-                            "Could not visit IF statement, truthy might be a reason.",
-                        ))
-                    }
+                }
+                _ => {
+                    return Err(Error::from_string(
+                        "Could not visit IF statement, truthy might be a reason.",
+                    ))
                 }
             }
 
@@ -541,19 +554,14 @@ pub mod interpreter {
 
         fn visit_while_stmt(&mut self, expr: &Expr, stmt: &Stmt) -> Result<(), Error> {
             let value = self.evaluate(expr)?;
-            let is_truthy = Interpreter::is_truthy_lval(&value);
-            if is_truthy {
-                match value {
-                    LiteralValue::Bool(value_bool) => {
-                        if value_bool {
-                            self.execute(stmt)?;
-                            return self.visit_while_stmt(expr, stmt);
-                        } else {
-                            return Ok(());
-                        }
+            match value {
+                LiteralValue::Bool(value_bool) => {
+                    if value_bool {
+                        self.execute(stmt)?;
+                        return self.visit_while_stmt(expr, stmt);
                     }
-                    _ => return Err(Error::from_string("While condition is not a boolean!")),
                 }
+                _ => return Err(Error::from_string("While condition is not a boolean!")),
             }
             Ok(())
         }

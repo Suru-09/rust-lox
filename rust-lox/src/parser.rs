@@ -1,6 +1,6 @@
 pub mod parser {
 
-    use crate::error_handling::error_handling::error;
+    use crate::error_handling::error_handling::{error, RLoxErrorType};
     use crate::expr::expr::Expr;
     use crate::function_name;
     /**
@@ -13,7 +13,7 @@ pub mod parser {
      * *
      */
     use crate::scanner::scan::{Token, TokenType};
-    use crate::stmt::stmt::{Stmt, LiteralValue};
+    use crate::stmt::stmt::{LiteralValue, Stmt};
     use log::debug;
 
     pub struct Parser {
@@ -169,6 +169,7 @@ pub mod parser {
                             self.peek().get_column(),
                             "Can't have more than 255 arguments.".to_string(),
                             function_name!(),
+                            Some(RLoxErrorType::ParseError),
                         );
                     }
                     arguments.push(self.expression()?);
@@ -215,6 +216,7 @@ pub mod parser {
                 self.peek().get_column(),
                 format!("Expect {} name.", kind),
                 function_name!(),
+                Some(RLoxErrorType::ParseError),
             );
             self.peek()
         }
@@ -236,15 +238,23 @@ pub mod parser {
 
             if self.match_any_number_or_string() {
                 match self.previous().get_token_type() {
-                    TokenType::String(str) => {return Ok(Expr::Literal(LiteralValue::String(str)));},
-                    TokenType::Number(num) => {return Ok(Expr::Literal(LiteralValue::Number(num)));},
+                    TokenType::String(str) => {
+                        return Ok(Expr::Literal(LiteralValue::String(str)));
+                    }
+                    TokenType::Number(num) => {
+                        return Ok(Expr::Literal(LiteralValue::Number(num)));
+                    }
                     _ => {
                         error(
                             self.previous().get_line(),
-                            self.previous().get_column(), 
+                            self.previous().get_column(),
                             "It has to be either a string or a number at this point".to_string(),
-                            function_name!());
-                        return Err("It has to be either a string or a number at this point".to_string());
+                            function_name!(),
+                            Some(RLoxErrorType::ParseError),
+                        );
+                        return Err(
+                            "It has to be either a string or a number at this point".to_string()
+                        );
                     }
                 }
             }
@@ -270,6 +280,7 @@ pub mod parser {
                 self.peek().get_column(),
                 "Expect expression.".to_string(),
                 function_name!(),
+                Some(RLoxErrorType::ParseError),
             );
             Err("Expect Expression?".to_string())
         }
@@ -285,6 +296,7 @@ pub mod parser {
                 current_token.get_column(),
                 message,
                 function_name!(),
+                Some(RLoxErrorType::ParseError),
             );
             self.peek()
         }
@@ -495,6 +507,7 @@ pub mod parser {
                             self.peek().get_column(),
                             "Can't have more than 255 parameters.".to_string(),
                             function_name!(),
+                            Some(RLoxErrorType::ParseError),
                         );
                     }
                     parameters.push(self.consume_any_identifier("parameter".to_string()));
@@ -523,6 +536,7 @@ pub mod parser {
                     self.peek().get_column(),
                     "Expect variable name.".to_string(),
                     function_name!(),
+                    Some(RLoxErrorType::ParseError),
                 );
                 return Err("".to_string());
             }
@@ -554,13 +568,14 @@ pub mod parser {
                 match expr {
                     Expr::Variable(name) | Expr::Assign(name, _) => {
                         return Ok(Expr::Assign(name, Box::new(value)))
-                    },
+                    }
                     _ => {
                         error(
                             equals.get_line(),
                             equals.get_column(),
                             "Invalid assignment target.".to_string(),
                             function_name!(),
+                            Some(RLoxErrorType::ParseError),
                         );
                         return Err("Invalid assignment target.".to_string());
                     }
