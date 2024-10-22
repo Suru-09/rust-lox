@@ -55,7 +55,6 @@ pub mod interpreter {
                 LiteralValue::Callable(Box::new(Callable::UnixTClock(UnixTClock {}))),
             );
 
-            // push clock into locals.
             let mut locals = Vec::new();
             locals.push((
                 Expr::Variable(Token::new(

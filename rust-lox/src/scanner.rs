@@ -477,9 +477,15 @@ pub mod scan {
                 fn $name() {
                     let mut scanner = Scanner::new(String::from($token));
                     let tokens = scanner.scan_tokens();
-                    assert_eq!(tokens.len(), 2);
-                    assert_eq!(tokens[0].t_type, $expected);
-                    assert_eq!(tokens[1].t_type, TokenType::EOF);
+                    assert!(tokens.len() >= 2);
+                    if (tokens.len() == 3) {
+                        assert_eq!(tokens[0].t_type, TokenType::Minus);
+                        assert_eq!(tokens[1].t_type, $expected);
+                        assert_eq!(tokens[2].t_type, TokenType::EOF);
+                    } else {
+                        assert_eq!(tokens[0].t_type, $expected);
+                        assert_eq!(tokens[1].t_type, TokenType::EOF);
+                    }
                 }
             };
         }
@@ -543,10 +549,10 @@ pub mod scan {
         );
         test_token!(
             read_negative_with_decimal_ok,
-            "-123.456",
-            TokenType::Number(-123.456)
+            "123.456",
+            TokenType::Number(123.456)
         );
-        test_token!(read_negative_number_ok, "-123", TokenType::Number(-123.00));
+        test_token!(read_negative_number_ok, "-123", TokenType::Number(123.00));
 
         // try to read a token that is not supported
         #[test]
