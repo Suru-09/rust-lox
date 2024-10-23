@@ -275,7 +275,7 @@ pub mod interpreter {
                 (LiteralValue::Bool(bool1), LiteralValue::Bool(bool2)) => {
                     Ok(LiteralValue::Bool(bool1 != bool2))
                 }
-                _ => Ok(LiteralValue::Bool(false)),
+                _ => Ok(LiteralValue::Bool(true)),
             }
         }
 

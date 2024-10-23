@@ -2,25 +2,13 @@
 
 ## A Rust implementation of the Lox language from the book [Crafting Interpreters](https://craftinginterpreters.com/)
 
-This is a work in progress. I'm currently working on the interpreter, and I'll be adding the compiler later.
 
 ## Usage
 
 - 'cargo run' is all you need to run the REPL.
-- 'cargo run  \<filename\>' will run the interpreter on the file.
+- 'cargo run  -- --src-path "file_path" will run the interpreter on the file.
 
-## TODO
-
-- [x] add support for lines & columns where errors occur.
-- [ ] add support for block comments.
-- [ ] add support for error recovery & synchronization.
-- [ ] add tests for the interpreter.
-- [ ] add suppport for break and continue in loops.
-- [ ] add support for newlines and tabs in print statements(\n, \t).
-- [x] add support for cleaning generated files before each run.
-- [x] add tests for the scanner.
-- [ ] add support for Date Time results from clock() function.
-- [ ] fix bug that causes wrong readings for negative numbers in the scanner.
+- for more optional flags run ./rlox --help
 
 ## AST visualizer
 
