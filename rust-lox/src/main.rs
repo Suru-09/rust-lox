@@ -14,21 +14,19 @@ use crate::resolver::resolver::Resolver;
 use args_parser::args_parser::Args;
 use clap::Parser;
 use error_handling::error_handling::LOGGER;
+use interpreter::interpreter::Interpreter;
 use log::error;
 use log::LevelFilter;
 use std::fs;
 use std::path::Path;
 use stmt::stmt::StmtGraphvizPrinter;
-use interpreter::interpreter::Interpreter;
 
 fn run(source: String, args: &Args) {
     let mut scanner = scanner::scan::Scanner::new(source);
     let tokens = scanner.scan_tokens();
 
     let mut parser = parser::parser::Parser::new(tokens);
-    let ast = parser
-        .parse()
-        .expect("Expected to be able to parse the source file!");
+    let ast = parser.parse().unwrap();
 
     if args.graphviz == true {
         StmtGraphvizPrinter::generate(&ast);
@@ -40,12 +38,10 @@ fn run(source: String, args: &Args) {
 
     let mut interpreter = Interpreter::new();
     let mut resolver = Resolver::new(&mut interpreter);
-    resolver
-        .resolve(&ast)
-        .expect("Expected to be able to resolve stuff without errors!");
+    resolver.resolve(&ast).unwrap();
 
     match resolver.interpreter.interpret(&ast) {
-        Ok(_) => {},
+        Ok(_) => {}
         Err(_) => {
             std::process::exit(1);
         }

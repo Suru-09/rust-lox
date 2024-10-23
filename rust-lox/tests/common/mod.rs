@@ -7,12 +7,12 @@ pub mod common {
         sequence::delimited,
         IResult,
     };
+    use std::fs::File;
     use std::io::{self, BufRead};
     use std::path::Path;
-    use std::{collections::HashMap, fs::File};
-    use walkdir::WalkDir;
+    use std::process::Command;
 
-    pub const INTEGRATION_TESTS_PATH: &str = "tests/resources/integration_tests";
+    pub const TESTS_PREFIX: &str = "tests/resources/integration_tests";
     pub const EXPECT_PATTERN: &str = "// expect:";
     pub const PARSER_ERROR_PATTERN: &str = "// Error at ";
     pub const RUNTIME_ERROR_PATTERN: &str = "// expect runtime error:";
@@ -108,17 +108,17 @@ pub mod common {
             };
 
             if let Ok((_, expect)) = parse_expect_pattern(&line) {
-                println!("Expect Pattern Match: {}", expect.literal);
+                //println!("Expect Pattern Match: {}", expect.literal);
                 test.expectancies.push(TestExpectTypes::Expect(expect));
             } else if let Ok((_, parse_err)) = parse_parser_error_pattern(&line) {
-                println!(
-                    "Parser Error Match: Location = '{}', Error Message = '{}'",
-                    parse_err.error_token, parse_err.error_message
-                );
+                // println!(
+                //     "Parser Error Match: Location = '{}', Error Message = '{}'",
+                //     parse_err.error_token, parse_err.error_message
+                // );
                 test.expectancies
                     .push(TestExpectTypes::ParseError(parse_err));
             } else if let Ok((_, runtime_err)) = parse_runtime_error_pattern(&line) {
-                println!("Runtime Error Pattern Match: {}", runtime_err.error_message);
+                // println!("Runtime Error Pattern Match: {}", runtime_err.error_message);
                 test.expectancies
                     .push(TestExpectTypes::RuntimeError(runtime_err));
             }
@@ -127,57 +127,69 @@ pub mod common {
         Ok(test)
     }
 
-    pub fn get_all_lox_files(path: &str) -> Vec<String> {
-        WalkDir::new(path)
-            .into_iter()
-            .filter_map(|entry| entry.ok())
-            .filter(|entry| entry.metadata().map(|m| m.is_file()).unwrap_or(false))
-            .filter_map(|entry| {
-                let path = entry.path();
-                let extension = path.extension()?.to_str()?;
-                if extension == "lox" {
-                    Some(path.to_str()?.to_string())
-                } else {
-                    None
-                }
-            })
-            .collect()
+    pub fn interpret_file(path: &str) -> (String, String) {
+        let output = Command::new("cargo")
+            .arg("run")
+            .arg("--")
+            .arg("--src-path")
+            .arg(path)
+            .output()
+            .expect("I should be able to interpret this file");
+
+        let stderr = String::from_utf8(output.stderr).expect("Invalid UTF-8 in stderr");
+        let stdout = String::from_utf8(output.stdout).expect("Invalid UTF-8 in stdout");
+        (stdout, stderr)
     }
 
-    pub fn parse_tests(path: &str) -> HashMap<String, Test> {
-        let mut tests: HashMap<String, Test> = HashMap::new();
-        for filename in get_all_lox_files(path) {
-            if !filename.contains("undefined.lox") {
-                continue;
-            }
+    pub fn run_test(path: &str) -> bool {
+        let test = match parse_file(path) {
+            Ok(test) => test,
+            Err(_) => return false,
+        };
 
-            match parse_file(filename.clone()) {
-                Ok(test) => {
-                    tests.insert(filename, test);
+        let (stdout, stderr) = interpret_file(path);
+
+        println!("Stdout: \n{}", stdout);
+        println!("Stderr: \n{}", stderr);
+
+        // stderr might me full of cargo command output, doesn't mean an error necesarrily
+        // errors are treated from stdout(we report them through error_handling).
+        // if !stderr.is_empty() {
+        //     return false;
+        // }
+
+        let lines: Vec<&str> = stdout.lines().collect();
+        let expectancies = test.expectancies;
+
+        if lines.len() != expectancies.len() {
+            println!("The number of lines does not match the number of enum elements.");
+            return false;
+        }
+
+        for (i, line) in lines.iter().enumerate() {
+            match expectancies[i].clone() {
+                TestExpectTypes::Expect(expect) => {
+                    println!("Stdout line: {}\n", line);
+                    println!("expect.literal: {}\n", expect.literal);
+                    if expect.literal != *line {
+                        return false;
+                    }
                 }
-                Err(e) => {
-                    println!("Error reading file: {}", e);
-                    continue;
-                }
+                TestExpectTypes::ParseError(_) => (),
+                TestExpectTypes::RuntimeError(_) => (),
             }
         }
-        tests
+
+        true
     }
 
+    #[macro_export]
     macro_rules! generate_integration_test {
         ($test_name:ident, $path:expr) => {
             #[test]
             fn $test_name() {
-                // Assuming `my_function` is the function you want to test, and it takes a &str as an argument.
-                let result = my_function($path);
-                // Define the expected result for the given test (you can customize this per test).
-                let expected_result = "some_expected_result"; // Replace this with appropriate logic.
-                assert_eq!(
-                    result,
-                    expected_result,
-                    "Test {} failed",
-                    stringify!($test_name)
-                );
+                let result = run_test($path);
+                assert_eq!(result, true, "Test {} failed", stringify!($test_name));
             }
         };
     }

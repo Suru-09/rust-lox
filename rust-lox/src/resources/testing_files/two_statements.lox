@@ -10,7 +10,7 @@ fun main() {
     var a = 2;
     var b = 3;
     var condition = false;
-    if (a < b) {
+  if (a < b) {
        print condition;
     }
     else
