@@ -31,6 +31,18 @@ pub mod stmt {
         Nil,
     }
 
+    impl fmt::Display for LiteralValue {
+        fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+            match self {
+                LiteralValue::Number(num) => write!(f, "{}", num),
+                LiteralValue::Bool(bool) => write!(f, "{}", bool),
+                LiteralValue::String(str) => write!(f, "{}", str),
+                LiteralValue::Callable(callable_box) => write!(f, "{}", *callable_box),
+                LiteralValue::Nil => write!(f, "Nil"),
+            }
+        }
+    }
+
     impl fmt::Display for Stmt {
         fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
             match self {

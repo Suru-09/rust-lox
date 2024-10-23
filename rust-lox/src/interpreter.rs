@@ -476,8 +476,8 @@ pub mod interpreter {
         }
 
         fn visit_print_stmt(&mut self, expr: &Expr) -> Result<(), Error> {
-            let value = self.evaluate(expr)?;
-            println!("{:?}", value);
+            let value: LiteralValue = self.evaluate(expr)?;
+            println!("{}", value);
             Ok(())
         }
 

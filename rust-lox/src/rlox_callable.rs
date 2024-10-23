@@ -6,9 +6,7 @@ pub mod rlox_callable {
         stmt::stmt::Stmt,
     };
     use chrono;
-    use std::borrow::BorrowMut;
-    use std::cell::RefCell;
-    use std::rc::Rc;
+    use std::{borrow::BorrowMut, cell::RefCell, fmt, rc::Rc};
 
     #[derive(Debug, PartialEq)]
     pub enum Callable {
@@ -29,6 +27,17 @@ pub mod rlox_callable {
         }
     }
 
+    impl fmt::Display for Callable {
+        fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+            match self {
+                Callable::Class(rlox_clas) => write!(f, "{}", rlox_clas.to_string()),
+                Callable::Function(rlox_fun) => write!(f, "{}", rlox_fun.to_string()),
+                Callable::Clock(clock) => write!(f, "{}", clock.to_string()),
+                Callable::UnixTClock(unix_tclock) => write!(f, "{}", unix_tclock.to_string()),
+            }
+        }
+    }
+
     pub trait RLoxCallable {
         fn arity(&self) -> usize;
         fn call(
@@ -40,6 +49,12 @@ pub mod rlox_callable {
 
     #[derive(Clone, Debug, PartialEq)]
     pub struct Clock {}
+
+    impl Clock {
+        pub fn to_string(&self) -> String {
+            String::from("clock")
+        }
+    }
 
     impl RLoxCallable for Clock {
         fn arity(&self) -> usize {
@@ -59,6 +74,12 @@ pub mod rlox_callable {
 
     #[derive(Clone, Debug, PartialEq)]
     pub struct UnixTClock {}
+
+    impl UnixTClock {
+        pub fn to_string(&self) -> String {
+            String::from("unixClock")
+        }
+    }
 
     impl RLoxCallable for UnixTClock {
         fn arity(&self) -> usize {
