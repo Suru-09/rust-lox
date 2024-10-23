@@ -254,9 +254,10 @@ pub mod interpreter {
                 (LiteralValue::Number(number1), LiteralValue::Number(number2)) => {
                     Ok(LiteralValue::Bool(number1 == number2))
                 }
-                _ => Err(Error::from_string(
-                    "Could do perform == on object of different types",
-                )),
+                (LiteralValue::Bool(bool1), LiteralValue::Bool(bool2)) => {
+                    Ok(LiteralValue::Bool(bool1 == bool2))
+                }
+                _ => Ok(LiteralValue::Bool(false)),
             }
         }
 
@@ -271,9 +272,10 @@ pub mod interpreter {
                 (LiteralValue::Number(number1), LiteralValue::Number(number2)) => {
                     Ok(LiteralValue::Bool(number1 != number2))
                 }
-                _ => Err(Error::from_string(
-                    "Could do perform != on object of different types",
-                )),
+                (LiteralValue::Bool(bool1), LiteralValue::Bool(bool2)) => {
+                    Ok(LiteralValue::Bool(bool1 != bool2))
+                }
+                _ => Ok(LiteralValue::Bool(false)),
             }
         }
 
@@ -355,7 +357,7 @@ pub mod interpreter {
                     },
                     _ => Err(Error::from_string("Operand must be a number!")),
                 },
-                TokenType::Bang => Ok(LiteralValue::Bool(Interpreter::is_truthy(right))),
+                TokenType::Bang => Ok(LiteralValue::Bool(!Interpreter::is_truthy(right))),
                 _ => Err(Error::from_string(
                     "The given operator is not a unary operator.",
                 )),
