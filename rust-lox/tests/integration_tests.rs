@@ -324,5 +324,4 @@ mod function_tests {
         test_too_many_parameters,
         &format!("{}{}", FUNCTION_PREFIX, "/too_many_parameters.lox")
     );
-
 }

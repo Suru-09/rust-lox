@@ -171,6 +171,7 @@ pub mod parser {
                             function_name!(),
                             Some(RLoxErrorType::ParseError),
                         );
+                        return Err(RLoxErrorType::ParseError);
                     }
                     arguments.push(self.expression()?);
                     if !self.match_token(vec![TokenType::Comma]) {

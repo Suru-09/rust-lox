@@ -45,7 +45,7 @@ pub mod environment {
                     token.get_line(),
                     token.get_column(),
                     format!(
-                        "Variable '{}' is not defined",
+                        "Undefined variable '{}'.",
                         token.get_token_type().to_string()
                     ),
                     function_name!(),

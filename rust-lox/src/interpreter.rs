@@ -400,7 +400,7 @@ pub mod interpreter {
                         parent.get_line(),
                         parent.get_column(),
                         format!(
-                            "Function signature has {} parameters, however {} args are received",
+                            "Expected {} arguments but got {}.",
                             arity, arguments
                         ),
                         function_name!(),
