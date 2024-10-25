@@ -51,10 +51,7 @@ pub mod environment {
                     function_name!(),
                     Some(RLoxErrorType::RuntimeError),
                 );
-                Err(Error::from_string(&format!(
-                    "Variable '{}' is not defined",
-                    token.get_token_type().to_string()
-                )))
+                return Err(Error::LoxRuntimeError)
             }
         }
 
@@ -74,10 +71,7 @@ pub mod environment {
                     function_name!(),
                     Some(RLoxErrorType::RuntimeError),
                 );
-                Err(Error::from_string(&format!(
-                    "Variable '{}' is undefined.",
-                    token_name
-                )))
+                return Err(Error::LoxRuntimeError)
             }
         }
 

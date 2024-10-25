@@ -20,14 +20,8 @@ pub mod interpreter {
 
     #[derive(Debug, PartialEq)]
     pub enum Error {
-        LoxRuntimeError(String),
+        LoxRuntimeError,
         Return(LiteralValue),
-    }
-
-    impl Error {
-        pub fn from_string(str: &str) -> Error {
-            Error::LoxRuntimeError(String::from(str))
-        }
     }
 
     impl Interpreter {
@@ -139,9 +133,7 @@ pub mod interpreter {
                 (LiteralValue::Number(number1), LiteralValue::Number(number2)) => {
                     Ok(LiteralValue::Number(number1 - number2))
                 }
-                _ => Err(Error::from_string(
-                    "In order to substract two things they need to be numbers",
-                )),
+                _ => Err(Error::LoxRuntimeError),
             }
         }
 
@@ -159,9 +151,7 @@ pub mod interpreter {
                 (LiteralValue::Number(num), LiteralValue::String(str)) => {
                     Ok(LiteralValue::String(str.clone() + &num.to_string()))
                 }
-                _ => Err(Error::from_string(
-                    "In order to add two things they need to be numbers or strings",
-                )),
+                _ => return Err(Error::LoxRuntimeError),
             }
         }
 
@@ -173,9 +163,7 @@ pub mod interpreter {
                 (LiteralValue::Number(number1), LiteralValue::Number(number2)) => {
                     Ok(LiteralValue::Number(number1 * number2))
                 }
-                _ => Err(Error::from_string(
-                    "In order to multiply two things they need to be numbers",
-                )),
+                _ => Err(Error::LoxRuntimeError),
             }
         }
 
@@ -184,9 +172,7 @@ pub mod interpreter {
                 (LiteralValue::Number(number1), LiteralValue::Number(number2)) => {
                     Ok(LiteralValue::Number(number1 / number2))
                 }
-                _ => Err(Error::from_string(
-                    "In order to divide two things they need to be numbers",
-                )),
+                _ => Err(Error::LoxRuntimeError),
             }
         }
 
@@ -198,9 +184,7 @@ pub mod interpreter {
                 (LiteralValue::Number(number1), LiteralValue::Number(number2)) => {
                     Ok(LiteralValue::Bool(number1 > number2))
                 }
-                _ => Err(Error::from_string(
-                    "In order to compare them, operands must be two numbers.",
-                )),
+                _ => Err(Error::LoxRuntimeError),
             }
         }
 
@@ -212,9 +196,7 @@ pub mod interpreter {
                 (LiteralValue::Number(number1), LiteralValue::Number(number2)) => {
                     Ok(LiteralValue::Bool(number1 >= number2))
                 }
-                _ => Err(Error::from_string(
-                    "In order to compare them, operands must be two numbers.",
-                )),
+                _ => Err(Error::LoxRuntimeError),
             }
         }
 
@@ -223,9 +205,7 @@ pub mod interpreter {
                 (LiteralValue::Number(number1), LiteralValue::Number(number2)) => {
                     Ok(LiteralValue::Bool(number1 < number2))
                 }
-                _ => Err(Error::from_string(
-                    "In order to compare them, operands must be two numbers.",
-                )),
+                _ => Err(Error::LoxRuntimeError),
             }
         }
 
@@ -237,9 +217,7 @@ pub mod interpreter {
                 (LiteralValue::Number(number1), LiteralValue::Number(number2)) => {
                     Ok(LiteralValue::Bool(number1 <= number2))
                 }
-                _ => Err(Error::from_string(
-                    "In order to compare them, operands must be two numbers.",
-                )),
+                _ => Err(Error::LoxRuntimeError),
             }
         }
 
@@ -282,7 +260,7 @@ pub mod interpreter {
         fn convert_expr_to_literal_value(expr: &Expr) -> Result<LiteralValue, Error> {
             match expr {
                 Expr::Literal(ltype) => Ok(ltype.clone()),
-                _ => Err(Error::from_string("Expression has to be a literal!!!")),
+                _ => Err(Error::LoxRuntimeError),
             }
         }
 
@@ -334,9 +312,7 @@ pub mod interpreter {
                 TokenType::Plus => Interpreter::add(&left, &right),
                 TokenType::Slash => Interpreter::divide(&left, &right),
                 TokenType::Star => Interpreter::multiply(&left, &right),
-                _ => Err(Error::from_string(
-                    "The given operator is not a binary operator.",
-                )),
+                _ => Err(Error::LoxRuntimeError),
             }
         }
 
@@ -353,14 +329,12 @@ pub mod interpreter {
                 TokenType::Minus => match right {
                     Expr::Literal(ltype) => match ltype {
                         LiteralValue::Number(number) => Ok(LiteralValue::Number(-number)),
-                        _ => Err(Error::from_string("Operand must be a number!")),
+                        _ => Err(Error::LoxRuntimeError),
                     },
-                    _ => Err(Error::from_string("Operand must be a number!")),
+                    _ => Err(Error::LoxRuntimeError),
                 },
                 TokenType::Bang => Ok(LiteralValue::Bool(!Interpreter::is_truthy(right))),
-                _ => Err(Error::from_string(
-                    "The given operator is not a unary operator.",
-                )),
+                _ => Err(Error::LoxRuntimeError),
             }
         }
 
@@ -432,10 +406,7 @@ pub mod interpreter {
                         function_name!(),
                         Some(RLoxErrorType::RuntimeError),
                     );
-                    return Err(Error::from_string(&format!(
-                        "Function signature has {} parameters, however {} args are received",
-                        arity, arguments
-                    )));
+                    return Err(Error::LoxRuntimeError);
                 }
                 Ok(())
             };
@@ -467,7 +438,13 @@ pub mod interpreter {
                 }
             }
 
-            Err(Error::from_string("Function has not been implemented yet."))
+            error(
+                parent.get_line(),
+                parent.get_column(),
+                String::from("Can only call functions and classes"),
+                 function_name!(),
+                 Some(RLoxErrorType::RuntimeError));
+            Err(Error::LoxRuntimeError)
         }
     }
 
@@ -540,9 +517,7 @@ pub mod interpreter {
                     }
                 }
                 _ => {
-                    return Err(Error::from_string(
-                        "Could not visit IF statement, truthy might be a reason.",
-                    ))
+                    return Err(Error::LoxRuntimeError)
                 }
             }
 
@@ -562,7 +537,7 @@ pub mod interpreter {
                         return self.visit_while_stmt(expr, stmt);
                     }
                 }
-                _ => return Err(Error::from_string("While condition is not a boolean!")),
+                _ => return Err(Error::LoxRuntimeError),
             }
             Ok(())
         }

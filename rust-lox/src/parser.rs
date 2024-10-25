@@ -278,11 +278,11 @@ pub mod parser {
             error(
                 self.peek().get_line(),
                 self.peek().get_column(),
-                "Expect expression.".to_string(),
+                format!("Error at '{}': Expect expression.", self.peek().get_token_type()),
                 function_name!(),
                 Some(RLoxErrorType::ParseError),
             );
-            Err("Expect Expression?".to_string())
+            Err("Expect Expression".to_string())
         }
 
         fn consume(&mut self, token_type: TokenType, message: String) -> Token {
@@ -294,7 +294,7 @@ pub mod parser {
             error(
                 current_token.get_line(),
                 current_token.get_column(),
-                message,
+                format!("Error at '{}': {}", current_token.get_token_type(), message),
                 function_name!(),
                 Some(RLoxErrorType::ParseError),
             );
