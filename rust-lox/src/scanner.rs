@@ -375,7 +375,7 @@ pub mod scan {
                 error(
                     self.line,
                     self.column,
-                    String::from("Unterminated string!"),
+                    String::from("Unterminated string."),
                     function_name!(),
                     Some(RLoxErrorType::ScannerError),
                 );

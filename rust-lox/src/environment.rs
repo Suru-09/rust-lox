@@ -11,7 +11,7 @@ pub mod environment {
     #[derive(Debug, PartialEq, Clone, Default)]
     pub struct Environment {
         values: HashMap<String, LiteralValue>,
-        enclosing: Option<Rc<RefCell<Environment>>>,
+        pub enclosing: Option<Rc<RefCell<Environment>>>,
     }
 
     impl Environment {
@@ -32,6 +32,13 @@ pub mod environment {
         pub fn define(&mut self, token: &Token, value: LiteralValue) {
             self.values
                 .insert(token.get_token_type().to_string().clone(), value);
+        }
+
+        pub fn is_defined(&self, token: &Token) -> bool {
+            match self.values.get(&token.get_token_type().to_string()) {
+                Some(_) => true,
+                None => false
+            }
         }
 
         pub fn get(&mut self, token: &Token) -> Result<LiteralValue, Error> {

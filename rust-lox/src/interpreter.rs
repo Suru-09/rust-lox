@@ -83,17 +83,6 @@ pub mod interpreter {
             expr.accept(self)
         }
 
-        fn is_truthy(expr: &Expr) -> bool {
-            match Interpreter::convert_expr_to_literal_value(expr) {
-                Ok(l_val) => match l_val {
-                    LiteralValue::Bool(b) => b,
-                    LiteralValue::Nil => false,
-                    _ => true,
-                },
-                Err(_) => false,
-            }
-        }
-
         fn is_truthy_lval(l_val: &LiteralValue) -> bool {
             match l_val {
                 LiteralValue::Bool(b) => *b,
@@ -345,13 +334,6 @@ pub mod interpreter {
             }
         }
 
-        fn convert_expr_to_literal_value(expr: &Expr) -> Result<LiteralValue, Error> {
-            match expr {
-                Expr::Literal(ltype) => Ok(ltype.clone()),
-                _ => Err(Error::LoxRuntimeError),
-            }
-        }
-
         pub fn execute(&mut self, stmt: &Stmt) -> Result<(), Error> {
             stmt.accept(self)
         }
@@ -555,14 +537,34 @@ pub mod interpreter {
             Ok(())
         }
 
-        fn visit_return_stmt(&mut self, _keyword: &Token, expr: &Expr) -> Result<(), Error> {
+        fn visit_return_stmt(&mut self, keyword: &Token, expr: &Expr) -> Result<(), Error> {
+            if self.environment.as_ref().borrow_mut().enclosing.is_none() {
+                error(
+                    keyword.get_line(),
+                    keyword.get_column(),
+                    format!("Error at '{}': Can't return from top-level code.", keyword.get_token_type()),
+                    function_name!(),
+                    Some(RLoxErrorType::RuntimeError)
+                );
+                return Err(Error::LoxRuntimeError)
+            }
             let return_val = self.evaluate(expr)?;
             Err(Error::Return(return_val))
         }
 
         fn visit_var_stmt(&mut self, name: &Token, initializer: &Expr) -> Result<(), Error> {
-            let value: LiteralValue = self.evaluate(initializer)?;
+            if self.environment.as_ref().borrow_mut().is_defined( name) {
+                error(
+                    name.get_line(),
+                    name.get_column(),
+                    format!("Error at '{}': Already a variable with this name in this scope.", name.get_token_type()),
+                    function_name!(),
+                    Some(RLoxErrorType::RuntimeError)
+                );
+                return Err(Error::LoxRuntimeError)
+            }
 
+            let value: LiteralValue = self.evaluate(initializer)?;
             self.environment.as_ref().borrow_mut().define(name, value);
             Ok(())
         }
@@ -605,18 +607,10 @@ pub mod interpreter {
             else_stmt: &Option<Box<Stmt>>,
         ) -> Result<(), Error> {
             let value = self.evaluate(expr)?;
-            match value {
-                LiteralValue::Bool(is_true) => {
-                    if is_true {
-                        return self.execute(stmt);
-                    }
-                }
-                _ => {
-                    return Err(Error::LoxRuntimeError)
-                }
+            if Interpreter::is_truthy_lval(&value) {
+                return self.execute(stmt);
             }
-
-            if let Some(else_) = else_stmt {
+            else if let Some(else_) = else_stmt {
                 return self.execute(&else_);
             }
 
@@ -624,15 +618,10 @@ pub mod interpreter {
         }
 
         fn visit_while_stmt(&mut self, expr: &Expr, stmt: &Stmt) -> Result<(), Error> {
-            let value = self.evaluate(expr)?;
-            match value {
-                LiteralValue::Bool(value_bool) => {
-                    if value_bool {
-                        self.execute(stmt)?;
-                        return self.visit_while_stmt(expr, stmt);
-                    }
-                }
-                _ => return Err(Error::LoxRuntimeError),
+            let mut l_val: LiteralValue = self.evaluate(expr)?;
+            while Interpreter::is_truthy_lval(&l_val) {
+                self.execute(stmt)?;
+                l_val = self.evaluate(expr)?;
             }
             Ok(())
         }

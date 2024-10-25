@@ -255,6 +255,88 @@ mod for_tests {
     );
 }
 
+mod if_tests {
+    use crate::common::common::run_test;
+    use crate::generate_integration_test;
+    pub const IF_PREFIX: &str = "tests/resources/integration_tests/if";
+
+    generate_integration_test!(
+        test_class_in_else,
+        &format!("{}{}", IF_PREFIX, "/class_in_else.lox")
+    );
+
+    generate_integration_test!(
+        test_class_in_then,
+        &format!("{}{}", IF_PREFIX, "/class_in_then.lox")
+    );
+
+    generate_integration_test!(
+        test_dangling_else,
+        &format!("{}{}", IF_PREFIX, "/dangling_else.lox")
+    );
+
+    generate_integration_test!(
+        test_else,
+        &format!("{}{}", IF_PREFIX, "/else.lox")
+    );
+
+    generate_integration_test!(
+        test_fun_in_else,
+        &format!("{}{}", IF_PREFIX, "/fun_in_else.lox")
+    );
+
+    generate_integration_test!(
+        test_fun_in_then,
+        &format!("{}{}", IF_PREFIX, "/fun_in_then.lox")
+    );
+
+    generate_integration_test!(
+        test_if,
+        &format!("{}{}", IF_PREFIX, "/if.lox")
+    );
+
+    generate_integration_test!(
+        test_truth,
+        &format!("{}{}", IF_PREFIX, "/truth.lox")
+    );
+
+    generate_integration_test!(
+        test_var_in_else,
+        &format!("{}{}", IF_PREFIX, "/var_in_else.lox")
+    );
+
+    generate_integration_test!(
+        test_var_in_then,
+        &format!("{}{}", IF_PREFIX, "/var_in_then.lox")
+    );
+}
+
+mod logical_operator_tests {
+    use crate::common::common::run_test;
+    use crate::generate_integration_test;
+    pub const LOPERATOR_PREFIX: &str = "tests/resources/integration_tests/logical_operator";
+    
+    generate_integration_test!(
+        test_and_truth,
+        &format!("{}{}", LOPERATOR_PREFIX, "/and_truth.lox")
+    );
+    
+    generate_integration_test!(
+        test_and,
+        &format!("{}{}", LOPERATOR_PREFIX, "/and.lox")
+    );
+
+    generate_integration_test!(
+        test_or_truth,
+        &format!("{}{}", LOPERATOR_PREFIX, "/or_truth.lox")
+    );
+
+    generate_integration_test!(
+        test_or,
+        &format!("{}{}", LOPERATOR_PREFIX, "/or.lox")
+    );
+}
+
 mod function_tests {
     use crate::common::common::run_test;
     use crate::generate_integration_test;
@@ -574,3 +656,170 @@ mod regression_tests {
     //     &format!("{}{}", REGRESSION_PREFIX, "/394.lox")
     // );
 }
+
+mod root_folder_tests {
+    pub const TESTS_PREFIX: &str = "tests/resources/integration_tests";
+    use crate::common::common::run_test;
+    use crate::generate_integration_test;
+    
+    generate_integration_test!(
+        test_empty_file,
+        &format!("{}{}", TESTS_PREFIX, "/empty_file.lox")
+    );
+    
+    generate_integration_test!(
+        test_precedence,
+        &format!("{}{}", TESTS_PREFIX, "/precedence.lox")
+    );
+}
+
+mod return_tests {
+    use crate::common::common::run_test;
+    use crate::generate_integration_test;
+    pub const RETURN_PREFIX: &str = "tests/resources/integration_tests/return";
+
+    generate_integration_test!(
+        test_after_else,
+        &format!("{}{}", RETURN_PREFIX, "/after_else.lox")
+    );
+
+    generate_integration_test!(
+        test_after_if,
+        &format!("{}{}", RETURN_PREFIX, "/after_if.lox")
+    );
+
+    generate_integration_test!(
+        test_after_while,
+        &format!("{}{}", RETURN_PREFIX, "/after_while.lox")
+    );
+
+    generate_integration_test!(
+        test_at_top_level,
+        &format!("{}{}", RETURN_PREFIX, "/at_top_level.lox")
+    );
+
+    generate_integration_test!(
+        test_in_function,
+        &format!("{}{}", RETURN_PREFIX, "/in_function.lox")
+    );
+
+    // TODO: enable when methods are available.
+    // generate_integration_test!(
+    //     test_in_method,
+    //     &format!("{}{}", RETURN_PREFIX, "/in_method.lox")
+    // );
+
+    generate_integration_test!(
+        test_return_nil_if_no_value,
+        &format!("{}{}", RETURN_PREFIX, "/return_nil_if_no_value.lox")
+    );
+}
+
+mod string_tests {
+    use crate::common::common::run_test;
+    use crate::generate_integration_test;
+    pub const STRING_PREFIX: &str = "tests/resources/integration_tests/string";
+
+    generate_integration_test!(
+        test_error_after_multiline,
+        &format!("{}{}", STRING_PREFIX, "/error_after_multiline.lox")
+    );
+
+    // TODO: add support for UNICODE.
+    // generate_integration_test!(
+    //     test_literals,
+    //     &format!("{}{}", STRING_PREFIX, "/literals.lox")
+    // );
+
+    generate_integration_test!(
+        test_multiline,
+        &format!("{}{}", STRING_PREFIX, "/multiline.lox")
+    );
+
+    // TODO: support for SCAN errors in mod.rs
+    // generate_integration_test!(
+    //     test_unterminated,
+    //     &format!("{}{}", STRING_PREFIX, "/unterminated.lox")
+    // );
+}
+
+mod variable_tests {
+    use crate::common::common::run_test;
+    use crate::generate_integration_test;
+    pub const VARIABLE_PREFIX: &str = "tests/resources/integration_tests/variable";
+
+
+    // TODO: impprove resolver.
+    // generate_integration_test!(
+    //     test_collide_with_parameter,
+    //     &format!("{}{}", VARIABLE_PREFIX, "/collide_with_parameter.lox")
+    // );
+
+    // generate_integration_test!(
+    //     test_duplicate_local,
+    //     &format!("{}{}", VARIABLE_PREFIX, "/duplicate_local.lox")
+    // );
+
+    // generate_integration_test!(
+    //     test_duplicate_parameter,
+    //     &format!("{}{}", VARIABLE_PREFIX, "/duplicate_parameter.lox")
+    // );
+
+    generate_integration_test!(
+        test_early_bound,
+        &format!("{}{}", VARIABLE_PREFIX, "/early_bound.lox")
+    );
+
+    generate_integration_test!(
+        test_in_middle_of_block,
+        &format!("{}{}", VARIABLE_PREFIX, "/in_middle_of_block.lox")
+    );
+
+    generate_integration_test!(
+        test_in_nested_block,
+        &format!("{}{}", VARIABLE_PREFIX, "/in_nested_block.lox")
+    );
+}
+
+mod while_tests {
+    use crate::common::common::run_test;
+    use crate::generate_integration_test;
+    pub const WHILE_PREFIX: &str = "tests/resources/integration_tests/while";
+
+    generate_integration_test!(
+        test_class_in_body,
+        &format!("{}{}", WHILE_PREFIX, "/class_in_body.lox")
+    );
+
+    generate_integration_test!(
+        test_closure_in_body,
+        &format!("{}{}", WHILE_PREFIX, "/closure_in_body.lox")
+    );
+
+    generate_integration_test!(
+        test_fun_in_body,
+        &format!("{}{}", WHILE_PREFIX, "/fun_in_body.lox")
+    );
+
+    generate_integration_test!(
+        test_return_closure,
+        &format!("{}{}", WHILE_PREFIX, "/return_closure.lox")
+    );
+    generate_integration_test!(
+        test_return_inside,
+        &format!("{}{}", WHILE_PREFIX, "/return_inside.lox")
+    );
+
+    generate_integration_test!(
+        test_syntax,
+        &format!("{}{}", WHILE_PREFIX, "/syntax.lox")
+    );
+
+    generate_integration_test!(
+        test_var_in_body,
+        &format!("{}{}", WHILE_PREFIX, "/var_in_body.lox")
+    );
+
+}
+
+
