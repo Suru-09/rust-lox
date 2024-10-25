@@ -54,6 +54,7 @@ pub mod error_handling {
         .report();
     }
 
+    #[derive(Debug, PartialEq)]
     pub enum RLoxErrorType {
         RuntimeError,
         ParseError,

@@ -40,10 +40,11 @@ mod assignment_tests {
         &format!("{}{}", ASSIGNMENT_PREFIX, "/syntax.lox")
     );
 
-    generate_integration_test!(
-        test_to_this,
-        &format!("{}{}", ASSIGNMENT_PREFIX, "/to_this.lox")
-    );
+    // TODO: reintroduce when 'this' has been implemented.
+    // generate_integration_test!(
+    //     test_to_this,
+    //     &format!("{}{}", ASSIGNMENT_PREFIX, "/to_this.lox")
+    // );
 
     generate_integration_test!(
         test_undefined,
@@ -118,5 +119,138 @@ mod expressions_test {
     generate_integration_test!(
         test_evaluate,
         &format!("{}{}", EXPRESSIONS_PREFIX, "/evaluate.lox")
+    );
+}
+
+mod closure_tests {
+    use crate::common::common::run_test;
+    use crate::generate_integration_test;
+    pub const CLOSURE_PREFIX: &str = "tests/resources/integration_tests/closure";
+
+    generate_integration_test!(
+        test_assign_to_closure,
+        &format!("{}{}", CLOSURE_PREFIX, "/assign_to_closure.lox")
+    );
+
+    generate_integration_test!(
+        test_assign_to_shadowed_later,
+        &format!("{}{}", CLOSURE_PREFIX, "/assign_to_shadowed_later.lox")
+    );
+
+    generate_integration_test!(
+        test_close_over_function_parameter,
+        &format!("{}{}", CLOSURE_PREFIX, "/close_over_function_parameter.lox")
+    );
+
+    generate_integration_test!(
+        test_close_over_later_variable,
+        &format!("{}{}", CLOSURE_PREFIX, "/close_over_later_variable.lox")
+    );
+
+    // TODO: enable the test when classes are fully implemented.
+    // generate_integration_test!(
+    //     test_close_over_method_parameter,
+    //     &format!("{}{}", CLOSURE_PREFIX, "/close_over_method_parameter.lox")
+    // );
+
+    generate_integration_test!(
+        test_closed_closure_in_function,
+        &format!("{}{}", CLOSURE_PREFIX, "/closed_closure_in_function.lox")
+    );
+
+    generate_integration_test!(
+        test_nested_closure,
+        &format!("{}{}", CLOSURE_PREFIX, "/nested_closure.lox")
+    );
+
+    generate_integration_test!(
+        test_open_closure_in_function,
+        &format!("{}{}", CLOSURE_PREFIX, "/open_closure_in_function.lox")
+    );
+
+    generate_integration_test!(
+        test_reference_closure_multiple_times,
+        &format!("{}{}", CLOSURE_PREFIX, "/reference_closure_multiple_times.lox")
+    );
+
+    generate_integration_test!(
+        test_reuse_closure_slot,
+        &format!("{}{}", CLOSURE_PREFIX, "/reuse_closure_slot.lox")
+    );
+
+    generate_integration_test!(
+        test_shadow_closure_with_local,
+        &format!("{}{}", CLOSURE_PREFIX, "/shadow_closure_with_local.lox")
+    );
+
+    generate_integration_test!(
+        test_unused_closure,
+        &format!("{}{}", CLOSURE_PREFIX, "/unused_closure.lox")
+    );
+
+    generate_integration_test!(
+        test_unused_later_closure,
+        &format!("{}{}", CLOSURE_PREFIX, "/unused_later_closure.lox")
+    );
+}
+
+mod for_tests {
+    use crate::common::common::run_test;
+    use crate::generate_integration_test;
+    pub const FOR_PREFIX: &str = "tests/resources/integration_tests/for";
+
+    generate_integration_test!(
+        test_class_in_body,
+        &format!("{}{}", FOR_PREFIX, "/class_in_body.lox")
+    );
+
+    generate_integration_test!(
+        test_closure_in_body,
+        &format!("{}{}", FOR_PREFIX, "/closure_in_body.lox")
+    );
+
+    generate_integration_test!(
+        test_fun_in_body,
+        &format!("{}{}", FOR_PREFIX, "/fun_in_body.lox")
+    );
+
+    generate_integration_test!(
+        test_return_closure,
+        &format!("{}{}", FOR_PREFIX, "/return_closure.lox")
+    );
+
+    generate_integration_test!(
+        test_return_inside,
+        &format!("{}{}", FOR_PREFIX, "/return_inside.lox")
+    );
+
+    generate_integration_test!(
+        test_scope,
+        &format!("{}{}", FOR_PREFIX, "/scope.lox")
+    );
+
+    generate_integration_test!(
+        test_statement_condition,
+        &format!("{}{}", FOR_PREFIX, "/statement_condition.lox")
+    );
+
+    generate_integration_test!(
+        test_statement_increment,
+        &format!("{}{}", FOR_PREFIX, "/statement_increment.lox")
+    );
+
+    generate_integration_test!(
+        test_statement_initializer,
+        &format!("{}{}", FOR_PREFIX, "/statement_initializer.lox")
+    );
+
+    generate_integration_test!(
+        test_syntax,
+        &format!("{}{}", FOR_PREFIX, "/syntax.lox")
+    );
+
+    generate_integration_test!(
+        test_var_in_body,
+        &format!("{}{}", FOR_PREFIX, "/var_in_body.lox")
     );
 }

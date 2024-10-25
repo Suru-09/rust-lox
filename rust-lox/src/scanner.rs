@@ -293,7 +293,7 @@ pub mod scan {
                 _ => {
                     if c.is_digit(10) {
                         self.number();
-                    } else if c.is_alphabetic() {
+                    } else if c.is_alphabetic() || c == '_' {
                         self.identifier();
                     } else {
                         error(
@@ -320,7 +320,7 @@ pub mod scan {
         }
 
         fn identifier(&mut self) {
-            while self.peek().is_alphanumeric() {
+            while self.peek().is_alphanumeric() ||  self.peek() == '_' {
                 self.advance_token();
             }
 

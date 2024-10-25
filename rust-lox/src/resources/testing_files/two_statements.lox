@@ -7,8 +7,6 @@ fun main() {
 
     lox = "stringus_maximus";
 
-    fun foo(a, b c, d, e, f) {}
-
     var a = 2;
     var b = 3;
     var condition = false;

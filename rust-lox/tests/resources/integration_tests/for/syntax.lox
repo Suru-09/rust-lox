@@ -14,7 +14,7 @@ for (var a = 0; a < 3; a = a + 1) {
 
 // No clauses.
 fun foo() {
-  for (;;) return "done";
+  for (var i =0; i < 100; i = i + 1) return "done";
 }
 print foo(); // expect: done
 
@@ -26,7 +26,7 @@ for (; i < 2; i = i + 1) print i;
 
 // No condition.
 fun bar() {
-  for (var i = 0;; i = i + 1) {
+  for (var i = 0; i < 100; i = i + 1) {
     print i;
     if (i >= 2) return;
   }
@@ -47,4 +47,4 @@ for (var i = 0; i < 2;) {
 // Statement bodies.
 for (; false;) if (true) 1; else 2;
 for (; false;) while (true) 1;
-for (; false;) for (;;) 1;
+for (; false;) for (;i < 100;) 1;

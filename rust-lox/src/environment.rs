@@ -67,7 +67,7 @@ pub mod environment {
                 error(
                     token.get_line(),
                     token.get_column(),
-                    format!("Variable '{}' is undefined.", token_name),
+                    format!("Undefined variable '{}'.", token_name),
                     function_name!(),
                     Some(RLoxErrorType::RuntimeError),
                 );

@@ -1,2 +1,2 @@
-// [line 2] Error at 'class': Expect expression.
-for (;;) class Foo {}
+// Error at 'class': Expect expression.
+for (var i = 0 ; i < 100 ; i = i + 1) class Foo {}

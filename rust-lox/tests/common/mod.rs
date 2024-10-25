@@ -12,7 +12,6 @@ pub mod common {
     use std::path::Path;
     use std::process::Command;
 
-    pub const TESTS_PREFIX: &str = "tests/resources/integration_tests";
     pub const EXPECT_PATTERN: &str = "// expect:";
     pub const PARSER_ERROR_PATTERN: &str = "// Error at ";
     pub const RUNTIME_ERROR_PATTERN: &str = "// expect runtime error:";
@@ -151,6 +150,7 @@ pub mod common {
 
         println!("Stdout: \n{}", stdout);
         println!("Stderr: \n{}", stderr);
+        println!("Expectancies: \n{:?}", test.expectancies);
 
         // stderr might me full of cargo command output, doesn't mean an error necesarrily
         // errors are treated from stdout(we report them through error_handling).
@@ -175,8 +175,20 @@ pub mod common {
                         return false;
                     }
                 }
-                TestExpectTypes::ParseError(_) => (),
-                TestExpectTypes::RuntimeError(_) => (),
+                TestExpectTypes::ParseError(parse_err) => {
+                    println!("Stdout line: {}\n", line);
+                    println!("parse_err.error_token: '{}' and message: {}\n", parse_err.error_token, parse_err.error_message);
+                    if !(*line).contains(&parse_err.error_token) || !(*line).contains(&parse_err.error_message){
+                        return false;
+                    }
+                },
+                TestExpectTypes::RuntimeError(runtime_err) => {
+                    println!("Stdout line: {}\n", line);
+                    println!("runtime_err.error_message message: {}\n", runtime_err.error_message);
+                    if !(*line).contains(&runtime_err.error_message){
+                        return false;
+                    }
+                },
             }
         }
 
