@@ -254,3 +254,75 @@ mod for_tests {
         &format!("{}{}", FOR_PREFIX, "/var_in_body.lox")
     );
 }
+
+mod function_tests {
+    use crate::common::common::run_test;
+    use crate::generate_integration_test;
+    pub const FUNCTION_PREFIX: &str = "tests/resources/integration_tests/function";
+
+    generate_integration_test!(
+        test_body_must_be_block,
+        &format!("{}{}", FUNCTION_PREFIX, "/body_must_be_block.lox")
+    );
+
+    generate_integration_test!(
+        test_empty_body,
+        &format!("{}{}", FUNCTION_PREFIX, "/empty_body.lox")
+    );
+
+    generate_integration_test!(
+        test_extra_arguments,
+        &format!("{}{}", FUNCTION_PREFIX, "/extra_arguments.lox")
+    );
+
+    generate_integration_test!(
+        test_local_mutual_recursion,
+        &format!("{}{}", FUNCTION_PREFIX, "/local_mutual_recursion.lox")
+    );
+
+    generate_integration_test!(
+        test_local_recursion,
+        &format!("{}{}", FUNCTION_PREFIX, "/local_recursion.lox")
+    );
+
+    generate_integration_test!(
+        test_missing_arguments,
+        &format!("{}{}", FUNCTION_PREFIX, "/missing_arguments.lox")
+    );
+
+    generate_integration_test!(
+        test_missing_comma_in_parameters,
+        &format!("{}{}", FUNCTION_PREFIX, "/missing_comma_in_parameters.lox")
+    );
+
+    generate_integration_test!(
+        test_nested_call_with_arguments,
+        &format!("{}{}", FUNCTION_PREFIX, "/nested_call_with_arguments.lox")
+    );
+
+    generate_integration_test!(
+        test_parameters,
+        &format!("{}{}", FUNCTION_PREFIX, "/parameters.lox")
+    );
+
+    generate_integration_test!(
+        test_print,
+        &format!("{}{}", FUNCTION_PREFIX, "/print.lox")
+    );
+
+    generate_integration_test!(
+        test_recursion,
+        &format!("{}{}", FUNCTION_PREFIX, "/recursion.lox")
+    );
+
+    generate_integration_test!(
+        test_too_many_arguments,
+        &format!("{}{}", FUNCTION_PREFIX, "/too_many_arguments.lox")
+    );
+
+    generate_integration_test!(
+        test_too_many_parameters,
+        &format!("{}{}", FUNCTION_PREFIX, "/too_many_parameters.lox")
+    );
+
+}

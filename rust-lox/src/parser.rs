@@ -167,7 +167,7 @@ pub mod parser {
                         error(
                             self.peek().get_line(),
                             self.peek().get_column(),
-                            "Can't have more than 255 arguments.".to_string(),
+                            format!("Error at '{}': Can't have more than 255 arguments.", self.peek().get_token_type()),
                             function_name!(),
                             Some(RLoxErrorType::ParseError),
                         );
