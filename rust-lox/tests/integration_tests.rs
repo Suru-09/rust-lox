@@ -325,3 +325,252 @@ mod function_tests {
         &format!("{}{}", FUNCTION_PREFIX, "/too_many_parameters.lox")
     );
 }
+
+mod nil_tests {
+    use crate::common::common::run_test;
+    use crate::generate_integration_test;
+    pub const NIL_PREFIX: &str = "tests/resources/integration_tests/nil";
+
+    generate_integration_test!(
+        test_nil,
+        &format!("{}{}", NIL_PREFIX, "/literal.lox")
+    );
+}
+
+mod number_tests {
+    use crate::common::common::run_test;
+    use crate::generate_integration_test;
+    pub const NUMBER_PREFIX: &str = "tests/resources/integration_tests/number";
+
+
+    // TODO: commented tested are related to the field property.
+    // generate_integration_test!(
+    //     test_decimal_point_at_eof,
+    //     &format!("{}{}", NUMBER_PREFIX, "/decimal_point_at_eof.lox")
+    // );
+
+    // generate_integration_test!(
+    //     test_leading_dot,
+    //     &format!("{}{}", NUMBER_PREFIX, "/leading_dot.lox")
+    // );
+
+    generate_integration_test!(
+        test_literals,
+        &format!("{}{}", NUMBER_PREFIX, "/literals.lox")
+    );
+
+    generate_integration_test!(
+        test_nan_equality,
+        &format!("{}{}", NUMBER_PREFIX, "/nan_equality.lox")
+    );
+
+    // generate_integration_test!(
+    //     test_trailing_dot,
+    //     &format!("{}{}", NUMBER_PREFIX, "/trailing_dot.lox")
+    // );
+}
+
+mod operator_tests {
+    use crate::common::common::run_test;
+    use crate::generate_integration_test;
+    pub const OPERATOR_PREFIX: &str = "tests/resources/integration_tests/operator";
+
+    generate_integration_test!(
+        test_add_bool_nil,
+        &format!("{}{}", OPERATOR_PREFIX, "/add_bool_nil.lox")
+    );
+
+    generate_integration_test!(
+        test_add_bool_num,
+        &format!("{}{}", OPERATOR_PREFIX, "/add_bool_num.lox")
+    );
+
+    generate_integration_test!(
+        test_add_bool_string,
+        &format!("{}{}", OPERATOR_PREFIX, "/add_bool_string.lox")
+    );
+
+    generate_integration_test!(
+        test_add_nil_nil,
+        &format!("{}{}", OPERATOR_PREFIX, "/add_nil_nil.lox")
+    );
+
+    generate_integration_test!(
+        test_add_num_nil,
+        &format!("{}{}", OPERATOR_PREFIX, "/add_num_nil.lox")
+    );
+
+    generate_integration_test!(
+        test_add_string_nil,
+        &format!("{}{}", OPERATOR_PREFIX, "/add_string_nil.lox")
+    );
+
+    generate_integration_test!(
+        test_add,
+        &format!("{}{}", OPERATOR_PREFIX, "/add.lox")
+    );
+
+    generate_integration_test!(
+        test_comparison,
+        &format!("{}{}", OPERATOR_PREFIX, "/comparison.lox")
+    );
+
+    generate_integration_test!(
+        test_divide_nonnum_num,
+        &format!("{}{}", OPERATOR_PREFIX, "/divide_nonnum_num.lox")
+    );
+
+    generate_integration_test!(
+        test_divide_num_nonnum,
+        &format!("{}{}", OPERATOR_PREFIX, "/divide_num_nonnum.lox")
+    );
+
+    generate_integration_test!(
+        test_divide,
+        &format!("{}{}", OPERATOR_PREFIX, "/divide.lox")
+    );
+
+
+    // TODO: add when finishing classes.
+    // generate_integration_test!(
+    //     test_equals_class,
+    //     &format!("{}{}", OPERATOR_PREFIX, "/equals_class.lox")
+    // );
+
+    // TODO: when method exists.
+    // generate_integration_test!(
+    //     test_equals_method,
+    //     &format!("{}{}", OPERATOR_PREFIX, "/equals_method.lox")
+    // );
+
+    generate_integration_test!(
+        test_equals,
+        &format!("{}{}", OPERATOR_PREFIX, "/equals.lox")
+    );
+
+    generate_integration_test!(
+        test_greater_nonnum_num,
+        &format!("{}{}", OPERATOR_PREFIX, "/greater_nonnum_num.lox")
+    );
+
+    generate_integration_test!(
+        test_greater_num_nonnum,
+        &format!("{}{}", OPERATOR_PREFIX, "/greater_num_nonnum.lox")
+    );
+
+    generate_integration_test!(
+        test_greater_or_equal_nonum_num,
+        &format!("{}{}", OPERATOR_PREFIX, "/greater_or_equal_nonnum_num.lox")
+    );
+
+    generate_integration_test!(
+        test_greater_or_equal_num_nonum,
+        &format!("{}{}", OPERATOR_PREFIX, "/greater_or_equal_num_nonnum.lox")
+    );
+
+    generate_integration_test!(
+        test_less_nonnum_num,
+        &format!("{}{}", OPERATOR_PREFIX, "/less_nonnum_num.lox")
+    );
+
+    generate_integration_test!(
+        test_less_num_nonnum,
+        &format!("{}{}", OPERATOR_PREFIX, "/less_num_nonnum.lox")
+    );
+
+    generate_integration_test!(
+        test_less_or_equal_nonnum_num,
+        &format!("{}{}", OPERATOR_PREFIX, "/less_or_equal_nonnum_num.lox")
+    );
+
+    generate_integration_test!(
+        test_less_or_equal_num_nonnum,
+        &format!("{}{}", OPERATOR_PREFIX, "/less_or_equal_num_nonnum.lox")
+    );
+
+    generate_integration_test!(
+        test_multiply_nonnum_num,
+        &format!("{}{}", OPERATOR_PREFIX, "/multiply_nonnum_num.lox")
+    );
+
+    generate_integration_test!(
+        test_multiply_num_nonnum,
+        &format!("{}{}", OPERATOR_PREFIX, "/multiply_num_nonnum.lox")
+    );
+
+    generate_integration_test!(
+        test_multiply,
+        &format!("{}{}", OPERATOR_PREFIX, "/multiply.lox")
+    );
+
+    generate_integration_test!(
+        test_negate_nonnum,
+        &format!("{}{}", OPERATOR_PREFIX, "/negate_nonnum.lox")
+    );
+
+    generate_integration_test!(
+        test_negate,
+        &format!("{}{}", OPERATOR_PREFIX, "/negate.lox")
+    );
+
+
+    //TODO: Enable when there is full support for classes.
+    // generate_integration_test!(
+    //     test_not_class,
+    //     &format!("{}{}", OPERATOR_PREFIX, "/not_class.lox")
+    // );
+
+    generate_integration_test!(
+        test_not_equals,
+        &format!("{}{}", OPERATOR_PREFIX, "/not_equals.lox")
+    );
+
+    generate_integration_test!(
+        test_not,
+        &format!("{}{}", OPERATOR_PREFIX, "/not.lox")
+    );
+
+    generate_integration_test!(
+        test_subtract_nonnum_num,
+        &format!("{}{}", OPERATOR_PREFIX, "/subtract_nonnum_num.lox")
+    );
+
+    generate_integration_test!(
+        test_subtract_num_nonnum,
+        &format!("{}{}", OPERATOR_PREFIX, "/subtract_num_nonnum.lox")
+    );
+
+    generate_integration_test!(
+        test_subtract,
+        &format!("{}{}", OPERATOR_PREFIX, "/subtract.lox")
+    );
+}
+
+mod print_tests {
+    use crate::common::common::run_test;
+    use crate::generate_integration_test;
+    pub const PRINT_PREFIX: &str = "tests/resources/integration_tests/print";
+
+    generate_integration_test!(
+        test_missing_argument,
+        &format!("{}{}", PRINT_PREFIX, "/missing_argument.lox")
+    );
+}
+
+mod regression_tests {
+    use crate::common::common::run_test;
+    use crate::generate_integration_test;
+    pub const REGRESSION_PREFIX: &str = "tests/resources/integration_tests/regression";
+
+    generate_integration_test!(
+        test_40,
+        &format!("{}{}", REGRESSION_PREFIX, "/40.lox")
+    );
+
+
+    // TODO: enable when inheritance is available.
+    // generate_integration_test!(
+    //     test_394,
+    //     &format!("{}{}", REGRESSION_PREFIX, "/394.lox")
+    // );
+}

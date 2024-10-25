@@ -128,16 +128,27 @@ pub mod interpreter {
         fn substract(
             operand1: &LiteralValue,
             operand2: &LiteralValue,
+            operator: &Token
         ) -> Result<LiteralValue, Error> {
             match (operand1, operand2) {
                 (LiteralValue::Number(number1), LiteralValue::Number(number2)) => {
                     Ok(LiteralValue::Number(number1 - number2))
                 }
-                _ => Err(Error::LoxRuntimeError),
+                _ => {
+                    error(
+                        operator.get_line(),
+                        operator.get_column(),
+                        format!("Operands must be numbers."),
+                        function_name!(),
+                        Some(RLoxErrorType::RuntimeError)
+                    );
+                    Err(Error::LoxRuntimeError)
+                }
             }
         }
 
-        fn add(operand1: &LiteralValue, operand2: &LiteralValue) -> Result<LiteralValue, Error> {
+        fn add(operand1: &LiteralValue, operand2: &LiteralValue,
+            operator: &Token) -> Result<LiteralValue, Error> {
             match (operand1, operand2) {
                 (LiteralValue::String(s1), LiteralValue::String(s2)) => {
                     Ok(LiteralValue::String(String::from(s1.to_string() + s2)))
@@ -151,79 +162,149 @@ pub mod interpreter {
                 (LiteralValue::Number(num), LiteralValue::String(str)) => {
                     Ok(LiteralValue::String(str.clone() + &num.to_string()))
                 }
-                _ => return Err(Error::LoxRuntimeError),
+                _ => {
+                    error(
+                        operator.get_line(),
+                        operator.get_column(),
+                        format!("Operands must be two numbers or two strings."),
+                        function_name!(),
+                        Some(RLoxErrorType::RuntimeError)
+                    );
+                    return Err(Error::LoxRuntimeError)
+                },
             }
         }
 
         fn multiply(
             operand1: &LiteralValue,
             operand2: &LiteralValue,
+            operator: &Token
         ) -> Result<LiteralValue, Error> {
             match (operand1, operand2) {
                 (LiteralValue::Number(number1), LiteralValue::Number(number2)) => {
                     Ok(LiteralValue::Number(number1 * number2))
                 }
-                _ => Err(Error::LoxRuntimeError),
+                _ => {
+                    error(
+                        operator.get_line(),
+                        operator.get_column(),
+                        format!("Operands must be numbers."),
+                        function_name!(),
+                        Some(RLoxErrorType::RuntimeError)
+                    );
+                    Err(Error::LoxRuntimeError)
+                }
             }
         }
 
-        fn divide(operand1: &LiteralValue, operand2: &LiteralValue) -> Result<LiteralValue, Error> {
+        fn divide(operand1: &LiteralValue, operand2: &LiteralValue,
+            operator: &Token) -> Result<LiteralValue, Error> {
             match (operand1, operand2) {
                 (LiteralValue::Number(number1), LiteralValue::Number(number2)) => {
                     Ok(LiteralValue::Number(number1 / number2))
                 }
-                _ => Err(Error::LoxRuntimeError),
+                _ => {
+                    error(
+                        operator.get_line(),
+                        operator.get_column(),
+                        format!("Operands must be numbers."),
+                        function_name!(),
+                        Some(RLoxErrorType::RuntimeError)
+                    );
+                    Err(Error::LoxRuntimeError)
+                },
             }
         }
 
         fn greater(
             operand1: &LiteralValue,
             operand2: &LiteralValue,
+            operator: &Token
         ) -> Result<LiteralValue, Error> {
             match (operand1, operand2) {
                 (LiteralValue::Number(number1), LiteralValue::Number(number2)) => {
                     Ok(LiteralValue::Bool(number1 > number2))
                 }
-                _ => Err(Error::LoxRuntimeError),
+                _ => {
+                    error(
+                        operator.get_line(),
+                        operator.get_column(),
+                        format!("Operands must be numbers."),
+                        function_name!(),
+                        Some(RLoxErrorType::RuntimeError)
+                    );
+                    Err(Error::LoxRuntimeError)
+                }
             }
         }
 
         fn greater_equal(
             operand1: &LiteralValue,
             operand2: &LiteralValue,
+            operator: &Token
         ) -> Result<LiteralValue, Error> {
             match (operand1, operand2) {
                 (LiteralValue::Number(number1), LiteralValue::Number(number2)) => {
                     Ok(LiteralValue::Bool(number1 >= number2))
                 }
-                _ => Err(Error::LoxRuntimeError),
+                _ => {
+                    error(
+                        operator.get_line(),
+                        operator.get_column(),
+                        format!("Operands must be numbers."),
+                        function_name!(),
+                        Some(RLoxErrorType::RuntimeError)
+                    );
+                    Err(Error::LoxRuntimeError)
+                }
             }
         }
 
-        fn less(operand1: &LiteralValue, operand2: &LiteralValue) -> Result<LiteralValue, Error> {
+        fn less(operand1: &LiteralValue, operand2: &LiteralValue,
+            operator: &Token) -> Result<LiteralValue, Error> {
             match (operand1, operand2) {
                 (LiteralValue::Number(number1), LiteralValue::Number(number2)) => {
                     Ok(LiteralValue::Bool(number1 < number2))
                 }
-                _ => Err(Error::LoxRuntimeError),
+                _ => {
+                    error(
+                        operator.get_line(),
+                        operator.get_column(),
+                        format!("Operands must be numbers."),
+                        function_name!(),
+                        Some(RLoxErrorType::RuntimeError)
+                    );
+                    Err(Error::LoxRuntimeError)
+                }
             }
         }
 
         fn less_equal(
             operand1: &LiteralValue,
             operand2: &LiteralValue,
+            operator: &Token
         ) -> Result<LiteralValue, Error> {
             match (operand1, operand2) {
                 (LiteralValue::Number(number1), LiteralValue::Number(number2)) => {
                     Ok(LiteralValue::Bool(number1 <= number2))
                 }
-                _ => Err(Error::LoxRuntimeError),
+                _ => {
+                    error(
+                        operator.get_line(),
+                        operator.get_column(),
+                        format!("Operands must be numbers."),
+                        function_name!(),
+                        Some(RLoxErrorType::RuntimeError)
+                    );
+                    Err(Error::LoxRuntimeError)
+                }
             }
         }
 
         fn equal_equal(
             operand1: &LiteralValue,
             operand2: &LiteralValue,
+            _operator: &Token
         ) -> Result<LiteralValue, Error> {
             match (operand1, operand2) {
                 (LiteralValue::String(s1), LiteralValue::String(s2)) => {
@@ -235,6 +316,9 @@ pub mod interpreter {
                 (LiteralValue::Bool(bool1), LiteralValue::Bool(bool2)) => {
                     Ok(LiteralValue::Bool(bool1 == bool2))
                 }
+                (LiteralValue::Nil, LiteralValue::Nil) => {
+                    Ok(LiteralValue::Bool(true))
+                }
                 _ => Ok(LiteralValue::Bool(false)),
             }
         }
@@ -242,6 +326,7 @@ pub mod interpreter {
         fn bang_equal(
             operand1: &LiteralValue,
             operand2: &LiteralValue,
+            _operator: &Token
         ) -> Result<LiteralValue, Error> {
             match (operand1, operand2) {
                 (LiteralValue::String(s1), LiteralValue::String(s2)) => {
@@ -252,6 +337,9 @@ pub mod interpreter {
                 }
                 (LiteralValue::Bool(bool1), LiteralValue::Bool(bool2)) => {
                     Ok(LiteralValue::Bool(bool1 != bool2))
+                }
+                (LiteralValue::Nil, LiteralValue::Nil) => {
+                    Ok(LiteralValue::Bool(false))
                 }
                 _ => Ok(LiteralValue::Bool(true)),
             }
@@ -302,16 +390,16 @@ pub mod interpreter {
             let right = self.evaluate(right)?.clone();
 
             match operator.get_token_type() {
-                TokenType::Greater => Interpreter::greater(&left, &right),
-                TokenType::GreaterEqual => Interpreter::greater_equal(&left, &right),
-                TokenType::Less => Interpreter::less(&left, &right),
-                TokenType::LessEqual => Interpreter::less_equal(&left, &right),
-                TokenType::BangEqual => Interpreter::bang_equal(&left, &right),
-                TokenType::EqualEqual => Interpreter::equal_equal(&left, &right),
-                TokenType::Minus => Interpreter::substract(&left, &right),
-                TokenType::Plus => Interpreter::add(&left, &right),
-                TokenType::Slash => Interpreter::divide(&left, &right),
-                TokenType::Star => Interpreter::multiply(&left, &right),
+                TokenType::Greater => Interpreter::greater(&left, &right, &operator),
+                TokenType::GreaterEqual => Interpreter::greater_equal(&left, &right, &operator),
+                TokenType::Less => Interpreter::less(&left, &right, &operator),
+                TokenType::LessEqual => Interpreter::less_equal(&left, &right, &operator),
+                TokenType::BangEqual => Interpreter::bang_equal(&left, &right, &operator),
+                TokenType::EqualEqual => Interpreter::equal_equal(&left, &right, &operator),
+                TokenType::Minus => Interpreter::substract(&left, &right, &operator),
+                TokenType::Plus => Interpreter::add(&left, &right, &operator),
+                TokenType::Slash => Interpreter::divide(&left, &right, &operator),
+                TokenType::Star => Interpreter::multiply(&left, &right, &operator),
                 _ => Err(Error::LoxRuntimeError),
             }
         }
@@ -325,16 +413,23 @@ pub mod interpreter {
             operator: &Token,
             right: &Expr,
         ) -> Result<LiteralValue, Error> {
+            let right_l = self.evaluate(right)?;
             match operator.get_token_type() {
-                TokenType::Minus => match right {
-                    Expr::Literal(ltype) => match ltype {
+                TokenType::Minus => match right_l {
                         LiteralValue::Number(number) => Ok(LiteralValue::Number(-number)),
-                        _ => Err(Error::LoxRuntimeError),
+                        _ => {
+                            error(
+                                operator.get_line(),
+                                operator.get_column(),
+                                format!("Operand must be a number."),
+                                function_name!(),
+                                Some(RLoxErrorType::RuntimeError)
+                            );
+                            Err(Error::LoxRuntimeError)
+                        },
                     },
-                    _ => Err(Error::LoxRuntimeError),
-                },
-                TokenType::Bang => Ok(LiteralValue::Bool(!Interpreter::is_truthy(right))),
-                _ => Err(Error::LoxRuntimeError),
+                TokenType::Bang => Ok(LiteralValue::Bool(!Interpreter::is_truthy_lval(&right_l))),
+            _ => Err(Error::LoxRuntimeError),
             }
         }
 
