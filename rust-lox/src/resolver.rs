@@ -2,10 +2,12 @@ pub mod resolver {
 
     use crate::expr::expr::Expr;
     use crate::expr::expr::Visitor;
-    use crate::interpreter::interpreter::Interpreter;
+    use crate::interpreter::interpreter::{Interpreter, Error};
     use crate::scanner::scan::Token;
     use crate::stmt::stmt::Stmt;
     use crate::stmt::stmt::{LiteralValue, StmtVisitor};
+    use crate::error_handling::error_handling::{error, RLoxErrorType};
+    use crate::function_name;
 
     pub struct Resolver<'a> {
         pub interpreter: &'a mut Interpreter,
@@ -35,33 +37,37 @@ pub mod resolver {
             self.scopes.pop();
         }
 
-        fn resolve_expr(&mut self, expr: &Expr) -> Result<(), String> {
+        fn resolve_expr(&mut self, expr: &Expr) -> Result<(), Error> {
             expr.accept(self)
         }
 
-        fn resolve_stmt(&mut self, stmt: &Stmt) -> Result<(), String> {
+        fn resolve_stmt(&mut self, stmt: &Stmt) -> Result<(), Error> {
             stmt.accept(self)
         }
 
-        pub fn resolve(&mut self, stmts: &Vec<Stmt>) -> Result<(), String> {
+        pub fn resolve(&mut self, stmts: &Vec<Stmt>) -> Result<(), Error> {
             for stmt in stmts {
                 self.resolve_stmt(stmt)?;
             }
             Ok(())
         }
 
-        fn declare(&mut self, name: &Token) -> Result<(), String> {
+        fn declare(&mut self, name: &Token) -> Result<(), Error> {
             if self.scopes.is_empty() {
                 return Ok(());
             }
 
             // check if the variable is already declared in the current scope.
             if let Some(scope) = self.scopes.last() {
-                if self.contains_key(name, scope) {
-                    return Err(format!(
-                        "Variable '{}' has already been declared in this scope.",
-                        name.get_token_type().to_string()
-                    ));
+                if self.contains_key(name, scope) && self.scopes.last() != self.scopes.first() {
+                    error(
+                        name.get_line(),
+                        name.get_column(),
+                        format!("Error at '{}': Already a variable with this name in this scope.", name.get_token_type()),
+                        function_name!(),
+                        Some(RLoxErrorType::RuntimeError)
+                    );
+                    return Err(Error::LoxRuntimeError)
                 }
             }
 
@@ -102,7 +108,7 @@ pub mod resolver {
             false
         }
 
-        fn _get_scope_after_string(
+        fn get_scope_after_string(
             &self,
             name: &Token,
             scope: &Vec<(String, bool)>,
@@ -130,7 +136,7 @@ pub mod resolver {
             _name: &Token,
             params: &Vec<Token>,
             body: &Vec<Stmt>,
-        ) -> Result<(), String> {
+        ) -> Result<(), Error> {
             self.begin_scope();
             for param in params {
                 self.declare(param)?;
@@ -143,8 +149,8 @@ pub mod resolver {
         }
     }
 
-    impl Visitor<Result<(), String>> for Resolver<'_> {
-        fn visit_assign_expr(&mut self, token: &Token, expr: &Expr) -> Result<(), String> {
+    impl Visitor<Result<(), Error>> for Resolver<'_> {
+        fn visit_assign_expr(&mut self, token: &Token, expr: &Expr) -> Result<(), Error> {
             self.resolve_expr(expr)?;
             self.resolve_local(token, expr.clone());
             Ok(())
@@ -155,7 +161,7 @@ pub mod resolver {
             left: &Expr,
             _operator: &Token,
             right: &Expr,
-        ) -> Result<(), String> {
+        ) -> Result<(), Error> {
             self.resolve_expr(left)?;
             self.resolve_expr(right)?;
             Ok(())
@@ -166,7 +172,7 @@ pub mod resolver {
             callee: &Expr,
             _paren: &Token,
             arguments: &Vec<Expr>,
-        ) -> Result<(), String> {
+        ) -> Result<(), Error> {
             self.resolve_expr(callee)?;
 
             for arg in arguments {
@@ -176,16 +182,16 @@ pub mod resolver {
             Ok(())
         }
 
-        fn visit_grouping_expr(&mut self, expression: &Expr) -> Result<(), String> {
+        fn visit_grouping_expr(&mut self, expression: &Expr) -> Result<(), Error> {
             self.resolve_expr(expression)?;
             Ok(())
         }
 
-        fn visit_literal_expr(&mut self, _: &LiteralValue) -> Result<(), String> {
+        fn visit_literal_expr(&mut self, _: &LiteralValue) -> Result<(), Error> {
             Ok(())
         }
 
-        fn visit_unary_expr(&mut self, _operator: &Token, right: &Expr) -> Result<(), String> {
+        fn visit_unary_expr(&mut self, _operator: &Token, right: &Expr) -> Result<(), Error> {
             self.resolve_expr(right)?;
             Ok(())
         }
@@ -195,22 +201,28 @@ pub mod resolver {
             left: &Expr,
             _operator: &Token,
             right: &Expr,
-        ) -> Result<(), String> {
+        ) -> Result<(), Error> {
             self.resolve_expr(left)?;
             self.resolve_expr(right)?;
             Ok(())
         }
 
-        fn visit_variable_expr(&mut self, token: &Token) -> Result<(), String> {
-            // if !self.scopes.is_empty() {
-            //     if let Some(scope) = self.scopes.last() {
-            //         if let Some((_, is_defined)) = self.get_scope_after_string(token, scope) {
-            //             // if !is_defined {
-            //             //     panic!("Cannot read local variable in its own initializer.");
-            //             // }
-            //         }
-            //     }
-            // }
+        fn visit_variable_expr(&mut self, token: &Token) -> Result<(), Error> {
+            if !self.scopes.is_empty() {
+                if let Some(scope) = self.scopes.last() {
+                    if let Some((_, is_defined)) = self.get_scope_after_string(token, scope) {
+                        if !is_defined {
+                            error(
+                                token.get_line(),
+                                token.get_column(),
+                                format!("Error at '{}': Can't read local variable in its own initializer.", token.get_token_type()),
+                                function_name!(),
+                                Some(RLoxErrorType::RuntimeError)
+                            );
+                        }
+                    }
+                }
+            }
 
             let expr = Expr::Variable(token.clone());
             self.resolve_local(token, expr);
@@ -218,21 +230,21 @@ pub mod resolver {
         }
     }
 
-    impl StmtVisitor<Result<(), String>> for Resolver<'_> {
-        fn visit_block_stmt(&mut self, stmts: &Vec<Stmt>) -> Result<(), String> {
+    impl StmtVisitor<Result<(), Error>> for Resolver<'_> {
+        fn visit_block_stmt(&mut self, stmts: &Vec<Stmt>) -> Result<(), Error> {
             self.begin_scope();
             self.resolve(stmts)?;
             self.end_scope();
             Ok(())
         }
 
-        fn visit_class_stmt(&mut self, name: &Token, _: &Vec<Stmt>) -> Result<(), String> {
+        fn visit_class_stmt(&mut self, name: &Token, _: &Vec<Stmt>) -> Result<(), Error> {
             self.declare(name)?;
             self.define(name);
             Ok(())
         }
 
-        fn visit_expr_stmt(&mut self, expr: &Expr) -> Result<(), String> {
+        fn visit_expr_stmt(&mut self, expr: &Expr) -> Result<(), Error> {
             self.resolve_expr(expr)?;
             Ok(())
         }
@@ -242,7 +254,7 @@ pub mod resolver {
             name: &Token,
             params: &Vec<Token>,
             body: &Vec<Stmt>,
-        ) -> Result<(), String> {
+        ) -> Result<(), Error> {
             self.declare(name)?;
             self.define(name);
             self.resolve_function(name, params, body)?;
@@ -254,7 +266,7 @@ pub mod resolver {
             expr: &Expr,
             stmt: &Stmt,
             else_stmt: &Option<Box<Stmt>>,
-        ) -> Result<(), String> {
+        ) -> Result<(), Error> {
             self.resolve_expr(expr)?;
             self.resolve_stmt(stmt)?;
             if let Some(else_stmt) = else_stmt {
@@ -263,12 +275,12 @@ pub mod resolver {
             Ok(())
         }
 
-        fn visit_return_stmt(&mut self, _keyword: &Token, expr: &Expr) -> Result<(), String> {
+        fn visit_return_stmt(&mut self, _keyword: &Token, expr: &Expr) -> Result<(), Error> {
             self.resolve_expr(expr)?;
             Ok(())
         }
 
-        fn visit_print_stmt(&mut self, expr: &Expr) -> Result<(), String> {
+        fn visit_print_stmt(&mut self, expr: &Expr) -> Result<(), Error> {
             self.resolve_expr(expr)?;
             Ok(())
         }
@@ -279,7 +291,7 @@ pub mod resolver {
          *    1. Variable declaration. --> We put false in the hashmap.
          *    2. Variable definition.  --> We put true in the hashmap.""
          */
-        fn visit_var_stmt(&mut self, token: &Token, expr: &Expr) -> Result<(), String> {
+        fn visit_var_stmt(&mut self, token: &Token, expr: &Expr) -> Result<(), Error> {
             self.declare(token)?;
             match expr {
                 Expr::Call(_, _, _) => {
@@ -291,7 +303,7 @@ pub mod resolver {
             Ok(())
         }
 
-        fn visit_while_stmt(&mut self, expr: &Expr, stmt: &Stmt) -> Result<(), String> {
+        fn visit_while_stmt(&mut self, expr: &Expr, stmt: &Stmt) -> Result<(), Error> {
             self.resolve_expr(expr)?;
             self.resolve_stmt(stmt)?;
 

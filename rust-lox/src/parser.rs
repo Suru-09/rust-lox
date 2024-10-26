@@ -541,7 +541,7 @@ pub mod parser {
                 error(
                     self.peek().get_line(),
                     self.peek().get_column(),
-                    "Expect variable name.".to_string(),
+                    format!("Error at '{}': Expect variable name.", self.peek().get_token_type()),
                     function_name!(),
                     Some(RLoxErrorType::ParseError),
                 );

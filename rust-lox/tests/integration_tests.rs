@@ -748,22 +748,20 @@ mod variable_tests {
     use crate::generate_integration_test;
     pub const VARIABLE_PREFIX: &str = "tests/resources/integration_tests/variable";
 
+    generate_integration_test!(
+        test_collide_with_parameter,
+        &format!("{}{}", VARIABLE_PREFIX, "/collide_with_parameter.lox")
+    );
 
-    // TODO: impprove resolver.
-    // generate_integration_test!(
-    //     test_collide_with_parameter,
-    //     &format!("{}{}", VARIABLE_PREFIX, "/collide_with_parameter.lox")
-    // );
+    generate_integration_test!(
+        test_duplicate_local,
+        &format!("{}{}", VARIABLE_PREFIX, "/duplicate_local.lox")
+    );
 
-    // generate_integration_test!(
-    //     test_duplicate_local,
-    //     &format!("{}{}", VARIABLE_PREFIX, "/duplicate_local.lox")
-    // );
-
-    // generate_integration_test!(
-    //     test_duplicate_parameter,
-    //     &format!("{}{}", VARIABLE_PREFIX, "/duplicate_parameter.lox")
-    // );
+    generate_integration_test!(
+        test_duplicate_parameter,
+        &format!("{}{}", VARIABLE_PREFIX, "/duplicate_parameter.lox")
+    );
 
     generate_integration_test!(
         test_early_bound,
@@ -779,6 +777,88 @@ mod variable_tests {
         test_in_nested_block,
         &format!("{}{}", VARIABLE_PREFIX, "/in_nested_block.lox")
     );
+
+    // TODO: enable when methods exist.
+    // generate_integration_test!(
+    //     test_local_from_method,
+    //     &format!("{}{}", VARIABLE_PREFIX, "/local_from_method.lox")
+    // );
+    
+    generate_integration_test!(
+        test_redeclare_global,
+        &format!("{}{}", VARIABLE_PREFIX, "/redeclare_global.lox")
+    );
+
+    generate_integration_test!(
+        test_redefine_global,
+        &format!("{}{}", VARIABLE_PREFIX, "/redefine_global.lox")
+    );
+
+    generate_integration_test!(
+        test_scope_reuse_in_different_blocks,
+        &format!("{}{}", VARIABLE_PREFIX, "/scope_reuse_in_different_blocks.lox")
+    );
+
+    generate_integration_test!(
+        test_shadow_and_local,
+        &format!("{}{}", VARIABLE_PREFIX, "/shadow_and_local.lox")
+    );
+
+    generate_integration_test!(
+        test_shadow_global,
+        &format!("{}{}", VARIABLE_PREFIX, "/shadow_global.lox")
+    );
+
+    generate_integration_test!(
+        test_shadow_local,
+        &format!("{}{}", VARIABLE_PREFIX, "/shadow_local.lox")
+    );
+
+    generate_integration_test!(
+        test_undefined_global,
+        &format!("{}{}", VARIABLE_PREFIX, "/undefined_global.lox")
+    );
+
+    generate_integration_test!(
+        test_undefined_local,
+        &format!("{}{}", VARIABLE_PREFIX, "/undefined_local.lox")
+    );
+
+    generate_integration_test!(
+        test_uninitialized,
+        &format!("{}{}", VARIABLE_PREFIX, "/uninitialized.lox")
+    );
+
+    generate_integration_test!(
+        test_unreached_undefined,
+        &format!("{}{}", VARIABLE_PREFIX, "/unreached_undefined.lox")
+    );
+
+    generate_integration_test!(
+        test_use_false_as_var,
+        &format!("{}{}", VARIABLE_PREFIX, "/use_false_as_var.lox")
+    );
+
+    generate_integration_test!(
+        test_use_global_in_initializer,
+        &format!("{}{}", VARIABLE_PREFIX, "/use_global_in_initializer.lox")
+    );
+
+    generate_integration_test!(
+        test_use_local_in_initializer,
+        &format!("{}{}", VARIABLE_PREFIX, "/use_local_in_initializer.lox")
+    );
+
+    generate_integration_test!(
+        test_use_nil_as_var,
+        &format!("{}{}", VARIABLE_PREFIX, "/use_nil_as_var.lox")
+    );
+
+    // TODO: enable when this exists.
+    // generate_integration_test!(
+    //     test_use_this_as_var,
+    //     &format!("{}{}", VARIABLE_PREFIX, "/use_this_as_var.lox")
+    // );
 }
 
 mod while_tests {

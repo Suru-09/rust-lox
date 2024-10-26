@@ -553,17 +553,6 @@ pub mod interpreter {
         }
 
         fn visit_var_stmt(&mut self, name: &Token, initializer: &Expr) -> Result<(), Error> {
-            if self.environment.as_ref().borrow_mut().is_defined( name) {
-                error(
-                    name.get_line(),
-                    name.get_column(),
-                    format!("Error at '{}': Already a variable with this name in this scope.", name.get_token_type()),
-                    function_name!(),
-                    Some(RLoxErrorType::RuntimeError)
-                );
-                return Err(Error::LoxRuntimeError)
-            }
-
             let value: LiteralValue = self.evaluate(initializer)?;
             self.environment.as_ref().borrow_mut().define(name, value);
             Ok(())
