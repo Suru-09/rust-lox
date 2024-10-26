@@ -249,9 +249,20 @@ pub mod resolver {
             Ok(())
         }
 
-        fn visit_class_stmt(&mut self, name: &Token, _: &Vec<Stmt>) -> Result<(), Error> {
+        fn visit_class_stmt(&mut self, name: &Token, methods: &Vec<Stmt>) -> Result<(), Error> {
             self.declare(name)?;
             self.define(name);
+
+            for method in methods {
+                match method {
+                    Stmt::Function(fn_name, fn_params, fn_body) 
+                        => {
+                            self.resolve_function(fn_name, fn_params, fn_body)?;
+                        }
+                    _ => ()
+                }
+            }
+
             Ok(())
         }
 

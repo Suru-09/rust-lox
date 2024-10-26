@@ -6,6 +6,7 @@ pub mod rlox_callable {
         stmt::stmt::Stmt,
     };
     use chrono;
+    use std::borrow::Borrow;
     use std::collections::HashMap;
     use std::{borrow::BorrowMut, cell::RefCell, fmt, rc::Rc};
     use crate::scanner::scan::Token;
@@ -15,7 +16,7 @@ pub mod rlox_callable {
     #[derive(Debug, PartialEq)]
     pub enum Callable {
         Class(RLoxClass),
-        Instance(RLoxInstance),
+        Instance(Rc<RefCell<RLoxInstance>>),
         Function(RLoxFunction),
         Clock(Clock),
         UnixTClock(UnixTClock),
@@ -37,7 +38,7 @@ pub mod rlox_callable {
         fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
             match self {
                 Callable::Class(rlox_clas) => write!(f, "{}", rlox_clas.to_string()),
-                Callable::Instance(rlox_instance) => write!(f, "{}", rlox_instance.to_string()),
+                Callable::Instance(rlox_instance) => write!(f, "{}", rlox_instance.clone().as_ref().borrow_mut().to_string()),
                 Callable::Function(rlox_fun) => write!(f, "{}", rlox_fun.to_string()),
                 Callable::Clock(clock) => write!(f, "{}", clock.to_string()),
                 Callable::UnixTClock(unix_tclock) => write!(f, "{}", unix_tclock.to_string()),
@@ -106,20 +107,20 @@ pub mod rlox_callable {
 
     #[derive(Clone, Debug, PartialEq)]
     pub struct RLoxFunction {
-        pub declaration: Stmt,
+        pub declaration: Box<Stmt>,
         pub closure: Rc<RefCell<Environment>>,
     }
 
     impl RLoxFunction {
         pub fn new(declaration: Stmt, closure: Rc<RefCell<Environment>>) -> Self {
             Self {
-                declaration,
+                declaration: Box::new(declaration),
                 closure,
             }
         }
 
         pub fn to_string(&self) -> String {
-            match &self.declaration {
+            match self.declaration.borrow() {
                 Stmt::Function(name, _, _) => format!("<fn {}>", name.get_token_type()),
                 _ => panic!("Cannot call non-function"),
             }
@@ -128,7 +129,7 @@ pub mod rlox_callable {
 
     impl RLoxCallable for RLoxFunction {
         fn arity(&self) -> usize {
-            match &self.declaration {
+            match self.declaration.borrow() {
                 Stmt::Function(_, params, _) => params.len(),
                 _ => 0,
             }
@@ -140,13 +141,13 @@ pub mod rlox_callable {
             args: &mut Vec<LiteralValue>,
         ) -> Result<LiteralValue, Error> {
             let mut env = Environment::new(self.closure.clone());
-            match &self.declaration {
+            match self.declaration.borrow() {
                 Stmt::Function(_, params, body) => {
                     for (idx, param) in params.iter().enumerate() {
                         env.borrow_mut().define(param, args[idx].clone());
                     }
 
-                    match interpreter.execute_block(body, env) {
+                    match interpreter.execute_block(&body, env) {
                         Ok(_) => return Ok(LiteralValue::Nil),
                         Err(err) => match err {
                             Error::Return(ret_val) => {
@@ -164,11 +165,23 @@ pub mod rlox_callable {
     #[derive(Clone, Debug, PartialEq)]
     pub struct RLoxClass {
         pub name: String,
+        pub methods: HashMap<String, RLoxFunction>
     }
 
     impl RLoxClass {
-        pub fn new(name: String) -> Self {
-            Self { name }
+        pub fn new(name: String, methods: HashMap<String, RLoxFunction>) -> Self {
+            Self {
+                name,
+                methods
+            }
+        }
+
+        pub fn find_method(&self, name: &str) -> Option<RLoxFunction> 
+        {
+            if self.methods.contains_key(name) {
+                return Some(self.methods.get(name).unwrap().clone())
+            }
+            None
         }
 
         pub fn to_string(&self) -> String {
@@ -186,19 +199,19 @@ pub mod rlox_callable {
             _interpreter: &mut Interpreter,
             _args: &mut Vec<LiteralValue>,
         ) -> Result<LiteralValue, Error> {
-            let instance = RLoxInstance::new(self.clone());
-            Ok(LiteralValue::Callable(Box::new(Callable::Instance(instance))))
+            let instance = Rc::new(RefCell::new(RLoxInstance::new(Rc::new(self.clone()))));
+            Ok(LiteralValue::Callable(Callable::Instance(Rc::clone(&instance))))
          }
         }
 
     #[derive(Clone, Debug, PartialEq)]
     pub struct RLoxInstance {
-        pub rlox_class: RLoxClass,
+        pub rlox_class: Rc<RLoxClass>,
         pub fields: HashMap<String, LiteralValue>
     }
 
     impl RLoxInstance {
-        pub fn new(rlox_class: RLoxClass) -> Self {
+        pub fn new(rlox_class: Rc<RLoxClass>) -> Self {
             Self { 
                 rlox_class,
                 fields: HashMap::new()
@@ -210,6 +223,11 @@ pub mod rlox_callable {
             if self.fields.contains_key(name_str) {
                 return Ok(self.fields.get(name_str).unwrap().clone())
             }
+
+            if let Some(method) = self.rlox_class.find_method(name_str) {
+                return Ok(LiteralValue::Callable(Callable::Function(method)))
+            }
+
             error(
                 name.get_line(),
                 name.get_column(),

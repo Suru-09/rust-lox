@@ -10,6 +10,7 @@ pub mod interpreter {
     use crate::scanner::scan::{Token, TokenType};
     use crate::stmt::stmt::{LiteralValue, Stmt, StmtVisitor};
     use std::cell::RefCell;
+    use std::collections::HashMap;
     use std::rc::Rc;
 
     pub struct Interpreter {
@@ -35,7 +36,7 @@ pub mod interpreter {
                     999,
                     999,
                 ),
-                LiteralValue::Callable(Box::new(Callable::Clock(Clock {}))),
+                LiteralValue::Callable(Callable::Clock(Clock {})),
             );
 
             globals.borrow_mut().define(
@@ -46,7 +47,7 @@ pub mod interpreter {
                     999,
                     999,
                 ),
-                LiteralValue::Callable(Box::new(Callable::UnixTClock(UnixTClock {}))),
+                LiteralValue::Callable(Callable::UnixTClock(UnixTClock {})),
             );
 
             let mut locals = Vec::new();
@@ -489,7 +490,7 @@ pub mod interpreter {
             };
 
             if let LiteralValue::Callable(callable_box) = calle_local.clone() {
-                if let Callable::Function(function) = *callable_box {
+                if let Callable::Function(function) = callable_box {
                     match handle_arity(arguments.len(), function.arity()) {
                         Ok(_) => return function.call(self, &mut args),
                         Err(err) => return Err(err),
@@ -498,7 +499,7 @@ pub mod interpreter {
             }
 
             if let LiteralValue::Callable(callable_box) = calle_local.clone() {
-                if let Callable::Clock(function) = *callable_box {
+                if let Callable::Clock(function) = callable_box {
                     match handle_arity(arguments.len(), function.arity()) {
                         Ok(_) => return function.call(self, &mut args),
                         Err(err) => return Err(err),
@@ -507,7 +508,7 @@ pub mod interpreter {
             }
 
             if let LiteralValue::Callable(callable_box) = calle_local.clone() {
-                if let Callable::UnixTClock(function) = *callable_box {
+                if let Callable::UnixTClock(function) = callable_box {
                     match handle_arity(arguments.len(), function.arity()) {
                         Ok(_) => return function.call(self, &mut args),
                         Err(err) => return Err(err),
@@ -516,7 +517,7 @@ pub mod interpreter {
             }
 
             if let LiteralValue::Callable(callable_box) = calle_local.clone() {
-                if let Callable::Class(function) = *callable_box {
+                if let Callable::Class(function) = callable_box {
                     match handle_arity(arguments.len(), function.arity()) {
                         Ok(_) => return function.call(self, &mut args),
                         Err(err) => return Err(err),
@@ -540,8 +541,8 @@ pub mod interpreter {
         ) -> Result<LiteralValue, Error> {
             match self.evaluate(object)? {
                 LiteralValue::Callable(call_box) => {
-                    if let Callable::Instance(_) = *call_box {
-                        return Ok(LiteralValue::Callable(call_box))
+                    if let Callable::Instance(instance) = call_box {
+                        return instance.borrow_mut().get(name)
                     }
                 }
                 _ => {
@@ -563,13 +564,12 @@ pub mod interpreter {
             name: &Token,
             value: &Expr
         ) -> Result<LiteralValue, Error> {
-            match self.evaluate(object)? {
-                LiteralValue::Callable(call_box) => {
-                    if let Callable::Instance(mut instance) = *call_box {
-                        let value_l = self.evaluate(value)?;
-                        instance.set(name, value_l.clone());
-                        return Ok(value_l);
-                    }   
+            let obj_l = self.evaluate(object)?;
+            let value_l = self.evaluate(value)?;
+            match obj_l {
+                LiteralValue::Callable(Callable::Instance(instance)) => {
+                    instance.borrow_mut().set(name, value_l.clone());
+                    return Ok(value_l);
                 }
                 _ => {
                     error(
@@ -580,8 +580,7 @@ pub mod interpreter {
                         Some(RLoxErrorType::RuntimeError));
                     return Err(Error::LoxRuntimeError)
                 }
-            };
-            Err(Error::LoxRuntimeError)
+            }
         }
     }
 
@@ -623,12 +622,24 @@ pub mod interpreter {
             self.execute_block(stmts, env)
         }
 
-        fn visit_class_stmt(&mut self, name: &Token, _: &Vec<Stmt>) -> Result<(), Error> {
-            let klass: RLoxClass = RLoxClass::new(name.get_token_type().to_string().clone());
+        fn visit_class_stmt(&mut self, name: &Token, statements: &Vec<Stmt>) -> Result<(), Error> {
             self.environment.as_ref().borrow_mut().define(
                 name,
-                LiteralValue::Callable(Box::new(Callable::Class(klass))),
+                LiteralValue::Nil
             );
+
+            let mut methods  = HashMap::new();
+            for method in statements {
+                let lox_fun =
+                    RLoxFunction::new(method.clone(), Rc::clone(&self.environment));
+                methods.insert(name.get_token_type().to_string(), lox_fun);
+            }
+
+            let klass: RLoxClass = RLoxClass::new(name.get_token_type().to_string().clone(), methods);
+            self.environment.as_ref().borrow_mut().assign(
+                name,
+                LiteralValue::Callable(Callable::Class(klass)),
+            )?;
             Ok(())
         }
 
@@ -644,7 +655,7 @@ pub mod interpreter {
             );
             self.environment.as_ref().borrow_mut().define(
                 name,
-                LiteralValue::Callable(Box::new(Callable::Function(func))),
+                LiteralValue::Callable(Callable::Function(func)),
             );
             Ok(())
         }

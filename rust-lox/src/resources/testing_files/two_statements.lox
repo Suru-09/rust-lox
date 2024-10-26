@@ -104,9 +104,16 @@ class DevonshireCream {
 }
 
 print DevonshireCream;
+var instance = DevonshireCream();
+instance.size = "Big Cream";
+print instance.size;
 
-var devonInstance = DevonshireCream();
-devonInstance.cream = "Good cream";
-print devonInstance;
-var cream = devonInstance.cream;
-print cream;
+class Bacon {
+  eat() {
+    print "Crunch crunch crunch";
+  }
+}
+
+Bacon().eat();
+
+

@@ -27,7 +27,7 @@ pub mod stmt {
         Number(f64),
         Bool(bool),
         String(String),
-        Callable(Box<Callable>),
+        Callable(Callable),
         Nil,
     }
 
@@ -436,8 +436,8 @@ pub mod stmt {
             let object_node_index = object.accept(self);
             let value_node_index = value.accept(self);
             let name_id = self.add_node(name.token_type_value());
-            self.add_edge(object_node_index, name_id);
-            self.add_edge(object_node_index, value_node_index);
+            self.add_edge(name_id, object_node_index);
+            self.add_edge(value_node_index, name_id);
       
             object_node_index
         }
