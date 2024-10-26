@@ -386,7 +386,7 @@ pub mod stmt {
         }
 
         fn visit_literal_expr(&mut self, value: &LiteralValue) -> u64 {
-            self.add_node(format!("{:?}", value))
+            self.add_node(format!("{}", value))
         }
 
         fn visit_unary_expr(&mut self, operator: &Token, right: &Expr) -> u64 {
@@ -426,7 +426,7 @@ pub mod stmt {
         }
         fn visit_get_expr(&mut self, object: &Expr, name: &Token) -> u64 {
             let object_node_index = object.accept(self);
-            let name_id = self.add_node(name.token_type_value());
+            let name_id = self.add_node(name.token_type_value().to_string());
             self.add_edge(object_node_index, name_id);
       
             object_node_index
@@ -435,9 +435,9 @@ pub mod stmt {
         fn visit_set_expr(&mut self, object: &Expr, name: &Token, value: &Expr) -> u64 {
             let object_node_index = object.accept(self);
             let value_node_index = value.accept(self);
-            let name_id = self.add_node(name.token_type_value());
-            self.add_edge(name_id, object_node_index);
-            self.add_edge(value_node_index, name_id);
+            let name_id = self.add_node(name.token_type_value().to_string());
+            self.add_edge(object_node_index, name_id);
+            self.add_edge(name_id, value_node_index);
       
             object_node_index
         }

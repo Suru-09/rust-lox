@@ -630,9 +630,11 @@ pub mod interpreter {
 
             let mut methods  = HashMap::new();
             for method in statements {
-                let lox_fun =
-                    RLoxFunction::new(method.clone(), Rc::clone(&self.environment));
-                methods.insert(name.get_token_type().to_string(), lox_fun);
+                if let Stmt::Function(fn_name, _, _) = method {
+                    let lox_fun: RLoxFunction =
+                        RLoxFunction::new(method.clone(), Rc::clone(&self.environment));
+                    methods.insert(fn_name.get_token_type().to_string(), lox_fun);
+                } 
             }
 
             let klass: RLoxClass = RLoxClass::new(name.get_token_type().to_string().clone(), methods);
