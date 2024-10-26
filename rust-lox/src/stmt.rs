@@ -424,5 +424,22 @@ pub mod stmt {
             }
             callee_node_index
         }
+        fn visit_get_expr(&mut self, object: &Expr, name: &Token) -> u64 {
+            let object_node_index = object.accept(self);
+            let name_id = self.add_node(name.token_type_value());
+            self.add_edge(object_node_index, name_id);
+      
+            object_node_index
+        }
+
+        fn visit_set_expr(&mut self, object: &Expr, name: &Token, value: &Expr) -> u64 {
+            let object_node_index = object.accept(self);
+            let value_node_index = value.accept(self);
+            let name_id = self.add_node(name.token_type_value());
+            self.add_edge(object_node_index, name_id);
+            self.add_edge(object_node_index, value_node_index);
+      
+            object_node_index
+        }
     }
 }

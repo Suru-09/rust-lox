@@ -6,11 +6,16 @@ pub mod rlox_callable {
         stmt::stmt::Stmt,
     };
     use chrono;
+    use std::collections::HashMap;
     use std::{borrow::BorrowMut, cell::RefCell, fmt, rc::Rc};
+    use crate::scanner::scan::Token;
+    use crate::function_name;
+    use crate::error_handling::error_handling::{error, RLoxErrorType};
 
     #[derive(Debug, PartialEq)]
     pub enum Callable {
         Class(RLoxClass),
+        Instance(RLoxInstance),
         Function(RLoxFunction),
         Clock(Clock),
         UnixTClock(UnixTClock),
@@ -20,6 +25,7 @@ pub mod rlox_callable {
         fn clone(&self) -> Self {
             match self {
                 Callable::Function(lox_function) => Callable::Function(lox_function.clone()),
+                Callable::Instance(rlox_instance) => Callable::Instance(rlox_instance.clone()),
                 Callable::Class(class) => Callable::Class(class.clone()),
                 Callable::Clock(clock) => Callable::Clock(clock.clone()),
                 Callable::UnixTClock(unix_t_clock) => Callable::UnixTClock(unix_t_clock.clone()),
@@ -31,6 +37,7 @@ pub mod rlox_callable {
         fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
             match self {
                 Callable::Class(rlox_clas) => write!(f, "{}", rlox_clas.to_string()),
+                Callable::Instance(rlox_instance) => write!(f, "{}", rlox_instance.to_string()),
                 Callable::Function(rlox_fun) => write!(f, "{}", rlox_fun.to_string()),
                 Callable::Clock(clock) => write!(f, "{}", clock.to_string()),
                 Callable::UnixTClock(unix_tclock) => write!(f, "{}", unix_tclock.to_string()),
@@ -166,6 +173,60 @@ pub mod rlox_callable {
 
         pub fn to_string(&self) -> String {
             format!("<class {}>", self.name)
+        }
+    }
+
+    impl RLoxCallable for RLoxClass {
+        fn arity(&self) -> usize {
+            0
+        }
+
+        fn call(
+            &self,
+            _interpreter: &mut Interpreter,
+            _args: &mut Vec<LiteralValue>,
+        ) -> Result<LiteralValue, Error> {
+            let instance = RLoxInstance::new(self.clone());
+            Ok(LiteralValue::Callable(Box::new(Callable::Instance(instance))))
+         }
+        }
+
+    #[derive(Clone, Debug, PartialEq)]
+    pub struct RLoxInstance {
+        pub rlox_class: RLoxClass,
+        pub fields: HashMap<String, LiteralValue>
+    }
+
+    impl RLoxInstance {
+        pub fn new(rlox_class: RLoxClass) -> Self {
+            Self { 
+                rlox_class,
+                fields: HashMap::new()
+            }
+        }
+
+        pub fn get(&self, name: &Token) -> Result<LiteralValue, Error> {
+            let name_str = &name.get_token_type().to_string();
+            if self.fields.contains_key(name_str) {
+                return Ok(self.fields.get(name_str).unwrap().clone())
+            }
+            error(
+                name.get_line(),
+                name.get_column(),
+                format!("Undefined property '{}'.", name.get_token_type()),
+                function_name!(),
+                Some(RLoxErrorType::RuntimeError)
+            );
+            Err(Error::LoxRuntimeError)
+        }
+
+        pub fn set(&mut self, name: &Token, value: LiteralValue) {
+            self.fields.insert(name.get_token_type().to_string(), value);
+            ()
+        }
+
+        pub fn to_string(&self) -> String {
+            format!("<{} instance>", self.rlox_class.name)
         }
     }
 }

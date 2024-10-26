@@ -104,3 +104,9 @@ class DevonshireCream {
 }
 
 print DevonshireCream;
+
+var devonInstance = DevonshireCream();
+devonInstance.cream = "Good cream";
+print devonInstance;
+var cream = devonInstance.cream;
+print cream;

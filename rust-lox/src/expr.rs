@@ -22,6 +22,8 @@ pub mod expr {
         Unary(Token, Box<Expr>),
         Variable(Token),
         Assign(Token, Box<Expr>),
+        Get(Box<Expr>/*obj*/, Token/*name*/),
+        Set(Box<Expr>/*obj*/, Token/*name*/, Box<Expr>/*value*/),
     }
 
     impl Expr {
@@ -35,6 +37,8 @@ pub mod expr {
                 Expr::Assign(_, _) => "Assign".to_string(),
                 Expr::Logical(_, _, _) => "Logical".to_string(),
                 Expr::Call(_, _, _) => "Call".to_string(),
+                Expr::Get(_, _) => "Get".to_string(),
+                Expr::Set(_, _, _) => "Set".to_string(),
             }
         }
     }
@@ -66,6 +70,12 @@ pub mod expr {
                     }
                     write!(f, "{}({})", calle, args_str)
                 }
+                Expr::Get(obj, name) => {
+                    write!(f, "{}.{}", obj, name.get_token_type())
+                }
+                Expr::Set(obj, name, value) => {
+                    write!(f, "{}.{} = {}", obj, name.get_token_type(), value)
+                }
             }
         }
     }
@@ -87,6 +97,12 @@ pub mod expr {
                 Expr::Call(callee, paren, arguments) => {
                     visitor.visit_call_expr(callee, paren, arguments)
                 }
+                Expr::Get(obj, name) => {
+                    visitor.visit_get_expr(obj, name)
+                }
+                Expr::Set(obj, name, value) => {
+                    visitor.visit_set_expr(obj, name, value)
+                }
             }
         }
     }
@@ -100,6 +116,8 @@ pub mod expr {
         fn visit_assign_expr(&mut self, token: &Token, expr: &Expr) -> T;
         fn visit_logical_expr(&mut self, left: &Expr, operator: &Token, right: &Expr) -> T;
         fn visit_call_expr(&mut self, callee: &Expr, paren: &Token, arguments: &Vec<Expr>) -> T;
+        fn visit_get_expr(&mut self, object: &Expr, name: &Token) -> T;
+        fn visit_set_expr(&mut self, object: &Expr, name: &Token, value: &Expr) -> T;
     }
 
     impl Expr {
@@ -118,6 +136,12 @@ pub mod expr {
                 }
                 Expr::Call(callee, paren, arguments) => {
                     visitor.visit_call_expr(callee, paren, arguments)
+                }
+                Expr::Get(object, name) => {
+                    visitor.visit_get_expr(object, name)
+                }
+                Expr::Set(object, name, value) => {
+                    visitor.visit_set_expr(object, name, value)
                 }
             }
         }
@@ -163,6 +187,14 @@ pub mod expr {
                 args_str.push_str(&format!("{}, ", arg.accept(self)));
             }
             format!("{}({})", callee.accept(self), args_str)
+        }
+    
+        fn visit_get_expr(&mut self, object: &Expr, name: &Token) -> String {
+            format!("{}.{}", object, name.get_token_type())
+        }
+
+        fn visit_set_expr(&mut self, object: &Expr, name: &Token, value: &Expr) -> String {
+            format!("{}.{} = {}", object, name.get_token_type(), value)
         }
     }
 }

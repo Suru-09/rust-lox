@@ -152,7 +152,12 @@ pub mod parser {
             loop {
                 if self.match_token(vec![TokenType::LeftParen]) {
                     expr = self.finish_call(expr)?;
-                } else {
+                } else if self.match_token(vec![TokenType::Dot]) {
+                    let name = 
+                        self.consume_any_identifier(String::from("property"))?;
+                    expr = Expr::Get(Box::new(expr), name);
+                } 
+                else {
                     break;
                 }
             }
@@ -208,9 +213,9 @@ pub mod parser {
             is_identifier
         }
 
-        fn consume_any_identifier(&mut self, kind: String) -> Token {
+        fn consume_any_identifier(&mut self, kind: String) -> Result<Token, RLoxErrorType> {
             if self.match_any_identifier() {
-                return self.previous();
+                return Ok(self.previous());
             }
             error(
                 self.peek().get_line(),
@@ -219,7 +224,7 @@ pub mod parser {
                 function_name!(),
                 Some(RLoxErrorType::ParseError),
             );
-            self.peek()
+            Err(RLoxErrorType::ParseError)
         }
 
         fn primary(&mut self) -> Result<Expr, RLoxErrorType> {
@@ -480,7 +485,7 @@ pub mod parser {
         }
 
         fn class_declaration(&mut self) ->Result<Stmt, RLoxErrorType> {
-            let name: Token = self.consume_any_identifier("class".to_string());
+            let name: Token = self.consume_any_identifier("class".to_string())?;
             self.consume(
                 TokenType::LeftBrace,
                 "Expect '{' before class body.".to_string(),
@@ -500,7 +505,7 @@ pub mod parser {
         }
 
         fn function(&mut self, kind: String) ->Result<Stmt, RLoxErrorType> {
-            let name = self.consume_any_identifier(kind.clone());
+            let name = self.consume_any_identifier(kind.clone())?;
             self.consume(
                 TokenType::LeftParen,
                 format!("Expect '(' after {} name.", kind.clone()),
@@ -517,7 +522,7 @@ pub mod parser {
                             Some(RLoxErrorType::ParseError),
                         );
                     }
-                    parameters.push(self.consume_any_identifier("parameter".to_string()));
+                    parameters.push(self.consume_any_identifier("parameter".to_string())?);
 
                     if !self.match_token(vec![TokenType::Comma]) {
                         break;
@@ -575,6 +580,9 @@ pub mod parser {
                 match expr {
                     Expr::Variable(name) | Expr::Assign(name, _) => {
                         return Ok(Expr::Assign(name, Box::new(value)))
+                    }
+                    Expr::Get(obj, name) => {
+                        return Ok(Expr::Set(obj, name, Box::new(value)))
                     }
                     _ => {
                         error(

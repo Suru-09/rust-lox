@@ -515,12 +515,72 @@ pub mod interpreter {
                 }
             }
 
+            if let LiteralValue::Callable(callable_box) = calle_local.clone() {
+                if let Callable::Class(function) = *callable_box {
+                    match handle_arity(arguments.len(), function.arity()) {
+                        Ok(_) => return function.call(self, &mut args),
+                        Err(err) => return Err(err),
+                    }
+                }
+            }
+
             error(
                 parent.get_line(),
                 parent.get_column(),
                 String::from("Can only call functions and classes"),
                  function_name!(),
                  Some(RLoxErrorType::RuntimeError));
+            Err(Error::LoxRuntimeError)
+        }
+
+        fn visit_get_expr(
+            &mut self,
+            object: &Expr,
+            name: &Token,
+        ) -> Result<LiteralValue, Error> {
+            match self.evaluate(object)? {
+                LiteralValue::Callable(call_box) => {
+                    if let Callable::Instance(_) = *call_box {
+                        return Ok(LiteralValue::Callable(call_box))
+                    }
+                }
+                _ => {
+                    error(
+                        name.get_line(),
+                        name.get_column(),
+                        format!("Error at '{}': Only instances can have properties.", name.get_token_type()),
+                        function_name!(),
+                        Some(RLoxErrorType::RuntimeError));
+                    return Err(Error::LoxRuntimeError)
+                }
+            };
+            Err(Error::LoxRuntimeError)
+        }
+
+        fn visit_set_expr(
+            &mut self,
+            object: &Expr,
+            name: &Token,
+            value: &Expr
+        ) -> Result<LiteralValue, Error> {
+            match self.evaluate(object)? {
+                LiteralValue::Callable(call_box) => {
+                    if let Callable::Instance(mut instance) = *call_box {
+                        let value_l = self.evaluate(value)?;
+                        instance.set(name, value_l.clone());
+                        return Ok(value_l);
+                    }   
+                }
+                _ => {
+                    error(
+                        name.get_line(),
+                        name.get_column(),
+                        format!("Error at '{}': Only instances have fields.", name.get_token_type()),
+                        function_name!(),
+                        Some(RLoxErrorType::RuntimeError));
+                    return Err(Error::LoxRuntimeError)
+                }
+            };
             Err(Error::LoxRuntimeError)
         }
     }

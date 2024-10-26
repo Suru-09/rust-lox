@@ -196,6 +196,17 @@ pub mod resolver {
             Ok(())
         }
 
+        fn visit_get_expr(&mut self , object: &Expr, _name: &Token) -> Result<(), Error> {
+            self.resolve_expr(object)?;
+            Ok(())
+        }
+
+        fn visit_set_expr(&mut self , object: &Expr, _name: &Token, value: &Expr) -> Result<(), Error> {
+            self.resolve_expr(value)?;
+            self.resolve_expr(object)?;
+            Ok(())
+        }
+
         fn visit_logical_expr(
             &mut self,
             left: &Expr,
