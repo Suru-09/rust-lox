@@ -38,7 +38,12 @@ fn run(source: String, args: &Args) {
 
     let mut interpreter = Interpreter::new();
     let mut resolver = Resolver::new(&mut interpreter);
-    resolver.resolve(&ast).unwrap();
+    match resolver.resolve(&ast) {
+        Ok(_) => {}
+        Err(_) => {
+            std::process::exit(1);
+        }
+    }
 
     match resolver.interpreter.interpret(&ast) {
         Ok(_) => {}

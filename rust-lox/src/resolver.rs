@@ -9,9 +9,16 @@ pub mod resolver {
     use crate::stmt::stmt::Stmt;
     use crate::stmt::stmt::{LiteralValue, StmtVisitor};
 
+    #[derive(Clone, Debug, PartialEq)]
+    pub enum ClassType {
+        None,
+        Class,
+    }
+
     pub struct Resolver<'a> {
         pub interpreter: &'a mut Interpreter,
         scopes: Vec<Vec<(String, bool)>>,
+        current_class: ClassType,
     }
 
     impl<'a> Resolver<'a> {
@@ -26,6 +33,7 @@ pub mod resolver {
             Self {
                 interpreter,
                 scopes: scopes_local,
+                current_class: ClassType::None,
             }
         }
 
@@ -216,6 +224,19 @@ pub mod resolver {
         }
 
         fn visit_this_expr(&mut self, keyword: &Token) -> Result<(), Error> {
+            if self.current_class == ClassType::None {
+                error(
+                    keyword.get_line(),
+                    keyword.get_column(),
+                    format!(
+                        "Error at '{}': Can't use 'this' outside of a class.",
+                        keyword.get_token_type()
+                    ),
+                    function_name!(),
+                    Some(RLoxErrorType::RuntimeError),
+                );
+                return Err(Error::LoxRuntimeError);
+            }
             self.resolve_local(keyword);
             Ok(())
         }
@@ -262,6 +283,8 @@ pub mod resolver {
         }
 
         fn visit_class_stmt(&mut self, name: &Token, methods: &Vec<Stmt>) -> Result<(), Error> {
+            let enclosing_class = self.current_class.clone();
+            self.current_class = ClassType::Class;
             self.declare(name)?;
             self.define(name);
 
@@ -281,6 +304,7 @@ pub mod resolver {
             }
 
             self.end_scope();
+            self.current_class = enclosing_class;
 
             Ok(())
         }
