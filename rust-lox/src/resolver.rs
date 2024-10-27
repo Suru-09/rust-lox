@@ -1,13 +1,13 @@
 pub mod resolver {
 
+    use crate::error_handling::error_handling::{error, RLoxErrorType};
     use crate::expr::expr::Expr;
     use crate::expr::expr::Visitor;
-    use crate::interpreter::interpreter::{Interpreter, Error};
+    use crate::function_name;
+    use crate::interpreter::interpreter::{Error, Interpreter};
     use crate::scanner::scan::Token;
     use crate::stmt::stmt::Stmt;
     use crate::stmt::stmt::{LiteralValue, StmtVisitor};
-    use crate::error_handling::error_handling::{error, RLoxErrorType};
-    use crate::function_name;
 
     pub struct Resolver<'a> {
         pub interpreter: &'a mut Interpreter,
@@ -63,11 +63,14 @@ pub mod resolver {
                     error(
                         name.get_line(),
                         name.get_column(),
-                        format!("Error at '{}': Already a variable with this name in this scope.", name.get_token_type()),
+                        format!(
+                            "Error at '{}': Already a variable with this name in this scope.",
+                            name.get_token_type()
+                        ),
                         function_name!(),
-                        Some(RLoxErrorType::RuntimeError)
+                        Some(RLoxErrorType::RuntimeError),
                     );
-                    return Err(Error::LoxRuntimeError)
+                    return Err(Error::LoxRuntimeError);
                 }
             }
 
@@ -121,7 +124,7 @@ pub mod resolver {
             None
         }
 
-        fn resolve_local(&mut self, token: &Token, _: Expr) {
+        fn resolve_local(&mut self, token: &Token) {
             for (i, scope) in self.scopes.iter().enumerate().rev() {
                 if self.contains_key(token, scope) {
                     self.interpreter
@@ -152,7 +155,7 @@ pub mod resolver {
     impl Visitor<Result<(), Error>> for Resolver<'_> {
         fn visit_assign_expr(&mut self, token: &Token, expr: &Expr) -> Result<(), Error> {
             self.resolve_expr(expr)?;
-            self.resolve_local(token, expr.clone());
+            self.resolve_local(token);
             Ok(())
         }
 
@@ -196,14 +199,24 @@ pub mod resolver {
             Ok(())
         }
 
-        fn visit_get_expr(&mut self , object: &Expr, _name: &Token) -> Result<(), Error> {
+        fn visit_get_expr(&mut self, object: &Expr, _name: &Token) -> Result<(), Error> {
             self.resolve_expr(object)?;
             Ok(())
         }
 
-        fn visit_set_expr(&mut self , object: &Expr, _name: &Token, value: &Expr) -> Result<(), Error> {
+        fn visit_set_expr(
+            &mut self,
+            object: &Expr,
+            _name: &Token,
+            value: &Expr,
+        ) -> Result<(), Error> {
             self.resolve_expr(value)?;
             self.resolve_expr(object)?;
+            Ok(())
+        }
+
+        fn visit_this_expr(&mut self, keyword: &Token) -> Result<(), Error> {
+            self.resolve_local(keyword);
             Ok(())
         }
 
@@ -235,8 +248,7 @@ pub mod resolver {
                 }
             }
 
-            let expr = Expr::Variable(token.clone());
-            self.resolve_local(token, expr);
+            self.resolve_local(token);
             Ok(())
         }
     }
@@ -253,15 +265,22 @@ pub mod resolver {
             self.declare(name)?;
             self.define(name);
 
+            self.begin_scope();
+            self.scopes
+                .last_mut()
+                .unwrap()
+                .push((String::from("this"), true));
+
             for method in methods {
                 match method {
-                    Stmt::Function(fn_name, fn_params, fn_body) 
-                        => {
-                            self.resolve_function(fn_name, fn_params, fn_body)?;
-                        }
-                    _ => ()
+                    Stmt::Function(fn_name, fn_params, fn_body) => {
+                        self.resolve_function(fn_name, fn_params, fn_body)?;
+                    }
+                    _ => (),
                 }
             }
+
+            self.end_scope();
 
             Ok(())
         }

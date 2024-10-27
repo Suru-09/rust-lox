@@ -153,11 +153,9 @@ pub mod parser {
                 if self.match_token(vec![TokenType::LeftParen]) {
                     expr = self.finish_call(expr)?;
                 } else if self.match_token(vec![TokenType::Dot]) {
-                    let name = 
-                        self.consume_any_identifier(String::from("property"))?;
+                    let name = self.consume_any_identifier(String::from("property"))?;
                     expr = Expr::Get(Box::new(expr), name);
-                } 
-                else {
+                } else {
                     break;
                 }
             }
@@ -172,7 +170,10 @@ pub mod parser {
                         error(
                             self.peek().get_line(),
                             self.peek().get_column(),
-                            format!("Error at '{}': Can't have more than 255 arguments.", self.peek().get_token_type()),
+                            format!(
+                                "Error at '{}': Can't have more than 255 arguments.",
+                                self.peek().get_token_type()
+                            ),
                             function_name!(),
                             Some(RLoxErrorType::ParseError),
                         );
@@ -242,6 +243,10 @@ pub mod parser {
                 return Ok(Expr::Literal(LiteralValue::Nil));
             }
 
+            if self.match_token(vec![TokenType::This]) {
+                return Ok(Expr::This(self.previous()));
+            }
+
             if self.match_any_number_or_string() {
                 match self.previous().get_token_type() {
                     TokenType::String(str) => {
@@ -262,7 +267,6 @@ pub mod parser {
                     }
                 }
             }
-
             if self.match_any_identifier() {
                 return Ok(Expr::Variable(self.previous()));
             }
@@ -282,14 +286,21 @@ pub mod parser {
             error(
                 self.peek().get_line(),
                 self.peek().get_column(),
-                format!("Error at '{}': Expect expression.", self.peek().get_token_type()),
+                format!(
+                    "Error at '{}': Expect expression.",
+                    self.peek().get_token_type()
+                ),
                 function_name!(),
                 Some(RLoxErrorType::ParseError),
             );
             Err(RLoxErrorType::ParseError)
         }
 
-        fn consume(&mut self, token_type: TokenType, message: String) -> Result<Token, RLoxErrorType> {
+        fn consume(
+            &mut self,
+            token_type: TokenType,
+            message: String,
+        ) -> Result<Token, RLoxErrorType> {
             if self.check(token_type) {
                 self.advance();
                 return Ok(self.previous());
@@ -313,7 +324,7 @@ pub mod parser {
             Ok(expressions)
         }
 
-        pub fn statement(&mut self) ->Result<Stmt, RLoxErrorType> {
+        pub fn statement(&mut self) -> Result<Stmt, RLoxErrorType> {
             match self.peek().get_token_type() {
                 TokenType::Print => self.print_statement(),
                 TokenType::Return => {
@@ -340,14 +351,14 @@ pub mod parser {
             Ok(statements)
         }
 
-        pub fn print_statement(&mut self) ->Result<Stmt, RLoxErrorType> {
+        pub fn print_statement(&mut self) -> Result<Stmt, RLoxErrorType> {
             self.advance();
             let value = self.expression()?;
             self.consume(TokenType::Semicolon, "Expect ';' after value.".to_string())?;
             Ok(Stmt::PrintStmt(value))
         }
 
-        pub fn return_statement(&mut self) ->Result<Stmt, RLoxErrorType> {
+        pub fn return_statement(&mut self) -> Result<Stmt, RLoxErrorType> {
             let keyword = self.previous();
             let mut value = Expr::Literal(LiteralValue::Nil);
             if !self.check(TokenType::Semicolon) {
@@ -360,7 +371,7 @@ pub mod parser {
             Ok(Stmt::ReturnStmt(keyword, value))
         }
 
-        fn while_statement(&mut self) ->Result<Stmt, RLoxErrorType> {
+        fn while_statement(&mut self) -> Result<Stmt, RLoxErrorType> {
             self.consume(
                 TokenType::While,
                 "Expect 'while' after 'while'.".to_string(),
@@ -378,7 +389,7 @@ pub mod parser {
             Ok(Stmt::WhileStmt(condition, Box::new(body)))
         }
 
-        fn for_statement(&mut self) ->Result<Stmt, RLoxErrorType> {
+        fn for_statement(&mut self) -> Result<Stmt, RLoxErrorType> {
             self.consume(TokenType::For, "Expect 'for' after 'for'.".to_string())?;
             self.consume(TokenType::LeftParen, "Expect '(' after 'for'.".to_string())?;
 
@@ -389,7 +400,7 @@ pub mod parser {
             } else {
                 match self.expression_statement() {
                     Ok(initalizer_val) => Some(initalizer_val),
-                    Err(_) => None
+                    Err(_) => None,
                 }
             };
 
@@ -397,10 +408,10 @@ pub mod parser {
             if !self.check(TokenType::RightParen) && !self.check(TokenType::Semicolon) {
                 condition = match self.expression() {
                     Ok(cond) => Some(cond),
-                    Err(_) => None
+                    Err(_) => None,
                 };
             }
-            
+
             self.consume(
                 TokenType::Semicolon,
                 "Expect ';' after expression.".to_string(),
@@ -438,7 +449,7 @@ pub mod parser {
             Ok(body)
         }
 
-        fn if_statement(&mut self) ->Result<Stmt, RLoxErrorType> {
+        fn if_statement(&mut self) -> Result<Stmt, RLoxErrorType> {
             self.consume(TokenType::If, "Expect 'if' after 'if'.".to_string())?;
             self.consume(TokenType::LeftParen, "Expect '(' after 'if'.".to_string())?;
             let expr = self.expression()?;
@@ -460,7 +471,7 @@ pub mod parser {
             return Ok(Stmt::IfStmt(expr, Box::new(then_branch), else_branch));
         }
 
-        pub fn expression_statement(&mut self) ->Result<Stmt, RLoxErrorType> {
+        pub fn expression_statement(&mut self) -> Result<Stmt, RLoxErrorType> {
             let expr = self.expression()?;
             self.consume(
                 TokenType::Semicolon,
@@ -469,7 +480,7 @@ pub mod parser {
             Ok(Stmt::ExprStmt(expr))
         }
 
-        fn declaration(&mut self) ->Result<Stmt, RLoxErrorType> {
+        fn declaration(&mut self) -> Result<Stmt, RLoxErrorType> {
             if self.match_token(vec![TokenType::Class]) {
                 return self.class_declaration();
             }
@@ -484,7 +495,7 @@ pub mod parser {
             self.statement()
         }
 
-        fn class_declaration(&mut self) ->Result<Stmt, RLoxErrorType> {
+        fn class_declaration(&mut self) -> Result<Stmt, RLoxErrorType> {
             let name: Token = self.consume_any_identifier("class".to_string())?;
             self.consume(
                 TokenType::LeftBrace,
@@ -504,7 +515,7 @@ pub mod parser {
             Ok(Stmt::ClassStmt(name, methods))
         }
 
-        fn function(&mut self, kind: String) ->Result<Stmt, RLoxErrorType> {
+        fn function(&mut self, kind: String) -> Result<Stmt, RLoxErrorType> {
             let name = self.consume_any_identifier(kind.clone())?;
             self.consume(
                 TokenType::LeftParen,
@@ -541,12 +552,15 @@ pub mod parser {
             Ok(Stmt::Function(name, parameters, body))
         }
 
-        fn var_declaration(&mut self) ->Result<Stmt, RLoxErrorType> {
+        fn var_declaration(&mut self) -> Result<Stmt, RLoxErrorType> {
             if !self.match_any_identifier() {
                 error(
                     self.peek().get_line(),
                     self.peek().get_column(),
-                    format!("Error at '{}': Expect variable name.", self.peek().get_token_type()),
+                    format!(
+                        "Error at '{}': Expect variable name.",
+                        self.peek().get_token_type()
+                    ),
                     function_name!(),
                     Some(RLoxErrorType::ParseError),
                 );
@@ -581,14 +595,15 @@ pub mod parser {
                     Expr::Variable(name) | Expr::Assign(name, _) => {
                         return Ok(Expr::Assign(name, Box::new(value)))
                     }
-                    Expr::Get(obj, name) => {
-                        return Ok(Expr::Set(obj, name, Box::new(value)))
-                    }
+                    Expr::Get(obj, name) => return Ok(Expr::Set(obj, name, Box::new(value))),
                     _ => {
                         error(
                             equals.get_line(),
                             equals.get_column(),
-                            format!("Error at '{}': Invalid assignment target.", equals.get_token_type()),
+                            format!(
+                                "Error at '{}': Invalid assignment target.",
+                                equals.get_token_type()
+                            ),
                             function_name!(),
                             Some(RLoxErrorType::ParseError),
                         );

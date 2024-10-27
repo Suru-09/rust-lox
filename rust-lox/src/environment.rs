@@ -34,10 +34,14 @@ pub mod environment {
                 .insert(token.get_token_type().to_string().clone(), value);
         }
 
+        pub fn define_str(&mut self, token_str: &str, value: LiteralValue) {
+            self.values.insert(String::from(token_str), value);
+        }
+
         pub fn is_defined(&self, token: &Token) -> bool {
             match self.values.get(&token.get_token_type().to_string()) {
                 Some(_) => true,
-                None => false
+                None => false,
             }
         }
 
@@ -58,7 +62,7 @@ pub mod environment {
                     function_name!(),
                     Some(RLoxErrorType::RuntimeError),
                 );
-                return Err(Error::LoxRuntimeError)
+                return Err(Error::LoxRuntimeError);
             }
         }
 
@@ -78,7 +82,7 @@ pub mod environment {
                     function_name!(),
                     Some(RLoxErrorType::RuntimeError),
                 );
-                return Err(Error::LoxRuntimeError)
+                return Err(Error::LoxRuntimeError);
             }
         }
 

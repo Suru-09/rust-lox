@@ -1,5 +1,8 @@
 pub mod rlox_callable {
     use crate::environment::environment::Environment;
+    use crate::error_handling::error_handling::{error, RLoxErrorType};
+    use crate::function_name;
+    use crate::scanner::scan::Token;
     use crate::stmt::stmt::LiteralValue;
     use crate::{
         interpreter::interpreter::{Error, Interpreter},
@@ -9,9 +12,6 @@ pub mod rlox_callable {
     use std::borrow::Borrow;
     use std::collections::HashMap;
     use std::{borrow::BorrowMut, cell::RefCell, fmt, rc::Rc};
-    use crate::scanner::scan::Token;
-    use crate::function_name;
-    use crate::error_handling::error_handling::{error, RLoxErrorType};
 
     #[derive(Debug, PartialEq)]
     pub enum Callable {
@@ -38,7 +38,11 @@ pub mod rlox_callable {
         fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
             match self {
                 Callable::Class(rlox_clas) => write!(f, "{}", rlox_clas.to_string()),
-                Callable::Instance(rlox_instance) => write!(f, "{}", rlox_instance.clone().as_ref().borrow_mut().to_string()),
+                Callable::Instance(rlox_instance) => write!(
+                    f,
+                    "{}",
+                    rlox_instance.clone().as_ref().borrow_mut().to_string()
+                ),
                 Callable::Function(rlox_fun) => write!(f, "{}", rlox_fun.to_string()),
                 Callable::Clock(clock) => write!(f, "{}", clock.to_string()),
                 Callable::UnixTClock(unix_tclock) => write!(f, "{}", unix_tclock.to_string()),
@@ -125,6 +129,17 @@ pub mod rlox_callable {
                 _ => panic!("Cannot call non-function"),
             }
         }
+
+        pub fn bind(&mut self, instance: Rc<RefCell<RLoxInstance>>) -> Self {
+            let env = Rc::clone(&self.closure);
+            env.as_ref()
+                .borrow_mut()
+                .define_str("this", LiteralValue::Callable(Callable::Instance(instance)));
+            Self {
+                declaration: self.declaration.clone(),
+                closure: env,
+            }
+        }
     }
 
     impl RLoxCallable for RLoxFunction {
@@ -165,21 +180,17 @@ pub mod rlox_callable {
     #[derive(Clone, Debug, PartialEq)]
     pub struct RLoxClass {
         pub name: String,
-        pub methods: HashMap<String, RLoxFunction>
+        pub methods: HashMap<String, RLoxFunction>,
     }
 
     impl RLoxClass {
         pub fn new(name: String, methods: HashMap<String, RLoxFunction>) -> Self {
-            Self {
-                name,
-                methods
-            }
+            Self { name, methods }
         }
 
-        pub fn find_method(&self, name: &str) -> Option<RLoxFunction> 
-        {
+        pub fn find_method(&self, name: &str) -> Option<RLoxFunction> {
             if self.methods.contains_key(name) {
-                return Some(self.methods.get(name).unwrap().clone())
+                return Some(self.methods.get(name).unwrap().clone());
             }
             None
         }
@@ -200,32 +211,36 @@ pub mod rlox_callable {
             _args: &mut Vec<LiteralValue>,
         ) -> Result<LiteralValue, Error> {
             let instance = Rc::new(RefCell::new(RLoxInstance::new(Rc::new(self.clone()))));
-            Ok(LiteralValue::Callable(Callable::Instance(Rc::clone(&instance))))
-         }
+            Ok(LiteralValue::Callable(Callable::Instance(Rc::clone(
+                &instance,
+            ))))
         }
+    }
 
     #[derive(Clone, Debug, PartialEq)]
     pub struct RLoxInstance {
         pub rlox_class: Rc<RLoxClass>,
-        pub fields: HashMap<String, LiteralValue>
+        pub fields: HashMap<String, LiteralValue>,
     }
 
     impl RLoxInstance {
         pub fn new(rlox_class: Rc<RLoxClass>) -> Self {
-            Self { 
+            Self {
                 rlox_class,
-                fields: HashMap::new()
+                fields: HashMap::new(),
             }
         }
 
-        pub fn get(&self, name: &Token) -> Result<LiteralValue, Error> {
+        pub fn get(&mut self, name: &Token) -> Result<LiteralValue, Error> {
             let name_str = &name.get_token_type().to_string();
             if self.fields.contains_key(name_str) {
-                return Ok(self.fields.get(name_str).unwrap().clone())
+                return Ok(self.fields.get(name_str).unwrap().clone());
             }
 
-            if let Some(method) = self.rlox_class.find_method(name_str) {
-                return Ok(LiteralValue::Callable(Callable::Function(method)))
+            if let Some(mut method) = self.rlox_class.find_method(name_str) {
+                return Ok(LiteralValue::Callable(Callable::Function(
+                    method.bind(Rc::new(RefCell::new(self.to_owned()))),
+                )));
             }
 
             error(
@@ -233,7 +248,7 @@ pub mod rlox_callable {
                 name.get_column(),
                 format!("Undefined property '{}'.", name.get_token_type()),
                 function_name!(),
-                Some(RLoxErrorType::RuntimeError)
+                Some(RLoxErrorType::RuntimeError),
             );
             Err(Error::LoxRuntimeError)
         }

@@ -428,7 +428,7 @@ pub mod stmt {
             let object_node_index = object.accept(self);
             let name_id = self.add_node(name.token_type_value().to_string());
             self.add_edge(object_node_index, name_id);
-      
+
             object_node_index
         }
 
@@ -438,8 +438,12 @@ pub mod stmt {
             let name_id = self.add_node(name.token_type_value().to_string());
             self.add_edge(object_node_index, name_id);
             self.add_edge(name_id, value_node_index);
-      
+
             object_node_index
+        }
+
+        fn visit_this_expr(&mut self, keyword: &Token) -> u64 {
+            self.add_node(keyword.token_type_value())
         }
     }
 }

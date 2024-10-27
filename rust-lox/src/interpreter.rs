@@ -118,7 +118,7 @@ pub mod interpreter {
         fn substract(
             operand1: &LiteralValue,
             operand2: &LiteralValue,
-            operator: &Token
+            operator: &Token,
         ) -> Result<LiteralValue, Error> {
             match (operand1, operand2) {
                 (LiteralValue::Number(number1), LiteralValue::Number(number2)) => {
@@ -130,15 +130,18 @@ pub mod interpreter {
                         operator.get_column(),
                         format!("Operands must be numbers."),
                         function_name!(),
-                        Some(RLoxErrorType::RuntimeError)
+                        Some(RLoxErrorType::RuntimeError),
                     );
                     Err(Error::LoxRuntimeError)
                 }
             }
         }
 
-        fn add(operand1: &LiteralValue, operand2: &LiteralValue,
-            operator: &Token) -> Result<LiteralValue, Error> {
+        fn add(
+            operand1: &LiteralValue,
+            operand2: &LiteralValue,
+            operator: &Token,
+        ) -> Result<LiteralValue, Error> {
             match (operand1, operand2) {
                 (LiteralValue::String(s1), LiteralValue::String(s2)) => {
                     Ok(LiteralValue::String(String::from(s1.to_string() + s2)))
@@ -158,17 +161,17 @@ pub mod interpreter {
                         operator.get_column(),
                         format!("Operands must be two numbers or two strings."),
                         function_name!(),
-                        Some(RLoxErrorType::RuntimeError)
+                        Some(RLoxErrorType::RuntimeError),
                     );
-                    return Err(Error::LoxRuntimeError)
-                },
+                    return Err(Error::LoxRuntimeError);
+                }
             }
         }
 
         fn multiply(
             operand1: &LiteralValue,
             operand2: &LiteralValue,
-            operator: &Token
+            operator: &Token,
         ) -> Result<LiteralValue, Error> {
             match (operand1, operand2) {
                 (LiteralValue::Number(number1), LiteralValue::Number(number2)) => {
@@ -180,15 +183,18 @@ pub mod interpreter {
                         operator.get_column(),
                         format!("Operands must be numbers."),
                         function_name!(),
-                        Some(RLoxErrorType::RuntimeError)
+                        Some(RLoxErrorType::RuntimeError),
                     );
                     Err(Error::LoxRuntimeError)
                 }
             }
         }
 
-        fn divide(operand1: &LiteralValue, operand2: &LiteralValue,
-            operator: &Token) -> Result<LiteralValue, Error> {
+        fn divide(
+            operand1: &LiteralValue,
+            operand2: &LiteralValue,
+            operator: &Token,
+        ) -> Result<LiteralValue, Error> {
             match (operand1, operand2) {
                 (LiteralValue::Number(number1), LiteralValue::Number(number2)) => {
                     Ok(LiteralValue::Number(number1 / number2))
@@ -199,17 +205,17 @@ pub mod interpreter {
                         operator.get_column(),
                         format!("Operands must be numbers."),
                         function_name!(),
-                        Some(RLoxErrorType::RuntimeError)
+                        Some(RLoxErrorType::RuntimeError),
                     );
                     Err(Error::LoxRuntimeError)
-                },
+                }
             }
         }
 
         fn greater(
             operand1: &LiteralValue,
             operand2: &LiteralValue,
-            operator: &Token
+            operator: &Token,
         ) -> Result<LiteralValue, Error> {
             match (operand1, operand2) {
                 (LiteralValue::Number(number1), LiteralValue::Number(number2)) => {
@@ -221,7 +227,7 @@ pub mod interpreter {
                         operator.get_column(),
                         format!("Operands must be numbers."),
                         function_name!(),
-                        Some(RLoxErrorType::RuntimeError)
+                        Some(RLoxErrorType::RuntimeError),
                     );
                     Err(Error::LoxRuntimeError)
                 }
@@ -231,7 +237,7 @@ pub mod interpreter {
         fn greater_equal(
             operand1: &LiteralValue,
             operand2: &LiteralValue,
-            operator: &Token
+            operator: &Token,
         ) -> Result<LiteralValue, Error> {
             match (operand1, operand2) {
                 (LiteralValue::Number(number1), LiteralValue::Number(number2)) => {
@@ -243,15 +249,18 @@ pub mod interpreter {
                         operator.get_column(),
                         format!("Operands must be numbers."),
                         function_name!(),
-                        Some(RLoxErrorType::RuntimeError)
+                        Some(RLoxErrorType::RuntimeError),
                     );
                     Err(Error::LoxRuntimeError)
                 }
             }
         }
 
-        fn less(operand1: &LiteralValue, operand2: &LiteralValue,
-            operator: &Token) -> Result<LiteralValue, Error> {
+        fn less(
+            operand1: &LiteralValue,
+            operand2: &LiteralValue,
+            operator: &Token,
+        ) -> Result<LiteralValue, Error> {
             match (operand1, operand2) {
                 (LiteralValue::Number(number1), LiteralValue::Number(number2)) => {
                     Ok(LiteralValue::Bool(number1 < number2))
@@ -262,7 +271,7 @@ pub mod interpreter {
                         operator.get_column(),
                         format!("Operands must be numbers."),
                         function_name!(),
-                        Some(RLoxErrorType::RuntimeError)
+                        Some(RLoxErrorType::RuntimeError),
                     );
                     Err(Error::LoxRuntimeError)
                 }
@@ -272,7 +281,7 @@ pub mod interpreter {
         fn less_equal(
             operand1: &LiteralValue,
             operand2: &LiteralValue,
-            operator: &Token
+            operator: &Token,
         ) -> Result<LiteralValue, Error> {
             match (operand1, operand2) {
                 (LiteralValue::Number(number1), LiteralValue::Number(number2)) => {
@@ -284,7 +293,7 @@ pub mod interpreter {
                         operator.get_column(),
                         format!("Operands must be numbers."),
                         function_name!(),
-                        Some(RLoxErrorType::RuntimeError)
+                        Some(RLoxErrorType::RuntimeError),
                     );
                     Err(Error::LoxRuntimeError)
                 }
@@ -294,7 +303,7 @@ pub mod interpreter {
         fn equal_equal(
             operand1: &LiteralValue,
             operand2: &LiteralValue,
-            _operator: &Token
+            _operator: &Token,
         ) -> Result<LiteralValue, Error> {
             match (operand1, operand2) {
                 (LiteralValue::String(s1), LiteralValue::String(s2)) => {
@@ -306,9 +315,7 @@ pub mod interpreter {
                 (LiteralValue::Bool(bool1), LiteralValue::Bool(bool2)) => {
                     Ok(LiteralValue::Bool(bool1 == bool2))
                 }
-                (LiteralValue::Nil, LiteralValue::Nil) => {
-                    Ok(LiteralValue::Bool(true))
-                }
+                (LiteralValue::Nil, LiteralValue::Nil) => Ok(LiteralValue::Bool(true)),
                 _ => Ok(LiteralValue::Bool(false)),
             }
         }
@@ -316,7 +323,7 @@ pub mod interpreter {
         fn bang_equal(
             operand1: &LiteralValue,
             operand2: &LiteralValue,
-            _operator: &Token
+            _operator: &Token,
         ) -> Result<LiteralValue, Error> {
             match (operand1, operand2) {
                 (LiteralValue::String(s1), LiteralValue::String(s2)) => {
@@ -328,9 +335,7 @@ pub mod interpreter {
                 (LiteralValue::Bool(bool1), LiteralValue::Bool(bool2)) => {
                     Ok(LiteralValue::Bool(bool1 != bool2))
                 }
-                (LiteralValue::Nil, LiteralValue::Nil) => {
-                    Ok(LiteralValue::Bool(false))
-                }
+                (LiteralValue::Nil, LiteralValue::Nil) => Ok(LiteralValue::Bool(false)),
                 _ => Ok(LiteralValue::Bool(true)),
             }
         }
@@ -399,20 +404,20 @@ pub mod interpreter {
             let right_l = self.evaluate(right)?;
             match operator.get_token_type() {
                 TokenType::Minus => match right_l {
-                        LiteralValue::Number(number) => Ok(LiteralValue::Number(-number)),
-                        _ => {
-                            error(
-                                operator.get_line(),
-                                operator.get_column(),
-                                format!("Operand must be a number."),
-                                function_name!(),
-                                Some(RLoxErrorType::RuntimeError)
-                            );
-                            Err(Error::LoxRuntimeError)
-                        },
-                    },
+                    LiteralValue::Number(number) => Ok(LiteralValue::Number(-number)),
+                    _ => {
+                        error(
+                            operator.get_line(),
+                            operator.get_column(),
+                            format!("Operand must be a number."),
+                            function_name!(),
+                            Some(RLoxErrorType::RuntimeError),
+                        );
+                        Err(Error::LoxRuntimeError)
+                    }
+                },
                 TokenType::Bang => Ok(LiteralValue::Bool(!Interpreter::is_truthy_lval(&right_l))),
-            _ => Err(Error::LoxRuntimeError),
+                _ => Err(Error::LoxRuntimeError),
             }
         }
 
@@ -477,10 +482,7 @@ pub mod interpreter {
                     error(
                         parent.get_line(),
                         parent.get_column(),
-                        format!(
-                            "Expected {} arguments but got {}.",
-                            arity, arguments
-                        ),
+                        format!("Expected {} arguments but got {}.", arity, arguments),
                         function_name!(),
                         Some(RLoxErrorType::RuntimeError),
                     );
@@ -529,30 +531,31 @@ pub mod interpreter {
                 parent.get_line(),
                 parent.get_column(),
                 String::from("Can only call functions and classes"),
-                 function_name!(),
-                 Some(RLoxErrorType::RuntimeError));
+                function_name!(),
+                Some(RLoxErrorType::RuntimeError),
+            );
             Err(Error::LoxRuntimeError)
         }
 
-        fn visit_get_expr(
-            &mut self,
-            object: &Expr,
-            name: &Token,
-        ) -> Result<LiteralValue, Error> {
+        fn visit_get_expr(&mut self, object: &Expr, name: &Token) -> Result<LiteralValue, Error> {
             match self.evaluate(object)? {
                 LiteralValue::Callable(call_box) => {
                     if let Callable::Instance(instance) = call_box {
-                        return instance.borrow_mut().get(name)
+                        return instance.borrow_mut().get(name);
                     }
                 }
                 _ => {
                     error(
                         name.get_line(),
                         name.get_column(),
-                        format!("Error at '{}': Only instances can have properties.", name.get_token_type()),
+                        format!(
+                            "Error at '{}': Only instances can have properties.",
+                            name.get_token_type()
+                        ),
                         function_name!(),
-                        Some(RLoxErrorType::RuntimeError));
-                    return Err(Error::LoxRuntimeError)
+                        Some(RLoxErrorType::RuntimeError),
+                    );
+                    return Err(Error::LoxRuntimeError);
                 }
             };
             Err(Error::LoxRuntimeError)
@@ -562,7 +565,7 @@ pub mod interpreter {
             &mut self,
             object: &Expr,
             name: &Token,
-            value: &Expr
+            value: &Expr,
         ) -> Result<LiteralValue, Error> {
             let obj_l = self.evaluate(object)?;
             let value_l = self.evaluate(value)?;
@@ -575,12 +578,20 @@ pub mod interpreter {
                     error(
                         name.get_line(),
                         name.get_column(),
-                        format!("Error at '{}': Only instances have fields.", name.get_token_type()),
+                        format!(
+                            "Error at '{}': Only instances have fields.",
+                            name.get_token_type()
+                        ),
                         function_name!(),
-                        Some(RLoxErrorType::RuntimeError));
-                    return Err(Error::LoxRuntimeError)
+                        Some(RLoxErrorType::RuntimeError),
+                    );
+                    return Err(Error::LoxRuntimeError);
                 }
             }
+        }
+
+        fn visit_this_expr(&mut self, keyword: &Token) -> Result<LiteralValue, Error> {
+            self.look_up_variable(keyword)
         }
     }
 
@@ -601,11 +612,14 @@ pub mod interpreter {
                 error(
                     keyword.get_line(),
                     keyword.get_column(),
-                    format!("Error at '{}': Can't return from top-level code.", keyword.get_token_type()),
+                    format!(
+                        "Error at '{}': Can't return from top-level code.",
+                        keyword.get_token_type()
+                    ),
                     function_name!(),
-                    Some(RLoxErrorType::RuntimeError)
+                    Some(RLoxErrorType::RuntimeError),
                 );
-                return Err(Error::LoxRuntimeError)
+                return Err(Error::LoxRuntimeError);
             }
             let return_val = self.evaluate(expr)?;
             Err(Error::Return(return_val))
@@ -623,25 +637,26 @@ pub mod interpreter {
         }
 
         fn visit_class_stmt(&mut self, name: &Token, statements: &Vec<Stmt>) -> Result<(), Error> {
-            self.environment.as_ref().borrow_mut().define(
-                name,
-                LiteralValue::Nil
-            );
+            self.environment
+                .as_ref()
+                .borrow_mut()
+                .define(name, LiteralValue::Nil);
 
-            let mut methods  = HashMap::new();
+            let mut methods = HashMap::new();
             for method in statements {
                 if let Stmt::Function(fn_name, _, _) = method {
                     let lox_fun: RLoxFunction =
                         RLoxFunction::new(method.clone(), Rc::clone(&self.environment));
                     methods.insert(fn_name.get_token_type().to_string(), lox_fun);
-                } 
+                }
             }
 
-            let klass: RLoxClass = RLoxClass::new(name.get_token_type().to_string().clone(), methods);
-            self.environment.as_ref().borrow_mut().assign(
-                name,
-                LiteralValue::Callable(Callable::Class(klass)),
-            )?;
+            let klass: RLoxClass =
+                RLoxClass::new(name.get_token_type().to_string().clone(), methods);
+            self.environment
+                .as_ref()
+                .borrow_mut()
+                .assign(name, LiteralValue::Callable(Callable::Class(klass)))?;
             Ok(())
         }
 
@@ -655,10 +670,10 @@ pub mod interpreter {
                 Stmt::Function(name.clone(), params.clone(), body.clone()),
                 Rc::clone(&self.environment),
             );
-            self.environment.as_ref().borrow_mut().define(
-                name,
-                LiteralValue::Callable(Callable::Function(func)),
-            );
+            self.environment
+                .as_ref()
+                .borrow_mut()
+                .define(name, LiteralValue::Callable(Callable::Function(func)));
             Ok(())
         }
 
@@ -671,8 +686,7 @@ pub mod interpreter {
             let value = self.evaluate(expr)?;
             if Interpreter::is_truthy_lval(&value) {
                 return self.execute(stmt);
-            }
-            else if let Some(else_) = else_stmt {
+            } else if let Some(else_) = else_stmt {
                 return self.execute(&else_);
             }
 
