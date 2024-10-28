@@ -15,10 +15,19 @@ pub mod resolver {
         Class,
     }
 
+    #[derive(Clone, Debug, PartialEq)]
+    pub enum FunctionType {
+        Function,
+        Initializer,
+        Method,
+        None,
+    }
+
     pub struct Resolver<'a> {
         pub interpreter: &'a mut Interpreter,
         scopes: Vec<Vec<(String, bool)>>,
         current_class: ClassType,
+        current_fn: FunctionType,
     }
 
     impl<'a> Resolver<'a> {
@@ -34,6 +43,7 @@ pub mod resolver {
                 interpreter,
                 scopes: scopes_local,
                 current_class: ClassType::None,
+                current_fn: FunctionType::None,
             }
         }
 
@@ -147,7 +157,11 @@ pub mod resolver {
             _name: &Token,
             params: &Vec<Token>,
             body: &Vec<Stmt>,
+            fn_type: FunctionType,
         ) -> Result<(), Error> {
+            let enclosing_fn = self.current_fn.clone();
+            self.current_fn = fn_type;
+
             self.begin_scope();
             for param in params {
                 self.declare(param)?;
@@ -156,6 +170,7 @@ pub mod resolver {
             self.resolve(body)?;
             self.end_scope();
 
+            self.current_fn = enclosing_fn;
             Ok(())
         }
     }
@@ -297,7 +312,11 @@ pub mod resolver {
             for method in methods {
                 match method {
                     Stmt::Function(fn_name, fn_params, fn_body) => {
-                        self.resolve_function(fn_name, fn_params, fn_body)?;
+                        let mut declaration = FunctionType::Method;
+                        if fn_name.get_token_type().to_string() == "init" {
+                            declaration = FunctionType::Initializer;
+                        }
+                        self.resolve_function(fn_name, fn_params, fn_body, declaration)?;
                     }
                     _ => (),
                 }
@@ -322,7 +341,7 @@ pub mod resolver {
         ) -> Result<(), Error> {
             self.declare(name)?;
             self.define(name);
-            self.resolve_function(name, params, body)?;
+            self.resolve_function(name, params, body, FunctionType::Function)?;
             Ok(())
         }
 

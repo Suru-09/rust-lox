@@ -102,6 +102,62 @@ mod comment_tests {
     // );
 }
 
+mod constructor_tests {
+    use crate::common::common::run_test;
+    use crate::generate_integration_test;
+    pub const CONSTRUCTOR_PREFIX: &str = "tests/resources/integration_tests/constructor";
+
+    generate_integration_test!(
+        test_arguments,
+        &format!("{}{}", CONSTRUCTOR_PREFIX, "/arguments.lox")
+    );
+
+    generate_integration_test!(
+        test_call_init_early_return,
+        &format!("{}{}", CONSTRUCTOR_PREFIX, "/call_init_early_return.lox")
+    );
+
+    generate_integration_test!(
+        test_call_init_explicitly,
+        &format!("{}{}", CONSTRUCTOR_PREFIX, "/call_init_explicitly.lox")
+    );
+
+    generate_integration_test!(
+        test_default_arguments,
+        &format!("{}{}", CONSTRUCTOR_PREFIX, "/default_arguments.lox")
+    );
+
+    generate_integration_test!(
+        test_default,
+        &format!("{}{}", CONSTRUCTOR_PREFIX, "/default.lox")
+    );
+
+    generate_integration_test!(
+        test_extra_arguments,
+        &format!("{}{}", CONSTRUCTOR_PREFIX, "/extra_arguments.lox")
+    );
+
+    generate_integration_test!(
+        test_init_not_method,
+        &format!("{}{}", CONSTRUCTOR_PREFIX, "/init_not_method.lox")
+    );
+
+    generate_integration_test!(
+        test_missing_arguments,
+        &format!("{}{}", CONSTRUCTOR_PREFIX, "/missing_arguments.lox")
+    );
+
+    generate_integration_test!(
+        test_return_in_nested_function,
+        &format!("{}{}", CONSTRUCTOR_PREFIX, "/return_in_nested_function.lox")
+    );
+
+    generate_integration_test!(
+        test_return_value,
+        &format!("{}{}", CONSTRUCTOR_PREFIX, "/return_value.lox")
+    );
+}
+
 mod expressions_test {
     use crate::common::common::run_test;
     use crate::generate_integration_test;
@@ -375,6 +431,54 @@ mod function_tests {
     generate_integration_test!(
         test_too_many_parameters,
         &format!("{}{}", FUNCTION_PREFIX, "/too_many_parameters.lox")
+    );
+}
+
+mod method_tests {
+    use crate::common::common::run_test;
+    use crate::generate_integration_test;
+    pub const METHOD_PREFIX: &str = "tests/resources/integration_tests/method";
+
+    generate_integration_test!(test_arity, &format!("{}{}", METHOD_PREFIX, "/arity.lox"));
+
+    generate_integration_test!(
+        test_empty_block,
+        &format!("{}{}", METHOD_PREFIX, "/empty_block.lox")
+    );
+
+    generate_integration_test!(
+        test_extra_arguments,
+        &format!("{}{}", METHOD_PREFIX, "/extra_arguments.lox")
+    );
+
+    generate_integration_test!(
+        test_missing_arguments,
+        &format!("{}{}", METHOD_PREFIX, "/missing_arguments.lox")
+    );
+
+    generate_integration_test!(
+        test_not_found,
+        &format!("{}{}", METHOD_PREFIX, "/not_found.lox")
+    );
+
+    generate_integration_test!(
+        test_print_bound_method,
+        &format!("{}{}", METHOD_PREFIX, "/print_bound_method.lox")
+    );
+
+    generate_integration_test!(
+        test_refer_to_name,
+        &format!("{}{}", METHOD_PREFIX, "/refer_to_name.lox")
+    );
+
+    generate_integration_test!(
+        test_too_many_arguments,
+        &format!("{}{}", METHOD_PREFIX, "/too_many_arguments.lox")
+    );
+
+    generate_integration_test!(
+        test_too_many_parameters,
+        &format!("{}{}", METHOD_PREFIX, "/too_many_parameters.lox")
     );
 }
 

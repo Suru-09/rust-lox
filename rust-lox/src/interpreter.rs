@@ -645,8 +645,11 @@ pub mod interpreter {
             let mut methods = HashMap::new();
             for method in statements {
                 if let Stmt::Function(fn_name, _, _) = method {
-                    let lox_fun: RLoxFunction =
-                        RLoxFunction::new(method.clone(), Rc::clone(&self.environment));
+                    let lox_fun: RLoxFunction = RLoxFunction::new(
+                        method.clone(),
+                        Rc::clone(&self.environment),
+                        fn_name.get_token_type().to_string() == "init",
+                    );
                     methods.insert(fn_name.get_token_type().to_string(), lox_fun);
                 }
             }
@@ -669,6 +672,7 @@ pub mod interpreter {
             let func: RLoxFunction = RLoxFunction::new(
                 Stmt::Function(name.clone(), params.clone(), body.clone()),
                 Rc::clone(&self.environment),
+                false,
             );
             self.environment
                 .as_ref()

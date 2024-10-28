@@ -2,7 +2,7 @@ pub mod rlox_callable {
     use crate::environment::environment::Environment;
     use crate::error_handling::error_handling::{error, RLoxErrorType};
     use crate::function_name;
-    use crate::scanner::scan::Token;
+    use crate::scanner::scan::{Token, TokenType};
     use crate::stmt::stmt::LiteralValue;
     use crate::{
         interpreter::interpreter::{Error, Interpreter},
@@ -113,13 +113,19 @@ pub mod rlox_callable {
     pub struct RLoxFunction {
         pub declaration: Box<Stmt>,
         pub closure: Rc<RefCell<Environment>>,
+        pub is_initializer: bool,
     }
 
     impl RLoxFunction {
-        pub fn new(declaration: Stmt, closure: Rc<RefCell<Environment>>) -> Self {
+        pub fn new(
+            declaration: Stmt,
+            closure: Rc<RefCell<Environment>>,
+            is_initializer: bool,
+        ) -> Self {
             Self {
                 declaration: Box::new(declaration),
                 closure,
+                is_initializer,
             }
         }
 
@@ -138,6 +144,7 @@ pub mod rlox_callable {
             Self {
                 declaration: self.declaration.clone(),
                 closure: env,
+                is_initializer: self.is_initializer,
             }
         }
     }
@@ -166,14 +173,29 @@ pub mod rlox_callable {
                         Ok(_) => return Ok(LiteralValue::Nil),
                         Err(err) => match err {
                             Error::Return(ret_val) => {
+                                if self.is_initializer {
+                                    return self.closure.as_ref().borrow_mut().get_at(
+                                        0,
+                                        &Token::new(TokenType::This, String::from("this"), 0, 0, 0),
+                                    );
+                                }
                                 return Ok(ret_val);
                             }
                             _ => return Err(err),
                         },
                     };
                 }
-                _ => panic!("Cannot call non-function"),
+                _ => (),
             }
+
+            if self.is_initializer {
+                return self.closure.as_ref().borrow_mut().get_at(
+                    0,
+                    &Token::new(TokenType::This, String::from("this"), 0, 0, 0),
+                );
+            }
+
+            Ok(LiteralValue::Nil)
         }
     }
 
@@ -202,15 +224,24 @@ pub mod rlox_callable {
 
     impl RLoxCallable for RLoxClass {
         fn arity(&self) -> usize {
+            if let Some(ctor) = self.find_method("init") {
+                return ctor.arity();
+            }
             0
         }
 
         fn call(
             &self,
-            _interpreter: &mut Interpreter,
-            _args: &mut Vec<LiteralValue>,
+            interpreter: &mut Interpreter,
+            args: &mut Vec<LiteralValue>,
         ) -> Result<LiteralValue, Error> {
             let instance = Rc::new(RefCell::new(RLoxInstance::new(Rc::new(self.clone()))));
+
+            let c_tor = self.find_method("init");
+            if let Some(mut ctor) = c_tor {
+                ctor.bind(Rc::clone(&instance)).call(interpreter, args)?;
+            }
+
             Ok(LiteralValue::Callable(Callable::Instance(Rc::clone(
                 &instance,
             ))))
