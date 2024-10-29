@@ -40,11 +40,10 @@ mod assignment_tests {
         &format!("{}{}", ASSIGNMENT_PREFIX, "/syntax.lox")
     );
 
-    // TODO: reintroduce when 'this' has been implemented.
-    // generate_integration_test!(
-    //     test_to_this,
-    //     &format!("{}{}", ASSIGNMENT_PREFIX, "/to_this.lox")
-    // );
+    generate_integration_test!(
+        test_to_this,
+        &format!("{}{}", ASSIGNMENT_PREFIX, "/to_this.lox")
+    );
 
     generate_integration_test!(
         test_undefined,
@@ -189,11 +188,10 @@ mod closure_tests {
         &format!("{}{}", CLOSURE_PREFIX, "/close_over_later_variable.lox")
     );
 
-    // TODO: enable the test when classes are fully implemented.
-    // generate_integration_test!(
-    //     test_close_over_method_parameter,
-    //     &format!("{}{}", CLOSURE_PREFIX, "/close_over_method_parameter.lox")
-    // );
+    generate_integration_test!(
+        test_close_over_method_parameter,
+        &format!("{}{}", CLOSURE_PREFIX, "/close_over_method_parameter.lox")
+    );
 
     generate_integration_test!(
         test_closed_closure_in_function,
@@ -526,17 +524,6 @@ mod number_tests {
     use crate::generate_integration_test;
     pub const NUMBER_PREFIX: &str = "tests/resources/integration_tests/number";
 
-    // TODO: commented tested are related to the field property.
-    // generate_integration_test!(
-    //     test_decimal_point_at_eof,
-    //     &format!("{}{}", NUMBER_PREFIX, "/decimal_point_at_eof.lox")
-    // );
-
-    // generate_integration_test!(
-    //     test_leading_dot,
-    //     &format!("{}{}", NUMBER_PREFIX, "/leading_dot.lox")
-    // );
-
     generate_integration_test!(
         test_literals,
         &format!("{}{}", NUMBER_PREFIX, "/literals.lox")
@@ -546,11 +533,6 @@ mod number_tests {
         test_nan_equality,
         &format!("{}{}", NUMBER_PREFIX, "/nan_equality.lox")
     );
-
-    // generate_integration_test!(
-    //     test_trailing_dot,
-    //     &format!("{}{}", NUMBER_PREFIX, "/trailing_dot.lox")
-    // );
 }
 
 mod operator_tests {
@@ -610,17 +592,15 @@ mod operator_tests {
         &format!("{}{}", OPERATOR_PREFIX, "/divide.lox")
     );
 
-    // TODO: add when finishing classes.
-    // generate_integration_test!(
-    //     test_equals_class,
-    //     &format!("{}{}", OPERATOR_PREFIX, "/equals_class.lox")
-    // );
+    generate_integration_test!(
+        test_equals_class,
+        &format!("{}{}", OPERATOR_PREFIX, "/equals_class.lox")
+    );
 
-    // TODO: when method exists.
-    // generate_integration_test!(
-    //     test_equals_method,
-    //     &format!("{}{}", OPERATOR_PREFIX, "/equals_method.lox")
-    // );
+    generate_integration_test!(
+        test_equals_method,
+        &format!("{}{}", OPERATOR_PREFIX, "/equals_method.lox")
+    );
 
     generate_integration_test!(
         test_equals,
@@ -692,11 +672,10 @@ mod operator_tests {
         &format!("{}{}", OPERATOR_PREFIX, "/negate.lox")
     );
 
-    //TODO: Enable when there is full support for classes.
-    // generate_integration_test!(
-    //     test_not_class,
-    //     &format!("{}{}", OPERATOR_PREFIX, "/not_class.lox")
-    // );
+    generate_integration_test!(
+        test_not_class,
+        &format!("{}{}", OPERATOR_PREFIX, "/not_class.lox")
+    );
 
     generate_integration_test!(
         test_not_equals,
@@ -739,11 +718,7 @@ mod regression_tests {
 
     generate_integration_test!(test_40, &format!("{}{}", REGRESSION_PREFIX, "/40.lox"));
 
-    // TODO: enable when inheritance is available.
-    // generate_integration_test!(
-    //     test_394,
-    //     &format!("{}{}", REGRESSION_PREFIX, "/394.lox")
-    // );
+    generate_integration_test!(test_394, &format!("{}{}", REGRESSION_PREFIX, "/394.lox"));
 }
 
 mod root_folder_tests {
@@ -792,11 +767,10 @@ mod return_tests {
         &format!("{}{}", RETURN_PREFIX, "/in_function.lox")
     );
 
-    // TODO: enable when methods are available.
-    // generate_integration_test!(
-    //     test_in_method,
-    //     &format!("{}{}", RETURN_PREFIX, "/in_method.lox")
-    // );
+    generate_integration_test!(
+        test_in_method,
+        &format!("{}{}", RETURN_PREFIX, "/in_method.lox")
+    );
 
     generate_integration_test!(
         test_return_nil_if_no_value,
@@ -900,10 +874,10 @@ mod super_tests {
     );
 
     generate_integration_test!(
-        test_super_in_closure_inherited_method,
+        test_super_in_closure_in_inherited_method,
         &format!(
             "{}{}",
-            SUPER_PREFIX, "/super_in_closure_inherited_method.lox"
+            SUPER_PREFIX, "/super_in_closure_in_inherited_method.lox"
         )
     );
 
@@ -1001,11 +975,10 @@ mod variable_tests {
         &format!("{}{}", VARIABLE_PREFIX, "/in_nested_block.lox")
     );
 
-    // TODO: enable when methods exist.
-    // generate_integration_test!(
-    //     test_local_from_method,
-    //     &format!("{}{}", VARIABLE_PREFIX, "/local_from_method.lox")
-    // );
+    generate_integration_test!(
+        test_local_from_method,
+        &format!("{}{}", VARIABLE_PREFIX, "/local_from_method.lox")
+    );
 
     generate_integration_test!(
         test_redeclare_global,
@@ -1080,11 +1053,10 @@ mod variable_tests {
         &format!("{}{}", VARIABLE_PREFIX, "/use_nil_as_var.lox")
     );
 
-    // TODO: enable when this exists.
-    // generate_integration_test!(
-    //     test_use_this_as_var,
-    //     &format!("{}{}", VARIABLE_PREFIX, "/use_this_as_var.lox")
-    // );
+    generate_integration_test!(
+        test_use_this_as_var,
+        &format!("{}{}", VARIABLE_PREFIX, "/use_this_as_var.lox")
+    );
 }
 
 mod while_tests {

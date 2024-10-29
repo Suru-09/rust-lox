@@ -600,17 +600,20 @@ pub mod interpreter {
             method: &Token,
         ) -> Result<LiteralValue, Error> {
             let distance = self.get_depth(keyword).unwrap();
-            let superclass = self.environment.borrow_mut().get_at(distance, keyword)?;
-            let instance_obj = self
-                .environment
-                .borrow_mut()
-                .get_at(distance - 1, keyword)?;
+            let superclass = self.environment.borrow_mut().get_at(
+                distance,
+                &Token::new(TokenType::Super, String::from("super"), 0, 0, 0),
+            )?;
+            let instance_obj = self.environment.borrow_mut().get_at(
+                distance - 1,
+                &Token::new(TokenType::This, String::from("this"), 0, 0, 0),
+            )?;
 
             match (superclass, instance_obj) {
                 (
                     LiteralValue::Callable(Callable::Class(klass)),
                     LiteralValue::Callable(Callable::Instance(instance)),
-                ) => match klass.find_method(&keyword.get_token_type().to_string()) {
+                ) => match klass.find_method(&method.get_token_type().to_string()) {
                     Some(mut method) => {
                         return Ok(LiteralValue::Callable(Callable::Function(
                             method.bind(instance),
