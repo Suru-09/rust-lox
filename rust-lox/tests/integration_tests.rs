@@ -341,6 +341,42 @@ mod if_tests {
     );
 }
 
+mod inheritance_tests {
+    use crate::common::common::run_test;
+    use crate::generate_integration_test;
+    pub const INHERITANCE_PREFIX: &str = "tests/resources/integration_tests/inheritance";
+
+    generate_integration_test!(
+        test_constructor,
+        &format!("{}{}", INHERITANCE_PREFIX, "/constructor.lox")
+    );
+
+    generate_integration_test!(
+        test_inherit_from_function,
+        &format!("{}{}", INHERITANCE_PREFIX, "/inherit_from_function.lox")
+    );
+
+    generate_integration_test!(
+        test_inherit_from_nil,
+        &format!("{}{}", INHERITANCE_PREFIX, "/inherit_from_nil.lox")
+    );
+
+    generate_integration_test!(
+        test_inherit_from_number,
+        &format!("{}{}", INHERITANCE_PREFIX, "/inherit_from_number.lox")
+    );
+
+    generate_integration_test!(
+        test_inherit_methods,
+        &format!("{}{}", INHERITANCE_PREFIX, "/inherit_methods.lox")
+    );
+
+    generate_integration_test!(
+        test_paranthesized_superclass,
+        &format!("{}{}", INHERITANCE_PREFIX, "/parenthesized_superclass.lox")
+    );
+}
+
 mod logical_operator_tests {
     use crate::common::common::run_test;
     use crate::generate_integration_test;
@@ -794,6 +830,107 @@ mod string_tests {
     //     test_unterminated,
     //     &format!("{}{}", STRING_PREFIX, "/unterminated.lox")
     // );
+}
+
+mod super_tests {
+    use crate::common::common::run_test;
+    use crate::generate_integration_test;
+    pub const SUPER_PREFIX: &str = "tests/resources/integration_tests/super";
+
+    generate_integration_test!(
+        test_bound_method,
+        &format!("{}{}", SUPER_PREFIX, "/bound_method.lox")
+    );
+
+    generate_integration_test!(
+        test_call_other_method,
+        &format!("{}{}", SUPER_PREFIX, "/call_other_method.lox")
+    );
+
+    generate_integration_test!(
+        test_call_same_method,
+        &format!("{}{}", SUPER_PREFIX, "/call_same_method.lox")
+    );
+
+    generate_integration_test!(test_closure, &format!("{}{}", SUPER_PREFIX, "/closure.lox"));
+
+    generate_integration_test!(
+        test_constructor,
+        &format!("{}{}", SUPER_PREFIX, "/constructor.lox")
+    );
+
+    generate_integration_test!(
+        test_extra_arguments,
+        &format!("{}{}", SUPER_PREFIX, "/extra_arguments.lox")
+    );
+
+    generate_integration_test!(
+        test_indirectly_inherited,
+        &format!("{}{}", SUPER_PREFIX, "/indirectly_inherited.lox")
+    );
+
+    generate_integration_test!(
+        test_missing_arguments,
+        &format!("{}{}", SUPER_PREFIX, "/missing_arguments.lox")
+    );
+
+    generate_integration_test!(
+        test_no_superclass_bind,
+        &format!("{}{}", SUPER_PREFIX, "/no_superclass_bind.lox")
+    );
+
+    generate_integration_test!(
+        test_no_superclass_call,
+        &format!("{}{}", SUPER_PREFIX, "/no_superclass_call.lox")
+    );
+
+    generate_integration_test!(
+        test_no_superclass_method,
+        &format!("{}{}", SUPER_PREFIX, "/no_superclass_method.lox")
+    );
+
+    generate_integration_test!(
+        test_reassign_superclass,
+        &format!("{}{}", SUPER_PREFIX, "/reassign_superclass.lox")
+    );
+
+    generate_integration_test!(
+        test_super_at_top_level,
+        &format!("{}{}", SUPER_PREFIX, "/super_at_top_level.lox")
+    );
+
+    generate_integration_test!(
+        test_super_in_closure_inherited_method,
+        &format!(
+            "{}{}",
+            SUPER_PREFIX, "/super_in_closure_inherited_method.lox"
+        )
+    );
+
+    generate_integration_test!(
+        test_super_in_inherited_method,
+        &format!("{}{}", SUPER_PREFIX, "/super_in_inherited_method.lox")
+    );
+
+    generate_integration_test!(
+        test_super_in_top_level_function,
+        &format!("{}{}", SUPER_PREFIX, "/super_in_top_level_function.lox")
+    );
+
+    generate_integration_test!(
+        test_super_without_dot,
+        &format!("{}{}", SUPER_PREFIX, "/super_without_dot.lox")
+    );
+
+    generate_integration_test!(
+        test_super_without_name,
+        &format!("{}{}", SUPER_PREFIX, "/super_without_name.lox")
+    );
+
+    generate_integration_test!(
+        test_this_in_superclass_method,
+        &format!("{}{}", SUPER_PREFIX, "/this_in_superclass_method.lox")
+    );
 }
 
 mod this_tests {

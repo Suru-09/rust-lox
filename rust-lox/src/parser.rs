@@ -228,6 +228,23 @@ pub mod parser {
             Err(RLoxErrorType::ParseError)
         }
 
+        fn consume_any_identifier_with_err_msg(
+            &mut self,
+            err_msg: String,
+        ) -> Result<Token, RLoxErrorType> {
+            if self.match_any_identifier() {
+                return Ok(self.previous());
+            }
+            error(
+                self.peek().get_line(),
+                self.peek().get_column(),
+                err_msg,
+                function_name!(),
+                Some(RLoxErrorType::ParseError),
+            );
+            Err(RLoxErrorType::ParseError)
+        }
+
         fn primary(&mut self) -> Result<Expr, RLoxErrorType> {
             debug!("{}", self.peek().get_token_type());
 
@@ -245,8 +262,11 @@ pub mod parser {
 
             if self.match_token(vec![TokenType::Super]) {
                 let keyword = self.previous();
-                let method =
-                    self.consume(TokenType::Dot, format!("Expect superclass method name."))?;
+                self.consume(TokenType::Dot, format!("Expect '.' after 'super'."))?;
+                let method = self.consume_any_identifier_with_err_msg(format!(
+                    "Error at '{}': Expect superclass method name.",
+                    self.peek().get_token_type(),
+                ))?;
                 return Ok(Expr::Super(keyword, method));
             }
 

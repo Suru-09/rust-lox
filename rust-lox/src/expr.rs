@@ -87,13 +87,8 @@ pub mod expr {
                 Expr::This(keyword) => {
                     write!(f, "{}", keyword.get_token_type())
                 }
-                Expr::Super(keyword, method) => {
-                    write!(
-                        f,
-                        "{} {}",
-                        keyword.get_token_type(),
-                        method.get_token_type()
-                    )
+                Expr::Super(keyword, _) => {
+                    write!(f, "{}", keyword.get_token_type())
                 }
             }
         }
