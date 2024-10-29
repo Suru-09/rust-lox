@@ -243,6 +243,13 @@ pub mod parser {
                 return Ok(Expr::Literal(LiteralValue::Nil));
             }
 
+            if self.match_token(vec![TokenType::Super]) {
+                let keyword = self.previous();
+                let method =
+                    self.consume(TokenType::Dot, format!("Expect superclass method name."))?;
+                return Ok(Expr::Super(keyword, method));
+            }
+
             if self.match_token(vec![TokenType::This]) {
                 return Ok(Expr::This(self.previous()));
             }
@@ -497,6 +504,13 @@ pub mod parser {
 
         fn class_declaration(&mut self) -> Result<Stmt, RLoxErrorType> {
             let name: Token = self.consume_any_identifier("class".to_string())?;
+
+            let mut superclass = None;
+            if self.match_token(vec![TokenType::Less]) {
+                self.consume_any_identifier("superclass".to_string())?;
+                superclass = Some(Expr::Variable(self.previous()));
+            }
+
             self.consume(
                 TokenType::LeftBrace,
                 "Expect '{' before class body.".to_string(),
@@ -512,7 +526,7 @@ pub mod parser {
                 "Expect '}' after class body.".to_string(),
             )?;
 
-            Ok(Stmt::ClassStmt(name, methods))
+            Ok(Stmt::ClassStmt(name, superclass, methods))
         }
 
         fn function(&mut self, kind: String) -> Result<Stmt, RLoxErrorType> {

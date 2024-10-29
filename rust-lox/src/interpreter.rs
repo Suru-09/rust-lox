@@ -593,6 +593,45 @@ pub mod interpreter {
         fn visit_this_expr(&mut self, keyword: &Token) -> Result<LiteralValue, Error> {
             self.look_up_variable(keyword)
         }
+
+        fn visit_super_expr(
+            &mut self,
+            keyword: &Token,
+            method: &Token,
+        ) -> Result<LiteralValue, Error> {
+            let distance = self.get_depth(keyword).unwrap();
+            let superclass = self.environment.borrow_mut().get_at(distance, keyword)?;
+            let instance_obj = self
+                .environment
+                .borrow_mut()
+                .get_at(distance - 1, keyword)?;
+
+            match (superclass, instance_obj) {
+                (
+                    LiteralValue::Callable(Callable::Class(klass)),
+                    LiteralValue::Callable(Callable::Instance(instance)),
+                ) => match klass.find_method(&keyword.get_token_type().to_string()) {
+                    Some(mut method) => {
+                        return Ok(LiteralValue::Callable(Callable::Function(
+                            method.bind(instance),
+                        )));
+                    }
+                    None => {
+                        error(
+                            method.get_line(),
+                            method.get_column(),
+                            format!("Undefined property '{}'.", method.get_token_type()),
+                            function_name!(),
+                            Some(RLoxErrorType::RuntimeError),
+                        );
+                        return Err(Error::LoxRuntimeError);
+                    }
+                },
+                (_, _) => {
+                    return Err(Error::LoxRuntimeError);
+                }
+            }
+        }
     }
 
     impl StmtVisitor<Result<(), Error>> for Interpreter {
@@ -636,11 +675,53 @@ pub mod interpreter {
             self.execute_block(stmts, env)
         }
 
-        fn visit_class_stmt(&mut self, name: &Token, statements: &Vec<Stmt>) -> Result<(), Error> {
+        fn visit_class_stmt(
+            &mut self,
+            name: &Token,
+            superclass: &Option<Expr>,
+            statements: &Vec<Stmt>,
+        ) -> Result<(), Error> {
+            let mut super_class = None;
+            let report_superclass_err = || {
+                error(
+                    name.get_line(),
+                    name.get_column(),
+                    format!(
+                        "Error at '{}': Superclass must be a class.",
+                        name.get_token_type()
+                    ),
+                    function_name!(),
+                    Some(RLoxErrorType::RuntimeError),
+                );
+                return Err(Error::LoxRuntimeError);
+            };
+
+            if let Some(superclass) = superclass {
+                super_class = match self.evaluate(superclass)? {
+                    LiteralValue::Callable(callable) => {
+                        if let Callable::Class(klass) = callable {
+                            Some(klass)
+                        } else {
+                            return report_superclass_err();
+                        }
+                    }
+                    _ => return report_superclass_err(),
+                }
+            }
+
             self.environment
                 .as_ref()
                 .borrow_mut()
                 .define(name, LiteralValue::Nil);
+
+            if let Some(super_class) = super_class.clone() {
+                self.environment =
+                    Rc::new(RefCell::new(Environment::new(Rc::clone(&self.environment))));
+                self.environment.as_ref().borrow_mut().define_str(
+                    "super",
+                    LiteralValue::Callable(Callable::Class(super_class)),
+                );
+            }
 
             let mut methods = HashMap::new();
             for method in statements {
@@ -654,8 +735,17 @@ pub mod interpreter {
                 }
             }
 
-            let klass: RLoxClass =
-                RLoxClass::new(name.get_token_type().to_string().clone(), methods);
+            let klass: RLoxClass = RLoxClass::new(
+                name.get_token_type().to_string().clone(),
+                methods,
+                super_class.clone(),
+            );
+
+            if let Some(_) = super_class {
+                let previous = self.environment.borrow().clone().enclosing.unwrap();
+                self.environment = previous;
+            }
+
             self.environment
                 .as_ref()
                 .borrow_mut()

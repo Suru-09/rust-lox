@@ -196,18 +196,32 @@ pub mod rlox_callable {
     #[derive(Clone, Debug, PartialEq)]
     pub struct RLoxClass {
         pub name: String,
+        pub super_class: Rc<Option<RLoxClass>>,
         pub methods: HashMap<String, RLoxFunction>,
     }
 
     impl RLoxClass {
-        pub fn new(name: String, methods: HashMap<String, RLoxFunction>) -> Self {
-            Self { name, methods }
+        pub fn new(
+            name: String,
+            methods: HashMap<String, RLoxFunction>,
+            super_class: Option<RLoxClass>,
+        ) -> Self {
+            Self {
+                name,
+                methods,
+                super_class: Rc::new(super_class),
+            }
         }
 
         pub fn find_method(&self, name: &str) -> Option<RLoxFunction> {
             if self.methods.contains_key(name) {
                 return Some(self.methods.get(name).unwrap().clone());
             }
+
+            if let Some(superclass) = self.super_class.borrow() {
+                return superclass.find_method(name);
+            }
+
             None
         }
 

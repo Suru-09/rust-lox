@@ -29,6 +29,7 @@ pub mod expr {
             Box<Expr>, /*value*/
         ),
         This(Token /*keyword*/),
+        Super(Token /*keyword*/, Token /*method*/),
     }
 
     impl Expr {
@@ -45,6 +46,7 @@ pub mod expr {
                 Expr::Get(_, _) => "Get".to_string(),
                 Expr::Set(_, _, _) => "Set".to_string(),
                 Expr::This(_) => "This".to_string(),
+                Expr::Super(_, _) => "super".to_string(),
             }
         }
     }
@@ -85,6 +87,14 @@ pub mod expr {
                 Expr::This(keyword) => {
                     write!(f, "{}", keyword.get_token_type())
                 }
+                Expr::Super(keyword, method) => {
+                    write!(
+                        f,
+                        "{} {}",
+                        keyword.get_token_type(),
+                        method.get_token_type()
+                    )
+                }
             }
         }
     }
@@ -109,6 +119,7 @@ pub mod expr {
                 Expr::Get(obj, name) => visitor.visit_get_expr(obj, name),
                 Expr::Set(obj, name, value) => visitor.visit_set_expr(obj, name, value),
                 Expr::This(keyword) => visitor.visit_this_expr(keyword),
+                Expr::Super(keyword, method) => visitor.visit_super_expr(keyword, method),
             }
         }
     }
@@ -125,6 +136,7 @@ pub mod expr {
         fn visit_get_expr(&mut self, object: &Expr, name: &Token) -> T;
         fn visit_set_expr(&mut self, object: &Expr, name: &Token, value: &Expr) -> T;
         fn visit_this_expr(&mut self, keyword: &Token) -> T;
+        fn visit_super_expr(&mut self, keyword: &Token, method: &Token) -> T;
     }
 
     impl Expr {
@@ -147,6 +159,7 @@ pub mod expr {
                 Expr::Get(object, name) => visitor.visit_get_expr(object, name),
                 Expr::Set(object, name, value) => visitor.visit_set_expr(object, name, value),
                 Expr::This(keyword) => visitor.visit_this_expr(keyword),
+                Expr::Super(keyword, method) => visitor.visit_super_expr(keyword, method),
             }
         }
     }
@@ -203,6 +216,10 @@ pub mod expr {
 
         fn visit_this_expr(&mut self, keyword: &Token) -> String {
             format!("{}", keyword.get_token_type())
+        }
+
+        fn visit_super_expr(&mut self, keyword: &Token, method: &Token) -> String {
+            format!("{} {}", keyword.get_token_type(), method.get_token_type())
         }
     }
 }

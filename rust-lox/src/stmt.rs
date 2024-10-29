@@ -16,7 +16,11 @@ pub mod stmt {
         ReturnStmt(Token, Expr),
         VarStmt(Token, Expr),
         BlockStmt(Vec<Stmt>),
-        ClassStmt(Token, Vec<Stmt>),
+        ClassStmt(
+            Token,
+            Option<Expr>, /*superclass*/
+            Vec<Stmt>,    /*methods*/
+        ),
         Function(Token, Vec<Token>, Vec<Stmt>),
         IfStmt(Expr, Box<Stmt>, Option<Box<Stmt>>),
         WhileStmt(Expr, Box<Stmt>),
@@ -59,7 +63,7 @@ pub mod stmt {
                     }
                     write!(f, "{}", stmts_str)
                 }
-                Stmt::ClassStmt(name, methods) => {
+                Stmt::ClassStmt(name, _superclass, methods) => {
                     let mut methods_str = String::new();
                     // iterate over methods and add them to the string.
                     for method in methods {
@@ -109,7 +113,12 @@ pub mod stmt {
         fn visit_return_stmt(&mut self, keyword: &Token, expr: &Expr) -> T;
         fn visit_var_stmt(&mut self, token: &Token, expr: &Expr) -> T;
         fn visit_block_stmt(&mut self, stmts: &Vec<Stmt>) -> T;
-        fn visit_class_stmt(&mut self, name: &Token, methods: &Vec<Stmt>) -> T;
+        fn visit_class_stmt(
+            &mut self,
+            name: &Token,
+            superclass: &Option<Expr>,
+            methods: &Vec<Stmt>,
+        ) -> T;
         fn visit_function_stmt(&mut self, name: &Token, params: &Vec<Token>, body: &Vec<Stmt>)
             -> T;
         fn visit_if_stmt(&mut self, expr: &Expr, stmt: &Stmt, else_stmt: &Option<Box<Stmt>>) -> T;
@@ -124,7 +133,9 @@ pub mod stmt {
                 Stmt::ReturnStmt(keyword, expr) => visitor.visit_return_stmt(keyword, expr),
                 Stmt::VarStmt(token, expr) => visitor.visit_var_stmt(token, expr),
                 Stmt::BlockStmt(stmts) => visitor.visit_block_stmt(stmts),
-                Stmt::ClassStmt(name, methods) => visitor.visit_class_stmt(name, methods),
+                Stmt::ClassStmt(name, superclass, methods) => {
+                    visitor.visit_class_stmt(name, superclass, methods)
+                }
                 Stmt::Function(name, params, body) => {
                     visitor.visit_function_stmt(name, params, body)
                 }
@@ -142,7 +153,9 @@ pub mod stmt {
                 Stmt::ReturnStmt(keyword, lval) => visitor.visit_return_stmt(keyword, lval),
                 Stmt::VarStmt(token, expr) => visitor.visit_var_stmt(token, expr),
                 Stmt::BlockStmt(stmts) => visitor.visit_block_stmt(stmts),
-                Stmt::ClassStmt(name, methods) => visitor.visit_class_stmt(name, methods),
+                Stmt::ClassStmt(name, superclass, methods) => {
+                    visitor.visit_class_stmt(name, superclass, methods)
+                }
                 Stmt::Function(name, params, body) => {
                     visitor.visit_function_stmt(name, params, body)
                 }
@@ -309,7 +322,12 @@ pub mod stmt {
             stmts_node_id
         }
 
-        fn visit_class_stmt(&mut self, name: &Token, methods: &Vec<Stmt>) -> u64 {
+        fn visit_class_stmt(
+            &mut self,
+            name: &Token,
+            _superclass: &Option<Expr>,
+            methods: &Vec<Stmt>,
+        ) -> u64 {
             let class_node_id = self.add_node(String::from("class"));
             let name_node_id = self.add_node(name.token_type_value());
             self.add_edge(class_node_id, name_node_id);
@@ -444,6 +462,13 @@ pub mod stmt {
 
         fn visit_this_expr(&mut self, keyword: &Token) -> u64 {
             self.add_node(keyword.token_type_value())
+        }
+
+        fn visit_super_expr(&mut self, keyword: &Token, method: &Token) -> u64 {
+            let super_idx = self.add_node(keyword.token_type_value());
+            let super_method_idx = self.add_node(method.token_type_value());
+            self.add_edge(super_idx, super_method_idx);
+            super_idx
         }
     }
 }

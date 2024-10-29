@@ -13,6 +13,7 @@ pub mod resolver {
     pub enum ClassType {
         None,
         Class,
+        SubClass,
     }
 
     #[derive(Clone, Debug, PartialEq)]
@@ -256,6 +257,37 @@ pub mod resolver {
             Ok(())
         }
 
+        fn visit_super_expr(&mut self, keyword: &Token, method: &Token) -> Result<(), Error> {
+            if self.current_class == ClassType::None {
+                error(
+                    keyword.get_line(),
+                    keyword.get_column(),
+                    format!(
+                        "Error at '{}': Can't use 'super' outside of a class.",
+                        keyword.get_token_type()
+                    ),
+                    function_name!(),
+                    Some(RLoxErrorType::RuntimeError),
+                );
+                return Err(Error::LoxRuntimeError);
+            } else if self.current_class != ClassType::SubClass {
+                error(
+                    keyword.get_line(),
+                    keyword.get_column(),
+                    format!(
+                        "Error at '{}': Can't use 'super' in a class with no superclass.",
+                        keyword.get_token_type()
+                    ),
+                    function_name!(),
+                    Some(RLoxErrorType::RuntimeError),
+                );
+                return Err(Error::LoxRuntimeError);
+            }
+            self.resolve_local(keyword);
+            self.resolve_local(method);
+            Ok(())
+        }
+
         fn visit_logical_expr(
             &mut self,
             left: &Expr,
@@ -298,11 +330,43 @@ pub mod resolver {
             Ok(())
         }
 
-        fn visit_class_stmt(&mut self, name: &Token, methods: &Vec<Stmt>) -> Result<(), Error> {
+        fn visit_class_stmt(
+            &mut self,
+            name: &Token,
+            superclass: &Option<Expr>,
+            methods: &Vec<Stmt>,
+        ) -> Result<(), Error> {
             let enclosing_class = self.current_class.clone();
             self.current_class = ClassType::Class;
             self.declare(name)?;
             self.define(name);
+
+            if let Some(supper) = superclass {
+                if let Expr::Variable(supper_var) = supper {
+                    if supper_var.get_token_type().to_string() == name.get_token_type().to_string()
+                    {
+                        error(
+                            name.get_line(),
+                            name.get_column(),
+                            format!(
+                                "Error at '{}': A class can't inherit from itself.",
+                                name.get_token_type()
+                            ),
+                            function_name!(),
+                            Some(RLoxErrorType::RuntimeError),
+                        );
+                        return Err(Error::LoxRuntimeError);
+                    }
+                }
+                self.current_class = ClassType::SubClass;
+                self.resolve_expr(supper)?;
+
+                self.begin_scope();
+                self.scopes
+                    .last_mut()
+                    .unwrap()
+                    .push((String::from("super"), true));
+            }
 
             self.begin_scope();
             self.scopes
@@ -321,6 +385,10 @@ pub mod resolver {
                     }
                     _ => (),
                 }
+            }
+
+            if let Some(_) = superclass {
+                self.end_scope();
             }
 
             self.end_scope();
