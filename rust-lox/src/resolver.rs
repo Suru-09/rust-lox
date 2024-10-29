@@ -279,6 +279,7 @@ pub mod resolver {
                                 function_name!(),
                                 Some(RLoxErrorType::RuntimeError)
                             );
+                            return Err(Error::LoxRuntimeError);
                         }
                     }
                 }
@@ -359,8 +360,25 @@ pub mod resolver {
             Ok(())
         }
 
-        fn visit_return_stmt(&mut self, _keyword: &Token, expr: &Expr) -> Result<(), Error> {
-            self.resolve_expr(expr)?;
+        fn visit_return_stmt(&mut self, keyword: &Token, expr: &Expr) -> Result<(), Error> {
+            match self.resolve_expr(expr) {
+                Ok(_) => {
+                    if self.current_fn == FunctionType::Initializer {
+                        error(
+                            keyword.get_line(),
+                            keyword.get_column(),
+                            format!(
+                                "Error at '{}': Can't return a value from an initializer.",
+                                keyword.get_token_type()
+                            ),
+                            function_name!(),
+                            Some(RLoxErrorType::RuntimeError),
+                        );
+                        return Err(Error::LoxRuntimeError);
+                    }
+                }
+                Err(err) => return Err(err),
+            }
             Ok(())
         }
 

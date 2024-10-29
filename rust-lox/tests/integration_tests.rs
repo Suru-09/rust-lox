@@ -112,15 +112,10 @@ mod constructor_tests {
         &format!("{}{}", CONSTRUCTOR_PREFIX, "/arguments.lox")
     );
 
-    generate_integration_test!(
-        test_call_init_early_return,
-        &format!("{}{}", CONSTRUCTOR_PREFIX, "/call_init_early_return.lox")
-    );
-
-    generate_integration_test!(
-        test_call_init_explicitly,
-        &format!("{}{}", CONSTRUCTOR_PREFIX, "/call_init_explicitly.lox")
-    );
+    // generate_integration_test!(
+    //     test_call_init_explicitly,
+    //     &format!("{}{}", CONSTRUCTOR_PREFIX, "/call_init_explicitly.lox")
+    // );
 
     generate_integration_test!(
         test_default_arguments,

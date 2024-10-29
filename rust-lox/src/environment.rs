@@ -50,7 +50,7 @@ pub mod environment {
             if self.values.contains_key(&token_name) {
                 return Ok(self.values.get(&token_name).unwrap().clone());
             } else if let Some(enclosing) = &self.enclosing {
-                Ok(enclosing.as_ref().borrow_mut().get(&token.clone())?)
+                Ok(enclosing.as_ref().borrow_mut().get(token)?)
             } else {
                 error(
                     token.get_line(),

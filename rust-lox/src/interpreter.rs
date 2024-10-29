@@ -19,7 +19,7 @@ pub mod interpreter {
         pub globals: Rc<RefCell<Environment>>,
     }
 
-    #[derive(Debug, PartialEq)]
+    #[derive(Debug, PartialEq, Clone)]
     pub enum Error {
         LoxRuntimeError,
         Return(LiteralValue),

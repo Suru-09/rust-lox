@@ -136,8 +136,8 @@ pub mod rlox_callable {
             }
         }
 
-        pub fn bind(&mut self, instance: Rc<RefCell<RLoxInstance>>) -> Self {
-            let env = Rc::clone(&self.closure);
+        pub fn bind(&mut self, instance: Rc<RefCell<RLoxInstance>>) -> RLoxFunction {
+            let env = Rc::new(RefCell::new(Environment::new(Rc::clone(&self.closure))));
             env.as_ref()
                 .borrow_mut()
                 .define_str("this", LiteralValue::Callable(Callable::Instance(instance)));
@@ -170,15 +170,9 @@ pub mod rlox_callable {
                     }
 
                     match interpreter.execute_block(&body, env) {
-                        Ok(_) => return Ok(LiteralValue::Nil),
+                        Ok(_) => (),
                         Err(err) => match err {
                             Error::Return(ret_val) => {
-                                if self.is_initializer {
-                                    return self.closure.as_ref().borrow_mut().get_at(
-                                        0,
-                                        &Token::new(TokenType::This, String::from("this"), 0, 0, 0),
-                                    );
-                                }
                                 return Ok(ret_val);
                             }
                             _ => return Err(err),
@@ -286,7 +280,6 @@ pub mod rlox_callable {
 
         pub fn set(&mut self, name: &Token, value: LiteralValue) {
             self.fields.insert(name.get_token_type().to_string(), value);
-            ()
         }
 
         pub fn to_string(&self) -> String {
