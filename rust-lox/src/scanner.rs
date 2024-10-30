@@ -3,7 +3,7 @@ pub mod scan {
 
     use crate::error_handling::error_handling::{error, RLoxErrorType};
     use crate::function_name;
-    use std::collections::HashMap;
+    use rustc_hash::FxHashMap as HashMap;
     use std::fmt;
 
     #[derive(Clone, PartialEq, Debug)]
@@ -58,7 +58,7 @@ pub mod scan {
 
     macro_rules! create_map {
         ($($token:ident),*) => {{
-            let mut m = HashMap::new();
+            let mut m = HashMap::default();
             $(
                 m.insert(format!("{}", TokenType::$token), TokenType::$token);
             )*
@@ -320,7 +320,7 @@ pub mod scan {
         }
 
         fn identifier(&mut self) {
-            while self.peek().is_alphanumeric() ||  self.peek() == '_' {
+            while self.peek().is_alphanumeric() || self.peek() == '_' {
                 self.advance_token();
             }
 

@@ -4,8 +4,8 @@ pub mod environment {
     use crate::interpreter::interpreter::Error;
     use crate::scanner::scan::Token;
     use crate::stmt::stmt::LiteralValue;
+    use rustc_hash::FxHashMap as HashMap;
     use std::cell::RefCell;
-    use std::collections::HashMap;
     use std::rc::Rc;
 
     #[derive(Debug, PartialEq, Clone, Default)]
@@ -17,14 +17,14 @@ pub mod environment {
     impl Environment {
         pub fn new(enclosing: Rc<RefCell<Environment>>) -> Self {
             Environment {
-                values: HashMap::new(),
+                values: HashMap::default(),
                 enclosing: Some(enclosing),
             }
         }
 
         pub fn new_without_enclosing() -> Self {
             Environment {
-                values: HashMap::new(),
+                values: HashMap::default(),
                 enclosing: None,
             }
         }

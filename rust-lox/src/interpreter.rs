@@ -9,8 +9,8 @@ pub mod interpreter {
     };
     use crate::scanner::scan::{Token, TokenType};
     use crate::stmt::stmt::{LiteralValue, Stmt, StmtVisitor};
+    use rustc_hash::FxHashMap as HashMap;
     use std::cell::RefCell;
-    use std::collections::HashMap;
     use std::rc::Rc;
 
     pub struct Interpreter {
@@ -726,7 +726,7 @@ pub mod interpreter {
                 );
             }
 
-            let mut methods = HashMap::new();
+            let mut methods = HashMap::default();
             for method in statements {
                 if let Stmt::Function(fn_name, _, _) = method {
                     let lox_fun: RLoxFunction = RLoxFunction::new(

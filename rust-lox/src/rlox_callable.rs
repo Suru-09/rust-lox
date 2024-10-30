@@ -9,8 +9,8 @@ pub mod rlox_callable {
         stmt::stmt::Stmt,
     };
     use chrono;
+    use rustc_hash::FxHashMap as HashMap;
     use std::borrow::Borrow;
-    use std::collections::HashMap;
     use std::{borrow::BorrowMut, cell::RefCell, fmt, rc::Rc};
 
     #[derive(Debug, PartialEq)]
@@ -266,7 +266,7 @@ pub mod rlox_callable {
         pub fn new(rlox_class: Rc<RLoxClass>) -> Self {
             Self {
                 rlox_class,
-                fields: HashMap::new(),
+                fields: HashMap::default(),
             }
         }
 
