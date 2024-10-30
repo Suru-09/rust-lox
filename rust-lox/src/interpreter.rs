@@ -22,7 +22,7 @@ pub mod interpreter {
     #[derive(Debug, PartialEq, Clone)]
     pub enum Error {
         LoxRuntimeError,
-        Return(LiteralValue),
+        Return(Rc<LiteralValue>),
     }
 
     impl Interpreter {
@@ -36,7 +36,7 @@ pub mod interpreter {
                     999,
                     999,
                 ),
-                LiteralValue::Callable(Callable::Clock(Clock {})),
+                Rc::new(LiteralValue::Callable(Callable::Clock(Clock {}))),
             );
 
             globals.borrow_mut().define(
@@ -47,7 +47,7 @@ pub mod interpreter {
                     999,
                     999,
                 ),
-                LiteralValue::Callable(Callable::UnixTClock(UnixTClock {})),
+                Rc::new(LiteralValue::Callable(Callable::UnixTClock(UnixTClock {}))),
             );
 
             let mut locals = Vec::new();
@@ -80,7 +80,7 @@ pub mod interpreter {
             }
         }
 
-        fn evaluate(&mut self, expr: &Expr) -> Result<LiteralValue, Error> {
+        fn evaluate(&mut self, expr: &Expr) -> Result<Rc<LiteralValue>, Error> {
             expr.accept(self)
         }
 
@@ -105,7 +105,7 @@ pub mod interpreter {
             None
         }
 
-        fn look_up_variable(&mut self, token: &Token) -> Result<LiteralValue, Error> {
+        fn look_up_variable(&mut self, token: &Token) -> Result<Rc<LiteralValue>, Error> {
             match self.get_depth(token) {
                 Some(depth) => {
                     let mut env = self.environment.as_ref().borrow_mut();
@@ -119,10 +119,10 @@ pub mod interpreter {
             operand1: &LiteralValue,
             operand2: &LiteralValue,
             operator: &Token,
-        ) -> Result<LiteralValue, Error> {
+        ) -> Result<Rc<LiteralValue>, Error> {
             match (operand1, operand2) {
                 (LiteralValue::Number(number1), LiteralValue::Number(number2)) => {
-                    Ok(LiteralValue::Number(number1 - number2))
+                    Ok(Rc::new(LiteralValue::Number(number1 - number2)))
                 }
                 _ => {
                     error(
@@ -141,20 +141,20 @@ pub mod interpreter {
             operand1: &LiteralValue,
             operand2: &LiteralValue,
             operator: &Token,
-        ) -> Result<LiteralValue, Error> {
+        ) -> Result<Rc<LiteralValue>, Error> {
             match (operand1, operand2) {
-                (LiteralValue::String(s1), LiteralValue::String(s2)) => {
-                    Ok(LiteralValue::String(String::from(s1.to_string() + s2)))
-                }
+                (LiteralValue::String(s1), LiteralValue::String(s2)) => Ok(Rc::new(
+                    LiteralValue::String(String::from(s1.to_string() + s2)),
+                )),
                 (LiteralValue::Number(number1), LiteralValue::Number(number2)) => {
-                    Ok(LiteralValue::Number(number1 + number2))
+                    Ok(Rc::new(LiteralValue::Number(number1 + number2)))
                 }
-                (LiteralValue::String(str), LiteralValue::Number(num)) => {
-                    Ok(LiteralValue::String(str.clone() + &num.to_string()))
-                }
-                (LiteralValue::Number(num), LiteralValue::String(str)) => {
-                    Ok(LiteralValue::String(str.clone() + &num.to_string()))
-                }
+                (LiteralValue::String(str), LiteralValue::Number(num)) => Ok(Rc::new(
+                    LiteralValue::String(str.clone() + &num.to_string()),
+                )),
+                (LiteralValue::Number(num), LiteralValue::String(str)) => Ok(Rc::new(
+                    LiteralValue::String(str.clone() + &num.to_string()),
+                )),
                 _ => {
                     error(
                         operator.get_line(),
@@ -172,10 +172,10 @@ pub mod interpreter {
             operand1: &LiteralValue,
             operand2: &LiteralValue,
             operator: &Token,
-        ) -> Result<LiteralValue, Error> {
+        ) -> Result<Rc<LiteralValue>, Error> {
             match (operand1, operand2) {
                 (LiteralValue::Number(number1), LiteralValue::Number(number2)) => {
-                    Ok(LiteralValue::Number(number1 * number2))
+                    Ok(Rc::new(LiteralValue::Number(number1 * number2)))
                 }
                 _ => {
                     error(
@@ -194,10 +194,10 @@ pub mod interpreter {
             operand1: &LiteralValue,
             operand2: &LiteralValue,
             operator: &Token,
-        ) -> Result<LiteralValue, Error> {
+        ) -> Result<Rc<LiteralValue>, Error> {
             match (operand1, operand2) {
                 (LiteralValue::Number(number1), LiteralValue::Number(number2)) => {
-                    Ok(LiteralValue::Number(number1 / number2))
+                    Ok(Rc::new(LiteralValue::Number(number1 / number2)))
                 }
                 _ => {
                     error(
@@ -216,10 +216,10 @@ pub mod interpreter {
             operand1: &LiteralValue,
             operand2: &LiteralValue,
             operator: &Token,
-        ) -> Result<LiteralValue, Error> {
+        ) -> Result<Rc<LiteralValue>, Error> {
             match (operand1, operand2) {
                 (LiteralValue::Number(number1), LiteralValue::Number(number2)) => {
-                    Ok(LiteralValue::Bool(number1 > number2))
+                    Ok(Rc::new(LiteralValue::Bool(number1 > number2)))
                 }
                 _ => {
                     error(
@@ -238,10 +238,10 @@ pub mod interpreter {
             operand1: &LiteralValue,
             operand2: &LiteralValue,
             operator: &Token,
-        ) -> Result<LiteralValue, Error> {
+        ) -> Result<Rc<LiteralValue>, Error> {
             match (operand1, operand2) {
                 (LiteralValue::Number(number1), LiteralValue::Number(number2)) => {
-                    Ok(LiteralValue::Bool(number1 >= number2))
+                    Ok(Rc::new(LiteralValue::Bool(number1 >= number2)))
                 }
                 _ => {
                     error(
@@ -260,10 +260,10 @@ pub mod interpreter {
             operand1: &LiteralValue,
             operand2: &LiteralValue,
             operator: &Token,
-        ) -> Result<LiteralValue, Error> {
+        ) -> Result<Rc<LiteralValue>, Error> {
             match (operand1, operand2) {
                 (LiteralValue::Number(number1), LiteralValue::Number(number2)) => {
-                    Ok(LiteralValue::Bool(number1 < number2))
+                    Ok(Rc::new(LiteralValue::Bool(number1 < number2)))
                 }
                 _ => {
                     error(
@@ -282,10 +282,10 @@ pub mod interpreter {
             operand1: &LiteralValue,
             operand2: &LiteralValue,
             operator: &Token,
-        ) -> Result<LiteralValue, Error> {
+        ) -> Result<Rc<LiteralValue>, Error> {
             match (operand1, operand2) {
                 (LiteralValue::Number(number1), LiteralValue::Number(number2)) => {
-                    Ok(LiteralValue::Bool(number1 <= number2))
+                    Ok(Rc::new(LiteralValue::Bool(number1 <= number2)))
                 }
                 _ => {
                     error(
@@ -304,19 +304,19 @@ pub mod interpreter {
             operand1: &LiteralValue,
             operand2: &LiteralValue,
             _operator: &Token,
-        ) -> Result<LiteralValue, Error> {
+        ) -> Result<Rc<LiteralValue>, Error> {
             match (operand1, operand2) {
                 (LiteralValue::String(s1), LiteralValue::String(s2)) => {
-                    Ok(LiteralValue::Bool(s1 == s2))
+                    Ok(Rc::new(LiteralValue::Bool(s1 == s2)))
                 }
                 (LiteralValue::Number(number1), LiteralValue::Number(number2)) => {
-                    Ok(LiteralValue::Bool(number1 == number2))
+                    Ok(Rc::new(LiteralValue::Bool(number1 == number2)))
                 }
                 (LiteralValue::Bool(bool1), LiteralValue::Bool(bool2)) => {
-                    Ok(LiteralValue::Bool(bool1 == bool2))
+                    Ok(Rc::new(LiteralValue::Bool(bool1 == bool2)))
                 }
-                (LiteralValue::Nil, LiteralValue::Nil) => Ok(LiteralValue::Bool(true)),
-                _ => Ok(LiteralValue::Bool(false)),
+                (LiteralValue::Nil, LiteralValue::Nil) => Ok(Rc::new(LiteralValue::Bool(true))),
+                _ => Ok(Rc::new(LiteralValue::Bool(false))),
             }
         }
 
@@ -324,19 +324,19 @@ pub mod interpreter {
             operand1: &LiteralValue,
             operand2: &LiteralValue,
             _operator: &Token,
-        ) -> Result<LiteralValue, Error> {
+        ) -> Result<Rc<LiteralValue>, Error> {
             match (operand1, operand2) {
                 (LiteralValue::String(s1), LiteralValue::String(s2)) => {
-                    Ok(LiteralValue::Bool(s1 != s2))
+                    Ok(Rc::new(LiteralValue::Bool(s1 != s2)))
                 }
                 (LiteralValue::Number(number1), LiteralValue::Number(number2)) => {
-                    Ok(LiteralValue::Bool(number1 != number2))
+                    Ok(Rc::new(LiteralValue::Bool(number1 != number2)))
                 }
                 (LiteralValue::Bool(bool1), LiteralValue::Bool(bool2)) => {
-                    Ok(LiteralValue::Bool(bool1 != bool2))
+                    Ok(Rc::new(LiteralValue::Bool(bool1 != bool2)))
                 }
-                (LiteralValue::Nil, LiteralValue::Nil) => Ok(LiteralValue::Bool(false)),
-                _ => Ok(LiteralValue::Bool(true)),
+                (LiteralValue::Nil, LiteralValue::Nil) => Ok(Rc::new(LiteralValue::Bool(false))),
+                _ => Ok(Rc::new(LiteralValue::Bool(true))),
             }
         }
 
@@ -362,9 +362,9 @@ pub mod interpreter {
         }
     }
 
-    impl Visitor<Result<LiteralValue, Error>> for Interpreter {
-        fn visit_literal_expr(&mut self, value: &LiteralValue) -> Result<LiteralValue, Error> {
-            Ok(value.clone())
+    impl Visitor<Result<Rc<LiteralValue>, Error>> for Interpreter {
+        fn visit_literal_expr(&mut self, value: &LiteralValue) -> Result<Rc<LiteralValue>, Error> {
+            Ok(Rc::new(value.clone()))
         }
 
         fn visit_binary_expr(
@@ -372,7 +372,7 @@ pub mod interpreter {
             left: &Expr,
             operator: &Token,
             right: &Expr,
-        ) -> Result<LiteralValue, Error> {
+        ) -> Result<Rc<LiteralValue>, Error> {
             // ? is the try operator, used to propagate errors.
             let left = self.evaluate(left)?.clone();
             let right = self.evaluate(right)?.clone();
@@ -392,7 +392,7 @@ pub mod interpreter {
             }
         }
 
-        fn visit_grouping_expr(&mut self, expr: &Expr) -> Result<LiteralValue, Error> {
+        fn visit_grouping_expr(&mut self, expr: &Expr) -> Result<Rc<LiteralValue>, Error> {
             self.evaluate(expr)
         }
 
@@ -400,11 +400,11 @@ pub mod interpreter {
             &mut self,
             operator: &Token,
             right: &Expr,
-        ) -> Result<LiteralValue, Error> {
+        ) -> Result<Rc<LiteralValue>, Error> {
             let right_l = self.evaluate(right)?;
             match operator.get_token_type() {
-                TokenType::Minus => match right_l {
-                    LiteralValue::Number(number) => Ok(LiteralValue::Number(-number)),
+                TokenType::Minus => match &*right_l {
+                    LiteralValue::Number(number) => Ok(Rc::new(LiteralValue::Number(-number))),
                     _ => {
                         error(
                             operator.get_line(),
@@ -416,16 +416,22 @@ pub mod interpreter {
                         Err(Error::LoxRuntimeError)
                     }
                 },
-                TokenType::Bang => Ok(LiteralValue::Bool(!Interpreter::is_truthy_lval(&right_l))),
+                TokenType::Bang => Ok(Rc::new(LiteralValue::Bool(!Interpreter::is_truthy_lval(
+                    &right_l,
+                )))),
                 _ => Err(Error::LoxRuntimeError),
             }
         }
 
-        fn visit_variable_expr(&mut self, name: &Token) -> Result<LiteralValue, Error> {
+        fn visit_variable_expr(&mut self, name: &Token) -> Result<Rc<LiteralValue>, Error> {
             self.look_up_variable(name)
         }
 
-        fn visit_assign_expr(&mut self, name: &Token, value: &Expr) -> Result<LiteralValue, Error> {
+        fn visit_assign_expr(
+            &mut self,
+            name: &Token,
+            value: &Expr,
+        ) -> Result<Rc<LiteralValue>, Error> {
             let value_evaluated = self.evaluate(value)?;
             let distance = self.get_depth(name);
 
@@ -449,7 +455,7 @@ pub mod interpreter {
             left: &Expr,
             operator: &Token,
             right: &Expr,
-        ) -> Result<LiteralValue, Error> {
+        ) -> Result<Rc<LiteralValue>, Error> {
             let left_val = self.evaluate(left)?;
             let is_truthy = Interpreter::is_truthy_lval(&left_val);
 
@@ -469,7 +475,7 @@ pub mod interpreter {
             callee: &Expr,
             parent: &Token,
             arguments: &Vec<Expr>,
-        ) -> Result<LiteralValue, Error> {
+        ) -> Result<Rc<LiteralValue>, Error> {
             let calle_local = self.evaluate(callee)?;
             let mut args = Vec::new();
 
@@ -491,7 +497,7 @@ pub mod interpreter {
                 Ok(())
             };
 
-            if let LiteralValue::Callable(callable_box) = calle_local.clone() {
+            if let LiteralValue::Callable(callable_box) = &*calle_local {
                 if let Callable::Function(function) = callable_box {
                     match handle_arity(arguments.len(), function.arity()) {
                         Ok(_) => return function.call(self, &mut args),
@@ -500,7 +506,7 @@ pub mod interpreter {
                 }
             }
 
-            if let LiteralValue::Callable(callable_box) = calle_local.clone() {
+            if let LiteralValue::Callable(callable_box) = &*calle_local {
                 if let Callable::Clock(function) = callable_box {
                     match handle_arity(arguments.len(), function.arity()) {
                         Ok(_) => return function.call(self, &mut args),
@@ -509,7 +515,7 @@ pub mod interpreter {
                 }
             }
 
-            if let LiteralValue::Callable(callable_box) = calle_local.clone() {
+            if let LiteralValue::Callable(callable_box) = &*calle_local {
                 if let Callable::UnixTClock(function) = callable_box {
                     match handle_arity(arguments.len(), function.arity()) {
                         Ok(_) => return function.call(self, &mut args),
@@ -518,7 +524,7 @@ pub mod interpreter {
                 }
             }
 
-            if let LiteralValue::Callable(callable_box) = calle_local.clone() {
+            if let LiteralValue::Callable(callable_box) = &*calle_local {
                 if let Callable::Class(function) = callable_box {
                     match handle_arity(arguments.len(), function.arity()) {
                         Ok(_) => return function.call(self, &mut args),
@@ -537,8 +543,12 @@ pub mod interpreter {
             Err(Error::LoxRuntimeError)
         }
 
-        fn visit_get_expr(&mut self, object: &Expr, name: &Token) -> Result<LiteralValue, Error> {
-            match self.evaluate(object)? {
+        fn visit_get_expr(
+            &mut self,
+            object: &Expr,
+            name: &Token,
+        ) -> Result<Rc<LiteralValue>, Error> {
+            match &*self.evaluate(object)? {
                 LiteralValue::Callable(call_box) => {
                     if let Callable::Instance(instance) = call_box {
                         return instance.borrow_mut().get(name);
@@ -566,12 +576,12 @@ pub mod interpreter {
             object: &Expr,
             name: &Token,
             value: &Expr,
-        ) -> Result<LiteralValue, Error> {
+        ) -> Result<Rc<LiteralValue>, Error> {
             let obj_l = self.evaluate(object)?;
             let value_l = self.evaluate(value)?;
-            match obj_l {
+            match &*obj_l {
                 LiteralValue::Callable(Callable::Instance(instance)) => {
-                    instance.borrow_mut().set(name, value_l.clone());
+                    instance.borrow_mut().set(name, Rc::clone(&value_l));
                     return Ok(value_l);
                 }
                 _ => {
@@ -590,7 +600,7 @@ pub mod interpreter {
             }
         }
 
-        fn visit_this_expr(&mut self, keyword: &Token) -> Result<LiteralValue, Error> {
+        fn visit_this_expr(&mut self, keyword: &Token) -> Result<Rc<LiteralValue>, Error> {
             self.look_up_variable(keyword)
         }
 
@@ -598,7 +608,7 @@ pub mod interpreter {
             &mut self,
             keyword: &Token,
             method: &Token,
-        ) -> Result<LiteralValue, Error> {
+        ) -> Result<Rc<LiteralValue>, Error> {
             let distance = self.get_depth(keyword).unwrap();
             let superclass = self.environment.borrow_mut().get_at(
                 distance,
@@ -609,15 +619,18 @@ pub mod interpreter {
                 &Token::new(TokenType::This, String::from("this"), 0, 0, 0),
             )?;
 
-            match (superclass, instance_obj) {
+            match (
+                Rc::unwrap_or_clone(superclass),
+                Rc::unwrap_or_clone(instance_obj),
+            ) {
                 (
                     LiteralValue::Callable(Callable::Class(klass)),
                     LiteralValue::Callable(Callable::Instance(instance)),
                 ) => match klass.find_method(&method.get_token_type().to_string()) {
                     Some(mut method) => {
-                        return Ok(LiteralValue::Callable(Callable::Function(
+                        return Ok(Rc::new(LiteralValue::Callable(Callable::Function(
                             method.bind(instance),
-                        )));
+                        ))));
                     }
                     None => {
                         error(
@@ -644,7 +657,7 @@ pub mod interpreter {
         }
 
         fn visit_print_stmt(&mut self, expr: &Expr) -> Result<(), Error> {
-            let value: LiteralValue = self.evaluate(expr)?;
+            let value = self.evaluate(expr)?;
             println!("{}", value);
             Ok(())
         }
@@ -668,7 +681,7 @@ pub mod interpreter {
         }
 
         fn visit_var_stmt(&mut self, name: &Token, initializer: &Expr) -> Result<(), Error> {
-            let value: LiteralValue = self.evaluate(initializer)?;
+            let value = self.evaluate(initializer)?;
             self.environment.as_ref().borrow_mut().define(name, value);
             Ok(())
         }
@@ -700,7 +713,7 @@ pub mod interpreter {
             };
 
             if let Some(superclass) = superclass {
-                super_class = match self.evaluate(superclass)? {
+                super_class = match Rc::unwrap_or_clone(self.evaluate(superclass)?) {
                     LiteralValue::Callable(callable) => {
                         if let Callable::Class(klass) = callable {
                             Some(klass)
@@ -715,14 +728,14 @@ pub mod interpreter {
             self.environment
                 .as_ref()
                 .borrow_mut()
-                .define(name, LiteralValue::Nil);
+                .define(name, Rc::new(LiteralValue::Nil));
 
             if let Some(super_class) = super_class.clone() {
                 self.environment =
                     Rc::new(RefCell::new(Environment::new(Rc::clone(&self.environment))));
                 self.environment.as_ref().borrow_mut().define_str(
                     "super",
-                    LiteralValue::Callable(Callable::Class(super_class)),
+                    Rc::new(LiteralValue::Callable(Callable::Class(super_class.clone()))),
                 );
             }
 
@@ -741,7 +754,10 @@ pub mod interpreter {
             let klass: RLoxClass = RLoxClass::new(
                 name.get_token_type().to_string().clone(),
                 methods,
-                super_class.clone(),
+                match super_class.clone() {
+                    Some(super_klass) => Some(super_klass.clone()),
+                    None => None,
+                },
             );
 
             if let Some(_) = super_class {
@@ -749,10 +765,10 @@ pub mod interpreter {
                 self.environment = previous;
             }
 
-            self.environment
-                .as_ref()
-                .borrow_mut()
-                .assign(name, LiteralValue::Callable(Callable::Class(klass)))?;
+            self.environment.as_ref().borrow_mut().assign(
+                name,
+                Rc::new(LiteralValue::Callable(Callable::Class(klass))),
+            )?;
             Ok(())
         }
 
@@ -767,10 +783,10 @@ pub mod interpreter {
                 Rc::clone(&self.environment),
                 false,
             );
-            self.environment
-                .as_ref()
-                .borrow_mut()
-                .define(name, LiteralValue::Callable(Callable::Function(func)));
+            self.environment.as_ref().borrow_mut().define(
+                name,
+                Rc::new(LiteralValue::Callable(Callable::Function(func))),
+            );
             Ok(())
         }
 
@@ -791,7 +807,7 @@ pub mod interpreter {
         }
 
         fn visit_while_stmt(&mut self, expr: &Expr, stmt: &Stmt) -> Result<(), Error> {
-            let mut l_val: LiteralValue = self.evaluate(expr)?;
+            let mut l_val = self.evaluate(expr)?;
             while Interpreter::is_truthy_lval(&l_val) {
                 self.execute(stmt)?;
                 l_val = self.evaluate(expr)?;

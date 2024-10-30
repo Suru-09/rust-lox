@@ -55,8 +55,8 @@ pub mod rlox_callable {
         fn call(
             &self,
             interpreter: &mut Interpreter,
-            args: &mut Vec<LiteralValue>,
-        ) -> Result<LiteralValue, Error>;
+            args: &mut Vec<Rc<LiteralValue>>,
+        ) -> Result<Rc<LiteralValue>, Error>;
     }
 
     #[derive(Clone, Debug, PartialEq)]
@@ -76,11 +76,11 @@ pub mod rlox_callable {
         fn call(
             &self,
             _interpreter: &mut Interpreter,
-            _args: &mut Vec<LiteralValue>,
-        ) -> Result<LiteralValue, Error> {
-            Ok(LiteralValue::String(
+            _args: &mut Vec<Rc<LiteralValue>>,
+        ) -> Result<Rc<LiteralValue>, Error> {
+            Ok(Rc::new(LiteralValue::String(
                 chrono::offset::Local::now().to_string(),
-            ))
+            )))
         }
     }
 
@@ -101,11 +101,11 @@ pub mod rlox_callable {
         fn call(
             &self,
             _interpreter: &mut Interpreter,
-            _args: &mut Vec<LiteralValue>,
-        ) -> Result<LiteralValue, Error> {
-            Ok(LiteralValue::Number(
+            _args: &mut Vec<Rc<LiteralValue>>,
+        ) -> Result<Rc<LiteralValue>, Error> {
+            Ok(Rc::new(LiteralValue::Number(
                 chrono::offset::Local::now().timestamp_millis() as f64,
-            ))
+            )))
         }
     }
 
@@ -138,9 +138,10 @@ pub mod rlox_callable {
 
         pub fn bind(&mut self, instance: Rc<RefCell<RLoxInstance>>) -> RLoxFunction {
             let env = Rc::new(RefCell::new(Environment::new(Rc::clone(&self.closure))));
-            env.as_ref()
-                .borrow_mut()
-                .define_str("this", LiteralValue::Callable(Callable::Instance(instance)));
+            env.as_ref().borrow_mut().define_str(
+                "this",
+                Rc::new(LiteralValue::Callable(Callable::Instance(instance))),
+            );
             Self {
                 declaration: self.declaration.clone(),
                 closure: env,
@@ -160,8 +161,8 @@ pub mod rlox_callable {
         fn call(
             &self,
             interpreter: &mut Interpreter,
-            args: &mut Vec<LiteralValue>,
-        ) -> Result<LiteralValue, Error> {
+            args: &mut Vec<Rc<LiteralValue>>,
+        ) -> Result<Rc<LiteralValue>, Error> {
             let mut env = Environment::new(self.closure.clone());
             match self.declaration.borrow() {
                 Stmt::Function(_, params, body) => {
@@ -189,7 +190,7 @@ pub mod rlox_callable {
                 );
             }
 
-            Ok(LiteralValue::Nil)
+            Ok(Rc::new(LiteralValue::Nil))
         }
     }
 
@@ -241,8 +242,8 @@ pub mod rlox_callable {
         fn call(
             &self,
             interpreter: &mut Interpreter,
-            args: &mut Vec<LiteralValue>,
-        ) -> Result<LiteralValue, Error> {
+            args: &mut Vec<Rc<LiteralValue>>,
+        ) -> Result<Rc<LiteralValue>, Error> {
             let instance = Rc::new(RefCell::new(RLoxInstance::new(Rc::new(self.clone()))));
 
             let c_tor = self.find_method("init");
@@ -250,8 +251,8 @@ pub mod rlox_callable {
                 ctor.bind(Rc::clone(&instance)).call(interpreter, args)?;
             }
 
-            Ok(LiteralValue::Callable(Callable::Instance(Rc::clone(
-                &instance,
+            Ok(Rc::new(LiteralValue::Callable(Callable::Instance(
+                Rc::clone(&instance),
             ))))
         }
     }
@@ -259,7 +260,7 @@ pub mod rlox_callable {
     #[derive(Clone, Debug, PartialEq)]
     pub struct RLoxInstance {
         pub rlox_class: Rc<RLoxClass>,
-        pub fields: HashMap<String, LiteralValue>,
+        pub fields: HashMap<String, Rc<LiteralValue>>,
     }
 
     impl RLoxInstance {
@@ -270,16 +271,16 @@ pub mod rlox_callable {
             }
         }
 
-        pub fn get(&mut self, name: &Token) -> Result<LiteralValue, Error> {
+        pub fn get(&mut self, name: &Token) -> Result<Rc<LiteralValue>, Error> {
             let name_str = &name.get_token_type().to_string();
             if self.fields.contains_key(name_str) {
                 return Ok(self.fields.get(name_str).unwrap().clone());
             }
 
             if let Some(mut method) = self.rlox_class.find_method(name_str) {
-                return Ok(LiteralValue::Callable(Callable::Function(
+                return Ok(Rc::new(LiteralValue::Callable(Callable::Function(
                     method.bind(Rc::new(RefCell::new(self.to_owned()))),
-                )));
+                ))));
             }
 
             error(
@@ -292,7 +293,7 @@ pub mod rlox_callable {
             Err(Error::LoxRuntimeError)
         }
 
-        pub fn set(&mut self, name: &Token, value: LiteralValue) {
+        pub fn set(&mut self, name: &Token, value: Rc<LiteralValue>) {
             self.fields.insert(name.get_token_type().to_string(), value);
         }
 

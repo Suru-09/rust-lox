@@ -10,7 +10,7 @@ pub mod environment {
 
     #[derive(Debug, PartialEq, Clone, Default)]
     pub struct Environment {
-        values: HashMap<String, LiteralValue>,
+        values: HashMap<String, Rc<LiteralValue>>,
         pub enclosing: Option<Rc<RefCell<Environment>>>,
     }
 
@@ -29,12 +29,12 @@ pub mod environment {
             }
         }
 
-        pub fn define(&mut self, token: &Token, value: LiteralValue) {
+        pub fn define(&mut self, token: &Token, value: Rc<LiteralValue>) {
             self.values
                 .insert(token.get_token_type().to_string().clone(), value);
         }
 
-        pub fn define_str(&mut self, token_str: &str, value: LiteralValue) {
+        pub fn define_str(&mut self, token_str: &str, value: Rc<LiteralValue>) {
             self.values.insert(String::from(token_str), value);
         }
 
@@ -45,7 +45,7 @@ pub mod environment {
             }
         }
 
-        pub fn get(&mut self, token: &Token) -> Result<LiteralValue, Error> {
+        pub fn get(&mut self, token: &Token) -> Result<Rc<LiteralValue>, Error> {
             let token_name = token.get_token_type().to_string().clone();
             if self.values.contains_key(&token_name) {
                 return Ok(self.values.get(&token_name).unwrap().clone());
@@ -66,7 +66,7 @@ pub mod environment {
             }
         }
 
-        pub fn assign(&mut self, token: &Token, value: LiteralValue) -> Result<(), Error> {
+        pub fn assign(&mut self, token: &Token, value: Rc<LiteralValue>) -> Result<(), Error> {
             let token_name = token.get_token_type().to_string().clone();
             if self.values.contains_key(&token_name) {
                 self.values.insert(token_name, value);
@@ -86,7 +86,11 @@ pub mod environment {
             }
         }
 
-        pub fn get_at(&mut self, distance: usize, token: &Token) -> Result<LiteralValue, Error> {
+        pub fn get_at(
+            &mut self,
+            distance: usize,
+            token: &Token,
+        ) -> Result<Rc<LiteralValue>, Error> {
             if distance == 0 {
                 self.get(&token)
             } else {
@@ -98,7 +102,7 @@ pub mod environment {
             }
         }
 
-        pub fn assign_at(&mut self, distance: usize, token: &Token, value: LiteralValue) {
+        pub fn assign_at(&mut self, distance: usize, token: &Token, value: Rc<LiteralValue>) {
             if distance == 0 {
                 self.define(token, value);
             } else {
