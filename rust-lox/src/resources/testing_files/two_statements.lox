@@ -35,9 +35,8 @@ fun main() {
     return "Mario + calculator == gucci++";
 }
 
-print clock();
+print "Starting the timer....";
 var t1 = unixClock();
-print t1;
 
 var stringMain = main();
 
@@ -62,13 +61,13 @@ print "Sum from one to " + nForSum + " is: " + sumToN(nForSum);
 
 fun fib(n) {
   if (n <= 1) {
-    return 1;
+    return n;
   }
   return fib(n - 2) + fib(n - 1);
 }
 
 for (var i = 0; i < 20; i = i + 1) {
-  print fib(i);
+  print "Fib<" + i + "> = " + fib(i);
 }
 
 fun makeCounter() {
@@ -89,13 +88,6 @@ var counter2 = makeCounter();
 counter2(); // "1".
 counter2(); // "2".
 counter2(); // "3"
-
-print "Time: ";
-print clock();
-var t2 = unixClock();
-print t2;
-
-print "All this took: " + (t2 - t1) + " milliseconds.";
 
 class DevonshireCream {
   serveOn() {
@@ -139,4 +131,7 @@ class BostonCream < Doughnut {
   }
 }
 BostonCream().cook();
+
+var t2 = unixClock();
+print "The entire process took: " + (t2 - t1) + " milliseconds.";
 

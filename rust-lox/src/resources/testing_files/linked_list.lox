@@ -1,0 +1,51 @@
+class Node {
+  init(val)
+  {
+    this.data = val;
+    this.next = nil;
+  }
+}
+
+class LinkedList {
+  init() {
+    this.head = nil;
+  }
+
+  insert(value) {
+    var newNode = Node(value);
+
+    if (this.head == nil) {
+      this.head = newNode;
+    } else {
+      var last = this.head;
+
+      while(last.next != nil) {
+          last = last.next;
+      }
+
+      last.next = newNode;
+    }
+
+    return this;
+  }
+
+  print_() {
+    var currentNode = list.head;
+    print "Linked List is: ";
+
+    while(currentNode != nil) {
+      print currentNode.data;
+      currentNode = currentNode.next;
+    }
+  }
+}
+
+var list = LinkedList();
+list = list.insert(15);
+list = list.insert(2);
+list = list.insert(33);
+list = list.insert(4567);
+list = list.insert(51);
+list = list.insert(6);
+
+list.print_();
