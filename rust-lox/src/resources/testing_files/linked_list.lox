@@ -1,6 +1,6 @@
 class Node {
-  init(val)
-  {
+
+  init(val) {
     this.data = val;
     this.next = nil;
   }
@@ -31,12 +31,70 @@ class LinkedList {
 
   print_() {
     var currentNode = list.head;
-    print "Linked List is: ";
 
     while(currentNode != nil) {
       print currentNode.data;
       currentNode = currentNode.next;
     }
+  }
+
+  findMiddle(headNode) {
+    if (headNode == nil or headNode.next == nil) {
+      return headNode;
+    }
+
+    var slow = headNode;
+    var fast = headNode.next;
+
+    while (fast != nil and fast.next != nil) {
+      slow = slow.next;
+      fast = fast.next.next;
+    }
+
+    return slow;
+  }
+
+  mergeTwoSortedLinkedLists(list1, list2) {
+    var dummyNode = Node(-1);
+    var temp = dummyNode;
+
+    while (list1 != nil and list2 != nil) {
+      if (list1.data <= list2.data) {
+        temp.next = list1;
+        list1 = list1.next;
+      } else {
+        temp.next = list2;
+        list2 = list2.next;
+      }
+
+      temp = temp.next;
+    }
+
+    if (list1 != nil) {
+      temp.next = list1;
+    } else {
+      temp.next = list2;
+    }
+
+    return dummyNode.next;
+  }
+
+  // return the sorted head, not this!!!
+  sort(headNode) {
+    if (headNode == nil or headNode.next == nil) {
+      return headNode;
+    }
+
+    var middle = this.findMiddle(headNode);
+
+    var right = middle.next;
+    middle.next = nil;
+    var left = headNode;
+
+    left = this.sort(left);
+    right = this.sort(right);
+
+    return this.mergeTwoSortedLinkedLists(left, right);
   }
 }
 
@@ -48,4 +106,10 @@ list = list.insert(4567);
 list = list.insert(51);
 list = list.insert(6);
 
+print "List before sorting: ";
+list.print_();
+
+list.head = list.sort(list.head);
+
+print "List after sorting: ";
 list.print_();
