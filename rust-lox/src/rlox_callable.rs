@@ -167,7 +167,7 @@ pub mod rlox_callable {
             match self.declaration.borrow() {
                 Stmt::Function(_, params, body) => {
                     for (idx, param) in params.iter().enumerate() {
-                        env.borrow_mut().define(param, args[idx].clone());
+                        env.borrow_mut().define(param, Rc::clone(&args[idx]));
                     }
 
                     match interpreter.execute_block(&body, env) {

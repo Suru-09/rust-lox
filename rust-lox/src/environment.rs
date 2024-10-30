@@ -46,7 +46,7 @@ pub mod environment {
         }
 
         pub fn get(&mut self, token: &Token) -> Result<Rc<LiteralValue>, Error> {
-            let token_name = token.get_token_type().to_string().clone();
+            let token_name = token.get_token_type().to_string();
             if self.values.contains_key(&token_name) {
                 return Ok(self.values.get(&token_name).unwrap().clone());
             } else if let Some(enclosing) = &self.enclosing {
@@ -67,7 +67,7 @@ pub mod environment {
         }
 
         pub fn assign(&mut self, token: &Token, value: Rc<LiteralValue>) -> Result<(), Error> {
-            let token_name = token.get_token_type().to_string().clone();
+            let token_name = token.get_token_type().to_string();
             if self.values.contains_key(&token_name) {
                 self.values.insert(token_name, value);
                 Ok(())

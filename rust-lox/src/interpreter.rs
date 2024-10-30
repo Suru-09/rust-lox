@@ -150,10 +150,10 @@ pub mod interpreter {
                     Ok(Rc::new(LiteralValue::Number(number1 + number2)))
                 }
                 (LiteralValue::String(str), LiteralValue::Number(num)) => Ok(Rc::new(
-                    LiteralValue::String(str.clone() + &num.to_string()),
+                    LiteralValue::String(str.to_owned() + &num.to_string()),
                 )),
                 (LiteralValue::Number(num), LiteralValue::String(str)) => Ok(Rc::new(
-                    LiteralValue::String(str.clone() + &num.to_string()),
+                    LiteralValue::String(str.to_owned() + &num.to_string()),
                 )),
                 _ => {
                     error(
@@ -374,8 +374,8 @@ pub mod interpreter {
             right: &Expr,
         ) -> Result<Rc<LiteralValue>, Error> {
             // ? is the try operator, used to propagate errors.
-            let left = self.evaluate(left)?.clone();
-            let right = self.evaluate(right)?.clone();
+            let left = self.evaluate(left)?;
+            let right = self.evaluate(right)?;
 
             match operator.get_token_type() {
                 TokenType::Greater => Interpreter::greater(&left, &right, &operator),
@@ -735,7 +735,7 @@ pub mod interpreter {
                     Rc::new(RefCell::new(Environment::new(Rc::clone(&self.environment))));
                 self.environment.as_ref().borrow_mut().define_str(
                     "super",
-                    Rc::new(LiteralValue::Callable(Callable::Class(super_class.clone()))),
+                    Rc::new(LiteralValue::Callable(Callable::Class(super_class))),
                 );
             }
 
@@ -752,10 +752,10 @@ pub mod interpreter {
             }
 
             let klass: RLoxClass = RLoxClass::new(
-                name.get_token_type().to_string().clone(),
+                name.get_token_type().to_string(),
                 methods,
                 match super_class.clone() {
-                    Some(super_klass) => Some(super_klass.clone()),
+                    Some(super_klass) => Some(super_klass),
                     None => None,
                 },
             );
