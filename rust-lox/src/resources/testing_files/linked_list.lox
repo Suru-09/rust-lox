@@ -104,7 +104,11 @@ list = list.insert(2);
 list = list.insert(33);
 list = list.insert(4567);
 list = list.insert(51);
-list = list.insert(6);
+list = list.insert(166);
+list = list.insert(5115.391);
+list = list.insert(-6234);
+list = list.insert(519);
+list = list.insert(69.32);
 
 print "List before sorting: ";
 list.print_();
