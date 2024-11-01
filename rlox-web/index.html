@@ -6,16 +6,6 @@
   <title>Testing Lox with Wasm</title>
 
   <link rel="stylesheet" type="text/css" href="resources/css/styles.css" />
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.52.2/codemirror.min.css">
-  </link>
-
-  <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.52.2/codemirror.min.js">
-  </script>
-  <script type="text/javascript"
-    src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.52.2/mode/javascript/javascript.min.js">
-    </script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.52.2/theme/monokai.min.css">
-
   <script>
     /*to prevent Firefox FOUC, this must be here*/
     let FF_FOUC_FIX;
@@ -25,28 +15,21 @@
 
 <body>
   <script type="module">
-    import { run_file_at_path } from './resources/js/interpretor.js'
     import { appendExplorerButtons } from './resources/js/explorer.js'
-    run_file_at_path("linked_list.lox");
+    import { EditorView, basicSetup } from 'codemirror';
+    import { createTextEditor } from './resources/js/text-editor.js'
+    import { appendRunButton } from './resources/js/header.js'
 
-    function button_stuff() {
-      console.log(`I am the mighty button`);
-    }
-
+    createTextEditor();
     appendExplorerButtons();
+    appendRunButton();
 
-    CodeMirror(document.querySelector('#text-editor-id'), {
-      lineNumbers: true,
-      tabSize: 2,
-      value: 'print "I am the Lox language";',
-      mode: 'lox',
-      theme: 'monokai'
-    });
   </script>
 
+  <script type="module" src="/src/main.js"></script>
+
   <div class="editor">
-    <div class="header">
-      Header has lots of writing
+    <div class="header" id="header-id">
     </div>
 
     <div id='explorer-id' class="explorer"></div>
