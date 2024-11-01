@@ -1,7 +1,7 @@
 pub mod interpreter {
 
     use crate::environment::environment::Environment;
-    use crate::error_handling::error_handling::{error, RLoxErrorType};
+    use crate::error_handling::error_handling::{error, RLoxErrorType, IS_WASM, WASM_OUTPUT};
     use crate::expr::expr::{Expr, Visitor};
     use crate::function_name;
     use crate::rlox_callable::rlox_callable::{
@@ -659,6 +659,9 @@ pub mod interpreter {
         fn visit_print_stmt(&mut self, expr: &Expr) -> Result<(), Error> {
             let value = self.evaluate(expr)?;
             println!("{}", value);
+            if *IS_WASM.read().unwrap() == true {
+                WASM_OUTPUT.write().unwrap().push(value.to_string());
+            }
             Ok(())
         }
 

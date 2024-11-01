@@ -11,9 +11,9 @@ pub mod stmt;
 pub mod utils;
 
 use crate::resolver::resolver::Resolver;
-use error_handling::error_handling::LOGGER;
+use error_handling::error_handling::{IS_WASM, LOGGER, WASM_ERRORS, WASM_OUTPUT};
 use interpreter::interpreter::Interpreter;
-use log::LevelFilter;
+use log::{info, LevelFilter};
 
 pub fn init() {
     let log_level = if cfg!(debug_assertions) {
@@ -28,11 +28,16 @@ pub fn init() {
             "I should be able to set MAX log level to: {}!",
             log_level.to_string()
         ));
+
+    let mut write = IS_WASM.write().unwrap();
+    *write = true;
 }
 
-pub fn execute_file(source: String) {
-    let mut scanner = scanner::scan::Scanner::new(source);
+pub fn execute_file(source: String) -> (String, String) {
+    let mut scanner = scanner::scan::Scanner::new(source.clone());
     let tokens = scanner.scan_tokens();
+
+    info!("Excuting file: {}", source);
 
     let mut parser = parser::parser::Parser::new(tokens);
     let ast = parser.parse().unwrap();
@@ -52,4 +57,25 @@ pub fn execute_file(source: String) {
             std::process::exit(1);
         }
     }
+
+    let output = WASM_OUTPUT
+        .read()
+        .unwrap()
+        .iter()
+        .fold("".to_string(), |cur: String, next: &String| {
+            cur + next + "\n"
+        });
+
+    let errors = WASM_ERRORS
+        .read()
+        .unwrap()
+        .iter()
+        .fold("".to_string(), |cur: String, next: &String| {
+            cur + next + "\n"
+        });
+
+    WASM_OUTPUT.write().unwrap().clear();
+    WASM_ERRORS.write().unwrap().clear();
+
+    (output, errors)
 }

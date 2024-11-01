@@ -4,8 +4,12 @@ pub mod error_handling {
     use log::error;
     use log::{Level, Metadata, Record};
     use std::fmt;
-
+    use std::sync::{LazyLock, RwLock};
     pub static LOGGER: SimpleLogger = SimpleLogger;
+
+    pub static IS_WASM: LazyLock<RwLock<bool>> = LazyLock::new(|| RwLock::new(false));
+    pub static WASM_OUTPUT: LazyLock<RwLock<Vec<String>>> = LazyLock::new(|| RwLock::new(vec![]));
+    pub static WASM_ERRORS: LazyLock<RwLock<Vec<String>>> = LazyLock::new(|| RwLock::new(vec![]));
     pub struct SimpleLogger;
 
     impl log::Log for SimpleLogger {
@@ -83,10 +87,15 @@ pub mod error_handling {
 
     impl RLoxError {
         fn report(&self) {
-            error!(
+            let error_msg = format!(
                 "[{}] <{}> [line: {} & col: {}] msg: {}",
                 self.error_type, self.location, self.line, self.column, self.message
             );
+            error!("{}", error_msg);
+
+            if *IS_WASM.read().unwrap() == true {
+                WASM_ERRORS.write().unwrap().push(error_msg);
+            }
         }
     }
 }
