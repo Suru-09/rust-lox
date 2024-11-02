@@ -2,11 +2,12 @@
   "name": "gh_pages",
   "version": "1.0.0",
   "description": "Web UI for rlox interpreter",
-  "dependencies": {},
-  "devDependencies": {},
+  "devDependencies": {
+    "wasm-pack": "^0.13.1"
+  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "cd rlox-web/ && npm install && npm run buildWasm"
+    "build": "npm install && cd rlox-web/ && npm install && npm run buildWasm"
   },
   "author": "",
   "license": "MIT"
