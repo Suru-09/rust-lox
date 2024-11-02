@@ -25,3 +25,5 @@ rust-lox/src/resources/generated/*
 
 # ignore node_modules
 **/node_modules/** */
+node_modules/
+rlox-web/node_modules/
