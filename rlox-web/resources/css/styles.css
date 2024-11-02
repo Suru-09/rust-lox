@@ -13,10 +13,20 @@
   grid-area: text;
   text-align: left;
   vertical-align: text-top;
+  resize: vertical;
+}
+
+.cm-editor {
+  width: 50vw;
+  max-width: 50vw;
+  resize: vertical;
+  overflow: auto;
 }
 
 .interpretor-output {
   grid-area: output;
+  width: 35vw;
+  max-width: 35vw;
 }
 
 .editor {
@@ -36,8 +46,4 @@
 
 .explorer-button {
   background-color: #101010;
-}
-
-textarea {
-  resize: vertical;
 }

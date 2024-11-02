@@ -32,8 +32,12 @@ impl ResultMessage {
 }
 
 #[wasm_bindgen]
-pub fn run_file(str: String) -> ResultMessage {
+pub fn init_interpreter() {
     init();
+}
+
+#[wasm_bindgen]
+pub fn run_file(str: String) -> ResultMessage {
     let (output, errors) = execute_file(str);
     ResultMessage { output, errors }
 }

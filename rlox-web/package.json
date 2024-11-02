@@ -14,7 +14,8 @@
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "vite"
+    "start": "npm run buildWasm && vite",
+    "buildWasm": "cd ../rlox-wasm && wasm-pack build --out-dir ../rlox-web/pkg/ --target web"
   },
   "author": "",
   "license": "MIT"

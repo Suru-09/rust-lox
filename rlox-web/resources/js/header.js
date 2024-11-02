@@ -3,15 +3,19 @@ import { textEditor } from './text-editor.js'
 
 export const headerID = 'header-id';
 
-export const appendRunButton = async () => {
+export const appendRunButton = () => {
+
+  // button && text creation
   const runButton = document.createElement(`button`);
   runButton.className = "run-button";
   var text = document.createTextNode(`Run this program`);
   runButton.appendChild(text);
-  runButton.onclick = async () => {
+
+  // button logic
+  runButton.onclick = () => {
     const file = textEditor.state.doc.toString();
-    let output = await runFile(file);
-    console.log(`Output: ${output}`);
+    let output = runFile(file);
+    // console.log(`Output: ${output}`);
 
     const outputDoc = document.getElementById("output-id");
     outputDoc.value = output;

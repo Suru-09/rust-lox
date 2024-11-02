@@ -14,18 +14,6 @@
 </head>
 
 <body>
-  <script type="module">
-    import { appendExplorerButtons } from './resources/js/explorer.js'
-    import { EditorView, basicSetup } from 'codemirror';
-    import { createTextEditor } from './resources/js/text-editor.js'
-    import { appendRunButton } from './resources/js/header.js'
-
-    createTextEditor();
-    appendExplorerButtons();
-    appendRunButton();
-
-  </script>
-
   <script type="module" src="/src/main.js"></script>
 
   <div class="editor">
@@ -34,7 +22,7 @@
 
     <div id='explorer-id' class="explorer"></div>
     <div id='text-editor-id' type="text" class="text-editor"></div>
-    <input type="text" class="interpretor-output" id="output-id" value="OUTPUT" readonly>
+    <textarea type="text" class="interpretor-output" id="output-id" value="OUTPUT" readonly></textarea>
   </div>
 </body>
 
