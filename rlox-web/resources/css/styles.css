@@ -1,8 +1,11 @@
 .header {
   grid-area: header;
+  text-align: center;
 }
 
 .explorer {
+  width: 12vw;
+  max-width: 12vw;
   grid-area: expTab;
   display: flex;
   flex-direction: column;
@@ -17,16 +20,57 @@
 }
 
 .cm-editor {
-  width: 50vw;
-  max-width: 50vw;
+  width: 48vw;
+  max-width: 48vw;
   resize: vertical;
   overflow: auto;
+  background-color: #0d1218;
+  border-color: #0c72b1;
+}
+
+.cm-scroller {
+  color: #C6E7FF;
+}
+
+.cm-gutter {
+  background-color: #070a0e;
+  padding: 2.5% 0 0 2.5%;
+}
+
+.cm-gutterElement {
+  background-color: #070a0e;
+}
+
+.cm-activeLineGutter {
+  background-color: #010102;
+}
+
+.cm-activeLine {
+  background-color: #9DB2BF;
+  color: #9DB2BF;
+}
+
+.cm-gutters {
+  background-color: #070a0e;
+}
+
+.cm-lineNumbers {
+  background-color: #070a0e;
 }
 
 .interpretor-output {
   grid-area: output;
   width: 35vw;
   max-width: 35vw;
+  font-size: 1.25em;
+  background-color: #010102;
+  color: #9DB2BF;
+  border-color: #31363F;
+  padding: 2.5% 0 0 2.5%;
+}
+
+.interpretor-output:focus {
+  border-color: #31363F;
 }
 
 .editor {
@@ -36,7 +80,8 @@
     'expTab text text text text output output output';
   gap: 10px;
   padding: 25px;
-  background-color: #101010;
+  background-color: #010102;
+  font-size: 1.5em;
 }
 
 .grid-container>div {
@@ -45,5 +90,38 @@
 }
 
 .explorer-button {
-  background-color: #101010;
+  background-color: #010102;
+  font-size: 0.8em;
+  color: #9DB2BF;
+  border-color: #31363F;
+  padding: 2.5% 2.5% 2.5% 2.5%;
+}
+
+.run-button {
+  background-color: #010102;
+  font-size: 0.8em;
+  color: #9DB2BF;
+  border-color: #31363F;
+  text-align: center;
+  padding: 4% 0.5% 4% 0.5%;
+  margin-bottom: 10%;
+}
+
+html {
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+  overflow: auto;
+  height: 100%;
+  width: 100%;
+  background-color: #010102;
+  background: #010102;
+}
+
+h1 {
+  color: #9DB2BF;
+  /* background-color: #010102; */
+  font-size: 64px;
 }

@@ -6,6 +6,6 @@ import init, {init_interpreter} from '../pkg/rlox_wasm.js'
 init().then(() => {
   init_interpreter();
   createTextEditor();
-  appendExplorerButtons();
   appendRunButton();
+  appendExplorerButtons();
 });

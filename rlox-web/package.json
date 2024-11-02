@@ -4,6 +4,7 @@
   "description": "Web UI for rlox interpreter",
   "main": "main.js",
   "dependencies": {
+    "@codemirror/lang-javascript": "^6.2.2",
     "codemirror": "^6.0.1",
     "crelt": "^1.0.6",
     "style-mod": "^4.1.2",

@@ -29,6 +29,10 @@ export const appendExplorerButtons = () => {
           }
         });
         textEditor.dispatch(transaction)
+
+        // clear output on change of file.
+        const outputDoc = document.getElementById("output-id");
+        outputDoc.value = "";
       })
     };
 

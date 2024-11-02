@@ -40,42 +40,35 @@ pub fn execute_file(source: String) -> (String, String) {
     info!("Excuting file: {}", source);
 
     let mut parser = parser::parser::Parser::new(tokens);
-    let ast = parser.parse().unwrap();
+    match parser.parse() {
+        Ok(ast) => {
+            let mut interpreter = Interpreter::new();
+            let mut resolver = Resolver::new(&mut interpreter);
 
-    let mut interpreter = Interpreter::new();
-    let mut resolver = Resolver::new(&mut interpreter);
-    match resolver.resolve(&ast) {
-        Ok(_) => {}
-        Err(_) => {
-            std::process::exit(1);
+            let _ = resolver.resolve(&ast);
+            let _ = resolver.interpreter.interpret(&ast);
+
+            let output = WASM_OUTPUT
+                .read()
+                .unwrap()
+                .iter()
+                .fold("".to_string(), |cur: String, next: &String| {
+                    cur + next + "\n"
+                });
+
+            let errors = WASM_ERRORS
+                .read()
+                .unwrap()
+                .iter()
+                .fold("".to_string(), |cur: String, next: &String| {
+                    cur + next + "\n"
+                });
+
+            WASM_OUTPUT.write().unwrap().clear();
+            WASM_ERRORS.write().unwrap().clear();
+
+            (output, errors)
         }
+        Err(_) => ("".to_string(), "".to_string()),
     }
-
-    match resolver.interpreter.interpret(&ast) {
-        Ok(_) => {}
-        Err(_) => {
-            std::process::exit(1);
-        }
-    }
-
-    let output = WASM_OUTPUT
-        .read()
-        .unwrap()
-        .iter()
-        .fold("".to_string(), |cur: String, next: &String| {
-            cur + next + "\n"
-        });
-
-    let errors = WASM_ERRORS
-        .read()
-        .unwrap()
-        .iter()
-        .fold("".to_string(), |cur: String, next: &String| {
-            cur + next + "\n"
-        });
-
-    WASM_OUTPUT.write().unwrap().clear();
-    WASM_ERRORS.write().unwrap().clear();
-
-    (output, errors)
 }

@@ -1,37 +1,38 @@
 import {EditorView, basicSetup} from 'codemirror';
-import {syntaxHighlighting} from "@codemirror/language"
-import {tags} from "@lezer/highlight"
+import {javascript} from "@codemirror/lang-javascript";
+import {tags, Tag} from "@lezer/highlight"
 import {HighlightStyle} from "@codemirror/language"
+import {syntaxHighlighting} from "@codemirror/language"
+
+
+const printTag = Tag.define('print');
 
 const myHighlightStyle = HighlightStyle.define([
-  {tag: tags.keyword, color: "#fc6"},
-  {tag: tags.comment, color: "#f5d", fontStyle: "italic"}
+  {tag: tags.keyword, color: "#FF6868"},
+  {tag: tags.comment, color: "#059212", fontStyle: "italic"},
+  {tag: tags.variableName, color: "#FFFFFF"},
+  {tag: tags.name, color: "#6499E9"},
+  {tag: tags.string, color: "#FFAD60"},
+  {tag: printTag, color: "#6499E9"},
 ])
+
 
 export let textEditor;
 
-const fixedHeightEditor = EditorView.theme({
-  "&": {width: "300px"},
-  ".cm-scroller": {overflow: "auto"}
-})
 
 
 export const createTextEditor = () => {
   if (textEditor && textEditor !== undefined)
     return;
 
-  EditorView.theme({
-    "&": {width: "200px"},
-    ".cm-scroller": {overflow: "auto"}
-  })
-
   textEditor = new EditorView({
     doc: "hello",
     extensions: [
       basicSetup,
+      javascript(),
       syntaxHighlighting(myHighlightStyle)
     ],
-    fixedHeightEditor,
+    mode: "javascript",
     parent: document.getElementById('text-editor-id')
   });
 
