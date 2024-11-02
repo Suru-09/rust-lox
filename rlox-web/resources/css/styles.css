@@ -26,6 +26,7 @@
   overflow: auto;
   background-color: #0d1218;
   border-color: #0c72b1;
+  height: 100%;
 }
 
 .cm-scroller {
@@ -67,6 +68,7 @@
   color: #9DB2BF;
   border-color: #31363F;
   padding: 2.5% 0 0 2.5%;
+  height: 100%;
 }
 
 .interpretor-output:focus {

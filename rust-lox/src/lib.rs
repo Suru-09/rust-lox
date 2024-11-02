@@ -47,28 +47,28 @@ pub fn execute_file(source: String) -> (String, String) {
 
             let _ = resolver.resolve(&ast);
             let _ = resolver.interpreter.interpret(&ast);
-
-            let output = WASM_OUTPUT
-                .read()
-                .unwrap()
-                .iter()
-                .fold("".to_string(), |cur: String, next: &String| {
-                    cur + next + "\n"
-                });
-
-            let errors = WASM_ERRORS
-                .read()
-                .unwrap()
-                .iter()
-                .fold("".to_string(), |cur: String, next: &String| {
-                    cur + next + "\n"
-                });
-
-            WASM_OUTPUT.write().unwrap().clear();
-            WASM_ERRORS.write().unwrap().clear();
-
-            (output, errors)
         }
-        Err(_) => ("".to_string(), "".to_string()),
+        Err(_) => (),
     }
+
+    let output = WASM_OUTPUT
+        .read()
+        .unwrap()
+        .iter()
+        .fold("".to_string(), |cur: String, next: &String| {
+            cur + next + "\n"
+        });
+
+    let errors = WASM_ERRORS
+        .read()
+        .unwrap()
+        .iter()
+        .fold("".to_string(), |cur: String, next: &String| {
+            cur + next + "\n"
+        });
+
+    WASM_OUTPUT.write().unwrap().clear();
+    WASM_ERRORS.write().unwrap().clear();
+
+    (output, errors)
 }

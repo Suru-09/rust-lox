@@ -19,14 +19,17 @@ const myHighlightStyle = HighlightStyle.define([
 
 export let textEditor;
 
-
+const helloLox =
+`var lox = "Hello from Lox!!!";
+print lox;
+`;
 
 export const createTextEditor = () => {
   if (textEditor && textEditor !== undefined)
     return;
 
   textEditor = new EditorView({
-    doc: "hello",
+    doc: helloLox,
     extensions: [
       basicSetup,
       javascript(),
