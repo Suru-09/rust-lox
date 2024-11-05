@@ -2,10 +2,14 @@
   "name": "gh_pages",
   "version": "1.0.0",
   "description": "Web UI for rlox interpreter",
+  "homepage": "https://Suru-09.github.io/rust-lox/",
   "devDependencies": {
+    "gh-pages": "^6.2.0",
     "wasm-pack": "^0.13.1"
   },
   "scripts": {
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d ./rlox-web --repo https://github.com/Suru-09/rust-lox",
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "npm install && cd rlox-web/ && npm install && npm run buildWasm"
   },

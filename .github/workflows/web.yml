@@ -1,43 +1,53 @@
-name: Deploy website
+# name: Deploy website
 
-on:
-  push:
-    branches:
-      # NOTE: You may want to limit the trigger branch to be "main" or "master" etc.
-      - '*'
+# on:
+#   push:
+#     branches:
+#       # NOTE: You may want to limit the trigger branch to be "main" or "master" etc.
+#       - '*'
 
-jobs:
-  publish:
-    permissions:
-      contents: write
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check out
-        # You may use a newer version of https://github.com/actions/checkout
-        uses: actions/checkout@v4
+# jobs:
+#   publish:
+#     permissions:
+#       contents: write
+#     runs-on: ubuntu-latest
+#     steps:
+#       - name: Check out
+#         # You may use a newer version of https://github.com/actions/checkout
+#         uses: actions/checkout@v4
 
-      - name: Generate your content
-        run: npm run build
+#       - name: Setup Rust
+#         uses: hecrj/setup-rust-action@v2.0.1
+#         with:
+#           rust-version: stable
 
-      - name: Publish current workdir (which contains generated content) to GitHub Pages
-        uses: rayluo/github-pages-overwriter@v1.3
+#       - name: Setup Nodejs
+#         uses: actions/setup-node@v2
+#         with:
+#           node-version: '18.x'
 
-        with:
+#       - name: Generate your content
+#         run: npm run build
 
-          # Optional.
-          #
-          # Default value "." means the root directory of your project will be published.
-          #
-          # You can use whatever directory your project uses,
-          # for example "wwwroot" (without leading "./").
-          # Such a directory does *not* have to already exist in your repo,
-          # it could be an output directory created dynamically
-          # by your static website builder.
-          source-directory: rlox-web
+#       - name: Publish current workdir (which contains generated content) to GitHub Pages
+#         uses: rayluo/github-pages-overwriter@v1.3
 
-          # Optional. Default value "gh-pages".
-          # It specifies the temporary branch which hosts the static website.
-          # Each build will REMOVE this branch and replace it with new content.
-          # (If you want to keep your old "gh-pages" branch,
-          # you should define a different target branch for this GPO action to work with.)
-          target-branch: gh-pages
+#         with:
+
+#           # Optional.
+#           #
+#           # Default value "." means the root directory of your project will be published.
+#           #
+#           # You can use whatever directory your project uses,
+#           # for example "wwwroot" (without leading "./").
+#           # Such a directory does *not* have to already exist in your repo,
+#           # it could be an output directory created dynamically
+#           # by your static website builder.
+#           source-directory: rlox-web
+
+#           # Optional. Default value "gh-pages".
+#           # It specifies the temporary branch which hosts the static website.
+#           # Each build will REMOVE this branch and replace it with new content.
+#           # (If you want to keep your old "gh-pages" branch,
+#           # you should define a different target branch for this GPO action to work with.)
+#           target-branch: gh-pages
