@@ -2,7 +2,8 @@
 export default {
   root: './',
   build: {
-      outDir: '../dist',
+      outDir: 'dist',
+      assetsDir: 'assets',
       commonjsOptions: {
         esmExternals: true
      },
