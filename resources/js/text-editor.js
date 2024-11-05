@@ -1,8 +1,8 @@
-import {EditorView, basicSetup} from '../../extra_modules/codemirror/dist/index.js';
-import {javascript} from "../../extra_modules/@codemirror/lang-javascript/dist/index.js";
-import {tags, Tag} from "../../extra_modules/@lezer/highlight/dist/index.js"
-import {HighlightStyle} from "../../extra_modules/@codemirror/language/dist/index.js"
-import {syntaxHighlighting} from "../../extra_modules/@codemirror/language/dist/index.js"
+import {EditorView, basicSetup} from 'codemirror';
+import {javascript} from "@codemirror/lang-javascript";
+import {tags, Tag} from "@lezer/highlight"
+import {HighlightStyle} from "@codemirror/language"
+import {syntaxHighlighting} from "@codemirror/language"
 
 
 const printTag = Tag.define('print');
