@@ -1,6 +1,6 @@
 // vite.config.js
 export default {
-  root: '/rust-lox/rlox-web/',
+  root: '/rust-lox/',
   build: {
       outDir: '../dist',
       commonjsOptions: {
