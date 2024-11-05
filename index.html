@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Rlox Interpreter</title>
+
+  <link rel="stylesheet" type="text/css" href="resources/css/styles.css" />
+  <script>
+    /*to prevent Firefox FOUC, this must be here*/
+    let FF_FOUC_FIX;
+  </script>
+
+</head>
+
+<body>
+  <script type="module" src="./src/main.js"></script>
+
+  <div class="editor">
+    <div class="header" id="header-id">
+      <h1>Rlox interpreter</h1>
+    </div>
+    <div id='explorer-id' class="explorer"></div>
+    <div id='text-editor-id' type="text" class="text-editor"></div>
+    <textarea type="text" class="interpretor-output" id="output-id" value="OUTPUT" readonly></textarea>
+  </div>
+</body>
+
+</html>
