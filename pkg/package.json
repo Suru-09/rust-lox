@@ -1,0 +1,18 @@
+{
+  "name": "rlox-wasm",
+  "type": "module",
+  "collaborators": [
+    "Suru-09 <dragos.surugiu13@yahoo.com>"
+  ],
+  "version": "0.1.0",
+  "files": [
+    "rlox_wasm_bg.wasm",
+    "rlox_wasm.js",
+    "rlox_wasm.d.ts"
+  ],
+  "main": "rlox_wasm.js",
+  "types": "rlox_wasm.d.ts",
+  "sideEffects": [
+    "./snippets/*"
+  ]
+}
