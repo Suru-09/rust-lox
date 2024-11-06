@@ -5,7 +5,8 @@
   align-items: center;
   flex-direction: row;
   background-color: #0d1218;
-  height: 7vh;
+  height: 10vh;
+  min-height: 7vh;
   gap: 150px;
 }
 

@@ -1,16 +1,20 @@
 import { textEditor } from './text-editor.js'
 import { clearOutput } from './output.js'
 
+import hello from '/lox_files/hello.lox?url'
+import linked_list from '/lox_files/linked_list.lox?url'
+import two_statements from '/lox_files/two_statements.lox?url'
+
 const defaultFiles = [
-  'hello.lox',
-  'linked_list.lox',
-  'two_statements.lox'
+  hello,
+  linked_list,
+  two_statements
 ];
 
 const headerID = 'header-id';
 
 const getFileContents = async(filename) => {
-  return fetch(`/lox_files/${filename}`)
+  return fetch(filename)
     .then(response => response.text());
 }
 
@@ -30,7 +34,9 @@ export const appendExplorerButtons = () => {
   defaultFiles.forEach((filename) => {
     const button = document.createElement(`button`);
     button.className = "explorer-button";
-    var text = document.createTextNode(`${filename}`);
+    var parts = filename.split("/");
+    var filename_real = parts.pop();
+    var text = document.createTextNode(`${filename_real}`);
     button.appendChild(text);
 
     button.onclick = () => {
