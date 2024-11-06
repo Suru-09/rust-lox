@@ -1,0 +1,134 @@
+fun main() {
+    var lox = 1 + 2 - 3 + 4 - 5 / 7 * 9 - 12.3 * (2.34 + 11);
+    print lox;
+
+    var result = (5 - (3 - 1)) + -1;
+    print result;
+
+    lox = "Reasign from number to string";
+
+    var a = 2;
+    var b = 3;
+    var condition = false;
+    if (a < b) {
+       print condition;
+    }
+    else
+      print "Condition is false";
+
+    if(condition or true)
+    {
+        lox = "Hehehe another string in this block";
+        print lox;
+    }
+    else
+        print "Not good";
+
+    for(var i = 0 ; i < 15; i = i + 1) {
+        lox = lox + "i";
+        print lox;
+    }
+
+    return "This the main string";
+}
+
+print "Starting the timer....";
+var t1 = unixClock();
+
+var stringMain = main();
+
+print stringMain;
+
+fun sayHi(first, last) {
+print "Hi, " + first + " " + last + "!";
+}
+
+sayHi("Dear", "Reader");
+
+fun sumToN(n) {
+  if (n < 2)
+    return 1;
+  else {
+    return n + sumToN(n - 1);
+  }
+}
+
+var nForSum = 10;
+print "Sum from one to " + nForSum + " is: " + sumToN(nForSum);
+
+fun fib(n) {
+  if (n <= 1) {
+    return n;
+  }
+  return fib(n - 2) + fib(n - 1);
+}
+
+for (var i = 0; i < 20; i = i + 1) {
+  print "Fib<" + i + "> = " + fib(i);
+}
+
+fun makeCounter() {
+  var i = 0;
+  fun count() {
+    i = i + 1;
+    print i;
+  }
+  return count;
+}
+
+var counter = makeCounter();
+counter(); // "1".
+counter(); // "2".
+counter(); // "3"
+
+var counter2 = makeCounter();
+counter2(); // "1".
+counter2(); // "2".
+counter2(); // "3"
+
+class DevonshireCream {
+  serveOn() {
+    return "Scones";
+  }
+}
+
+print DevonshireCream;
+var instance = DevonshireCream();
+instance.size = "Big Cream";
+print instance.size;
+
+class Bacon {
+  eat() {
+    print "Crunch crunch crunch";
+  }
+}
+
+Bacon().eat();
+
+class Egotist {
+  speak() {
+    print this;
+  }
+}
+
+var method = Egotist().speak;
+method();
+
+
+class Doughnut {
+  cook() {
+    print "Fry until golden brown.";
+    print "Place in a nice box.";
+  }
+}
+
+class BostonCream < Doughnut {
+  cook() {
+    print "Pipe full of custard and coat with chocolate.";
+  }
+}
+BostonCream().cook();
+
+var t2 = unixClock();
+print "The entire process took: " + (t2 - t1) + " milliseconds.";
+
