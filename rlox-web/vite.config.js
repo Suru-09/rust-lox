@@ -1,10 +1,14 @@
 // vite.config.js
 export default {
-  root: './',
+  base: './',
   build: {
-      outDir: '../dist',
+      outDir: 'dist',
+      assetsDir: './',
       commonjsOptions: {
         esmExternals: true
      },
+      esbuild: {
+        drop: ['console', 'debugger']
+      }
   }
 };

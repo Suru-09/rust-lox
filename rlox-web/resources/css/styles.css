@@ -1,15 +1,58 @@
 .header {
   grid-area: header;
-  text-align: center;
+  text-align: left;
+  display: flex;
+  align-items: center;
+  flex-direction: row;
+  background-color: #0d1218;
+  height: 7vh;
+  gap: 150px;
 }
 
-.explorer {
-  width: 12vw;
-  max-width: 12vw;
-  grid-area: expTab;
-  display: flex;
-  flex-direction: column;
-  height: 100%;
+.dropdown {
+  position: relative;
+  display: inline-block;
+  min-width: 7vw;
+  cursor: pointer;
+  border: 2px solid #9DB2BF;
+  transition: background-color 0.3s;
+  background-color: #010102;
+}
+
+.explorer-button {
+  border: 1px solid #31363F;
+  z-index: 1;
+  background-color: #0d1218;
+  font-size: 0.8em;
+  color: #9DB2BF;
+  cursor: pointer;
+}
+
+.run-button {
+  background-color: #010102;
+  font-size: 0.8em;
+  color: #9DB2BF;
+  border-color: #31363F;
+  text-align: center;
+  padding: 1% 0.5% 1% 0.5%;
+}
+
+.dropdown-content {
+  display: none;
+  position: absolute;
+  background-color: #0d1218;
+  box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
+  z-index: 1;
+}
+
+.dropdown:hover .dropdown-content {
+  display: block;
+}
+
+.dropdown-span {
+  color: #9DB2BF;
+  text-align: center;
+  font-size: 1em;
 }
 
 .text-editor {
@@ -27,6 +70,7 @@
   background-color: #0d1218;
   border-color: #0c72b1;
   height: 100%;
+  margin-left: 1vw;
 }
 
 .cm-scroller {
@@ -61,14 +105,15 @@
 
 .interpretor-output {
   grid-area: output;
-  width: 35vw;
-  max-width: 35vw;
+  width: 45vw;
+  max-width: 45vw;
   font-size: 1.25em;
   background-color: #010102;
   color: #9DB2BF;
   border-color: #31363F;
   padding: 2.5% 0 0 2.5%;
   height: 100%;
+  resize: vertical;
 }
 
 .interpretor-output:focus {
@@ -78,8 +123,8 @@
 .editor {
   display: grid;
   grid-template-areas:
-    'header header header header header header header header'
-    'expTab text text text text output output output';
+    'header header header header header header'
+    'text text text output output output';
   gap: 10px;
   padding: 25px;
   background-color: #010102;
@@ -89,24 +134,6 @@
 .grid-container>div {
   padding: 20px 0;
   font-size: 30px;
-}
-
-.explorer-button {
-  background-color: #010102;
-  font-size: 0.8em;
-  color: #9DB2BF;
-  border-color: #31363F;
-  padding: 2.5% 2.5% 2.5% 2.5%;
-}
-
-.run-button {
-  background-color: #010102;
-  font-size: 0.8em;
-  color: #9DB2BF;
-  border-color: #31363F;
-  text-align: center;
-  padding: 4% 0.5% 4% 0.5%;
-  margin-bottom: 10%;
 }
 
 html {
@@ -120,4 +147,6 @@ h1 {
   color: #9DB2BF;
   /* background-color: #010102; */
   font-size: 64px;
+  text-align: left;
+  margin-left: 1vw;
 }

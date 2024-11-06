@@ -16,4 +16,8 @@ export const runFile = (src) => {
   return output + errors;
 }
 
+export const clearOutput = () => {
+  const outputDoc = document.getElementById("output-id");
+  outputDoc.value = "";
+};
 

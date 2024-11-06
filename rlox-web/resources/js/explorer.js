@@ -1,18 +1,32 @@
 import { textEditor } from './text-editor.js'
+import { clearOutput } from './output.js'
 
 const defaultFiles = [
+  'hello.lox',
   'linked_list.lox',
   'two_statements.lox'
 ];
 
-const explorerDivID = 'explorer-id';
+const headerID = 'header-id';
 
 const getFileContents = async(filename) => {
-  return fetch(`resources/lox_files/${filename}`)
+  return fetch(`/lox_files/${filename}`)
     .then(response => response.text());
 }
 
 export const appendExplorerButtons = () => {
+  const explorerDropdown = document.createElement('div');
+  explorerDropdown.className = "dropdown";
+
+  const dropDownName = document.createElement("SPAN");
+  dropDownName.className = "dropdown-span";
+  dropDownName.innerText = "Choose file";
+  explorerDropdown.appendChild(dropDownName);
+
+  const dropDownContent = document.createElement('div');
+  dropDownContent.className = "dropdown-content";
+  explorerDropdown.appendChild(dropDownContent);
+
   defaultFiles.forEach((filename) => {
     const button = document.createElement(`button`);
     button.className = "explorer-button";
@@ -30,12 +44,13 @@ export const appendExplorerButtons = () => {
         });
         textEditor.dispatch(transaction)
 
-        // clear output on change of file.
-        const outputDoc = document.getElementById("output-id");
-        outputDoc.value = "";
+        // clear the old output when loading a new file to interpret.
+        clearOutput();
       })
     };
 
-    document.getElementById(explorerDivID).appendChild(button);
+    dropDownContent.appendChild(button);
   });
+
+  document.getElementById(headerID).appendChild(explorerDropdown);
 }

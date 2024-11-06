@@ -1,7 +1,8 @@
 import {runFile} from './output.js'
 import { textEditor } from './text-editor.js'
+import { clearOutput } from './output.js'
 
-export const explorerID = 'explorer-id';
+export const headerID = 'header-id';
 
 export const appendRunButton = () => {
 
@@ -14,14 +15,16 @@ export const appendRunButton = () => {
   // button logic
   runButton.onclick = () => {
     const file = textEditor.state.doc.toString();
-    // clear output on change of file.
     const outputDoc = document.getElementById("output-id");
-    outputDoc.value = "";
+
+    // clear output on change of file.
+    clearOutput();
+
     let output = runFile(file);
     // console.log(`Output: ${output}`);
 
     outputDoc.value = output;
   };
 
-  document.getElementById(explorerID).appendChild(runButton);
+  document.getElementById(headerID).appendChild(runButton);
 }
