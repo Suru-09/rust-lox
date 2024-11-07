@@ -2,7 +2,7 @@ import {runFile} from './output.js'
 import { textEditor } from './text-editor.js'
 import { clearOutput } from './output.js'
 
-export const headerID = 'header-id';
+export const headerButtonsID = 'header-buttons-id';
 
 export const appendRunButton = () => {
 
@@ -26,5 +26,5 @@ export const appendRunButton = () => {
     outputDoc.value = output;
   };
 
-  document.getElementById(headerID).appendChild(runButton);
+  document.getElementById(headerButtonsID).appendChild(runButton);
 }

@@ -11,7 +11,7 @@ const defaultFiles = [
   two_statements
 ];
 
-const headerID = 'header-id';
+const headerButtonsID = 'header-buttons-id';
 
 const getFileContents = async(filename) => {
   return fetch(filename)
@@ -58,5 +58,5 @@ export const appendExplorerButtons = () => {
     dropDownContent.appendChild(button);
   });
 
-  document.getElementById(headerID).appendChild(explorerDropdown);
+  document.getElementById(headerButtonsID).appendChild(explorerDropdown);
 }

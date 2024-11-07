@@ -9,6 +9,6 @@ window.onbeforeunload = clearOutput;
 init().then(() => {
   init_interpreter();
   createTextEditor();
-  appendRunButton();
   appendExplorerButtons();
+  appendRunButton();
 });

@@ -1,13 +1,15 @@
 .header {
   grid-area: header;
-  text-align: left;
   display: flex;
-  align-items: center;
   flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  vertical-align: center;
   background-color: #0d1218;
-  height: 10vh;
+  height: 7vh;
   min-height: 7vh;
-  gap: 150px;
+  width: 100%;
+  max-width: 100%;
 }
 
 .dropdown {
@@ -35,7 +37,7 @@
   color: #9DB2BF;
   border-color: #31363F;
   text-align: center;
-  padding: 1% 0.5% 1% 0.5%;
+  max-height: fit-content;
 }
 
 .dropdown-content {
@@ -60,27 +62,37 @@
   grid-area: text;
   text-align: left;
   vertical-align: text-top;
-  resize: vertical;
+  resize: none;
+  height: 85vh;
+  max-height: 85vh;
+  margin-left: 2.5vw;
 }
 
 .cm-editor {
-  width: 48vw;
-  max-width: 48vw;
-  resize: vertical;
-  overflow: auto;
+  width: 50vw;
+  max-width: 50vw;
+  resize: none;
+  overflow: none;
   background-color: #0d1218;
   border-color: #0c72b1;
-  height: 100%;
-  margin-left: 1vw;
+  height: 85vh;
+  max-height: 85vh;
 }
 
 .cm-scroller {
   color: #C6E7FF;
+  height: 85vh;
+  max-height: 85vh;
+}
+
+.cm-scroller::-webkit-scrollbar {
+  width: 1em;
+  scrollbar-width: thin;
+  overflow: visible;
 }
 
 .cm-gutter {
   background-color: #070a0e;
-  padding: 2.5% 0 0 2.5%;
 }
 
 .cm-gutterElement {
@@ -106,19 +118,26 @@
 
 .interpretor-output {
   grid-area: output;
-  width: 45vw;
-  max-width: 45vw;
-  font-size: 1.25em;
+  width: 40vw;
+  max-width: 40vw;
+  font-size: 1em;
   background-color: #010102;
   color: #9DB2BF;
   border-color: #31363F;
-  padding: 2.5% 0 0 2.5%;
-  height: 100%;
-  resize: vertical;
+  height: 85vh;
+  max-height: 85vh;
+  resize: none;
 }
 
 .interpretor-output:focus {
   border-color: #31363F;
+}
+
+.interpretor-output::-webkit-scrollbar {
+  width: 1em;
+  scrollbar-color: rebeccapurple green;
+  scrollbar-width: thin;
+  overflow: visible;
 }
 
 .editor {
@@ -127,14 +146,24 @@
     'header header header header header header'
     'text text text output output output';
   gap: 10px;
-  padding: 25px;
   background-color: #010102;
-  font-size: 1.5em;
+  width: 100%;
+  max-width: 100%;
+  height: 100%;
+  max-height: 100%;
 }
 
 .grid-container>div {
-  padding: 20px 0;
   font-size: 30px;
+}
+
+.header-buttons {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  height: 7vh;
+  gap: 3vw;
 }
 
 html {
@@ -147,7 +176,6 @@ html {
 h1 {
   color: #9DB2BF;
   /* background-color: #010102; */
-  font-size: 64px;
-  text-align: left;
-  margin-left: 1vw;
+  text-align: center;
+  display: inline;
 }
