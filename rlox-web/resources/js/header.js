@@ -20,8 +20,8 @@ export const appendRunButton = () => {
     // clear output on change of file.
     clearOutput();
 
-    let output = runFile(file).then(() => {
-      outputDoc.value = output;
+    runFile(file).then((data) => {
+      outputDoc.value = data;
     });
   };
 
