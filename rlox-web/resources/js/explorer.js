@@ -18,29 +18,33 @@ const getFileContents = async(filename) => {
     .then(response => response.text());
 }
 
+const getFileNameFromPath = (path) => {
+  var parts = path.split("/");
+  return parts.pop();
+}
+
 export const appendExplorerButtons = () => {
   const explorerDropdown = document.createElement('div');
   explorerDropdown.className = "dropdown";
 
-  const dropDownName = document.createElement("SPAN");
-  dropDownName.className = "dropdown-span";
-  dropDownName.innerText = "Choose file";
-  explorerDropdown.appendChild(dropDownName);
+  const dropDownSpan = document.createElement(`SPAN`);
+  dropDownSpan.className = "dropdown-span";
+  dropDownSpan.id = "dropdown-span-id";
+  dropDownSpan.innerText = getFileNameFromPath(defaultFiles[0]);
+  explorerDropdown.appendChild(dropDownSpan);
 
   const dropDownContent = document.createElement('div');
   dropDownContent.className = "dropdown-content";
   explorerDropdown.appendChild(dropDownContent);
 
-  defaultFiles.forEach((filename) => {
+  defaultFiles.forEach((filePath) => {
     const button = document.createElement(`button`);
     button.className = "explorer-button";
-    var parts = filename.split("/");
-    var filename_real = parts.pop();
-    var text = document.createTextNode(`${filename_real}`);
+    var text = document.createTextNode(getFileNameFromPath(filePath));
     button.appendChild(text);
 
     button.onclick = () => {
-      getFileContents(filename).then((contents) => {
+      getFileContents(filePath).then((contents) => {
         const transaction = textEditor.state.update({
           changes: {
             from: 0,
@@ -49,6 +53,9 @@ export const appendExplorerButtons = () => {
           }
         });
         textEditor.dispatch(transaction)
+
+        // update the dropdown
+        document.getElementById("dropdown-span-id").innerText = getFileNameFromPath(filePath);
 
         // clear the old output when loading a new file to interpret.
         clearOutput();

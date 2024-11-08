@@ -24,7 +24,7 @@ const helloLox =
 print lox;
 `;
 
-export const createTextEditor = () => {
+export const createTextEditor = async () => {
   if (textEditor && textEditor !== undefined)
     return;
 

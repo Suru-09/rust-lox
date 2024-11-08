@@ -13,17 +13,16 @@ export const appendRunButton = () => {
   runButton.appendChild(text);
 
   // button logic
-  runButton.onclick = () => {
+  runButton.onclick = async () => {
     const file = textEditor.state.doc.toString();
     const outputDoc = document.getElementById("output-id");
 
     // clear output on change of file.
     clearOutput();
 
-    let output = runFile(file);
-    // console.log(`Output: ${output}`);
-
-    outputDoc.value = output;
+    let output = runFile(file).then(() => {
+      outputDoc.value = output;
+    });
   };
 
   document.getElementById(headerButtonsID).appendChild(runButton);

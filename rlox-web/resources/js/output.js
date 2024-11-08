@@ -1,6 +1,6 @@
 import{ run_file } from '../../pkg/rlox_wasm.js'
 
-export const runFile = (src) => {
+export const runFile = async (src) => {
   console.log(`I am running: ${src}`);
   const result = run_file(src);
   const output = result.get_output();

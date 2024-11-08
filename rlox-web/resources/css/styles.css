@@ -15,11 +15,25 @@
 .dropdown {
   position: relative;
   display: inline-block;
-  min-width: 7vw;
+  text-align: center;
+  min-width: fit-content;
+  max-width: fit-content;
   cursor: pointer;
-  border: 2px solid #9DB2BF;
+  border: 2px solid #31363F;
   transition: background-color 0.3s;
   background-color: #010102;
+}
+
+.dropdown:hover{
+  border: 2px solid #9DB2BF;
+}
+
+.explorer-button:hover {
+  border: 2px solid #9DB2BF;
+}
+
+.run-button:hover {
+  border: 2px solid #9DB2BF;
 }
 
 .explorer-button {
@@ -29,6 +43,8 @@
   font-size: 0.8em;
   color: #9DB2BF;
   cursor: pointer;
+  min-width: 100%;
+  width: 100%;
 }
 
 .run-button {
@@ -38,6 +54,7 @@
   border-color: #31363F;
   text-align: center;
   max-height: fit-content;
+  cursor: pointer;
 }
 
 .dropdown-content {
@@ -46,6 +63,8 @@
   background-color: #0d1218;
   box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
   z-index: 1;
+  max-width: 100%;
+  width: 100%;
 }
 
 .dropdown:hover .dropdown-content {
@@ -56,6 +75,10 @@
   color: #9DB2BF;
   text-align: center;
   font-size: 1em;
+  padding: 10px;
+  overflow: hidden;
+  max-width: 100%;
+  width: 100%;
 }
 
 .text-editor {
@@ -164,6 +187,10 @@
   align-items: center;
   height: 7vh;
   gap: 3vw;
+  margin-right: 2vw;
+  max-height: fit-content;
+  max-width: fit-content;
+  min-width: fit-content;
 }
 
 html {

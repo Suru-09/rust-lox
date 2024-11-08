@@ -11,12 +11,12 @@
     "w3c-keyname": "^2.2.8"
   },
   "devDependencies": {
-    "vite": "^5.4.10",
-    "gh-pages": "^6.2.0"
+    "gh-pages": "^6.2.0",
+    "vite": "^5.4.10"
   },
   "scripts": {
     "start": "vite",
-    "predeploy": "npm install && npm run build && vite build --base /rust-lox/ && npm run buildWasm",
+    "predeploy": "npm install && npm run build && vite build --base /rust-lox/",
     "deploy": "gh-pages -d ./dist/ --repo https://github.com/Suru-09/rust-lox --dotfiles",
     "build": "vite build",
     "buildWasm": "cd ../rlox-wasm && wasm-pack build --out-dir ../rlox-web/pkg/ --target web"
