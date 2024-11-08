@@ -4,7 +4,7 @@ import { clearOutput } from './output.js'
 
 export const headerButtonsID = 'header-buttons-id';
 
-export const appendRunButton = () => {
+export const appendRunButton = async () => {
 
   // button && text creation
   const runButton = document.createElement(`button`);
