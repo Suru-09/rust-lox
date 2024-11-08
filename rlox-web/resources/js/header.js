@@ -14,11 +14,11 @@ export const appendRunButton = () => {
 
   // button logic
   runButton.onclick = async () => {
-    const file = textEditor.state.doc.toString();
-    const outputDoc = document.getElementById("output-id");
-
     // clear output on change of file.
     clearOutput();
+  
+    const file = textEditor.state.doc.toString();
+    const outputDoc = document.getElementById("output-id");
 
     runFile(file).then((data) => {
       outputDoc.value = data;

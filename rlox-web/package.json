@@ -16,7 +16,7 @@
   },
   "scripts": {
     "start": "vite",
-    "predeploy": "npm install && npm run build && vite build --base /rust-lox/ && npm run buildWasm",
+    "predeploy": "npm install && npm run build && vite build --base /rust-lox/",
     "deploy": "gh-pages -d ./dist/ --repo https://github.com/Suru-09/rust-lox --dotfiles",
     "build": "vite build",
     "buildWasm": "cd ../rlox-wasm && wasm-pack build --out-dir ../rlox-web/pkg/ --target web"

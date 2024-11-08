@@ -3,10 +3,10 @@ import {javascript} from "@codemirror/lang-javascript";
 import {tags, Tag} from "@lezer/highlight"
 import {HighlightStyle} from "@codemirror/language"
 import {syntaxHighlighting} from "@codemirror/language"
-
+import hello from '/lox_files/hello.lox?url'
+import { getFileContents } from './explorer.js';
 
 const printTag = Tag.define('print');
-
 const myHighlightStyle = HighlightStyle.define([
   {tag: tags.keyword, color: "#FF6868"},
   {tag: tags.comment, color: "#059212", fontStyle: "italic"},
@@ -16,20 +16,14 @@ const myHighlightStyle = HighlightStyle.define([
   {tag: printTag, color: "#6499E9"},
 ])
 
-
 export let textEditor;
-
-const helloLox =
-`var lox = "Hello from Lox!!!";
-print lox;
-`;
 
 export const createTextEditor = async () => {
   if (textEditor && textEditor !== undefined)
     return;
 
   textEditor = new EditorView({
-    doc: helloLox,
+    doc: await getFileContents(hello),
     extensions: [
       basicSetup,
       javascript(),

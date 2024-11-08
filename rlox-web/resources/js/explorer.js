@@ -13,7 +13,7 @@ const defaultFiles = [
 
 const headerButtonsID = 'header-buttons-id';
 
-const getFileContents = async(filename) => {
+export const getFileContents = async(filename) => {
   return fetch(filename)
     .then(response => response.text());
 }
@@ -27,6 +27,7 @@ export const appendExplorerButtons = () => {
   const explorerDropdown = document.createElement('div');
   explorerDropdown.className = "dropdown";
 
+  // dropdown support
   const dropDownSpan = document.createElement(`SPAN`);
   dropDownSpan.className = "dropdown-span";
   dropDownSpan.id = "dropdown-span-id";
@@ -65,5 +66,6 @@ export const appendExplorerButtons = () => {
     dropDownContent.appendChild(button);
   });
 
+  // add the header buttons to the header...
   document.getElementById(headerButtonsID).appendChild(explorerDropdown);
 }

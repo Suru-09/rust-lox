@@ -1,0 +1,25 @@
+.interpretor-output:focus {
+    border-color: #31363F;
+}
+  
+.interpretor-output::-webkit-scrollbar {
+    width: 1em;
+    scrollbar-color: rebeccapurple green;
+    scrollbar-width: thin;
+    overflow: visible;
+}
+
+.interpretor-output {
+    grid-area: output;
+    width: 40vw;
+    max-width: 40vw;
+    font-size: 1em;
+    background-color: #010102;
+    color: #9DB2BF;
+    border-color: #31363F;
+    height: 84.18vh;
+    min-height: 84.18vh;
+    max-height: 84.18vh;
+    resize: none;
+    margin: 0;
+}

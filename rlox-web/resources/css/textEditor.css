@@ -1,0 +1,61 @@
+
+.text-editor {
+    grid-area: text;
+    text-align: left;
+    vertical-align: text-top;
+    resize: none;
+    height: 85vh;
+    min-height: 85vh;
+    max-height: 85vh;
+    margin-left: 2.5vw;
+}
+  
+.cm-editor {
+    width: 50vw;
+    max-width: 50vw;
+    resize: none;
+    overflow: visible;
+    background-color: #0d1218;
+    border-color: #0c72b1;
+    min-height: 100%;
+    height: 100%;
+    max-height: 100%;
+}
+  
+.cm-scroller {
+    color: #C6E7FF;
+    height: 85vh;
+    max-height: 85vh;
+}
+  
+.cm-scroller::-webkit-scrollbar {
+    width: 1em;
+    scrollbar-width: thin;
+    overflow: visible;
+}
+  
+.cm-gutter {
+    background-color: #070a0e;
+}
+  
+.cm-gutterElement {
+    background-color: #070a0e;
+}
+  
+.cm-activeLineGutter {
+background-color: #010102;
+  }
+  
+.cm-activeLine {
+    background-color: #9DB2BF;
+    color: #9DB2BF;
+}
+  
+.cm-gutters {
+    background-color: #070a0e;
+}
+  
+.cm-lineNumbers {
+    background-color: #070a0e;
+}
+  
