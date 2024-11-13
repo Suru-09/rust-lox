@@ -1,6 +1,6 @@
 import{ run_file } from '../../pkg/rlox_wasm.js'
 
-export const runFile = async (src) => {
+export const runFile = async (src: string) => {
   console.log(`I am running: ${src}`);
   const result = run_file(src);
   const output = result.get_output();
@@ -17,7 +17,7 @@ export const runFile = async (src) => {
 }
 
 export const clearOutput = () => {
-  const outputDoc = document.getElementById("output-id");
+  const outputDoc = document.getElementById("output-id") as HTMLTextAreaElement;
   outputDoc.value = "";
 };
 

@@ -1,6 +1,6 @@
-import {runFile} from './output.js'
-import { textEditor } from './text-editor.js'
-import { clearOutput } from './output.js'
+import {runFile} from './output'
+import { textEditor } from './text-editor'
+import { clearOutput } from './output'
 
 export const headerButtonsID = 'header-buttons-id';
 
@@ -18,12 +18,13 @@ export const appendRunButton = async () => {
     clearOutput();
   
     const file = textEditor.state.doc.toString();
-    const outputDoc = document.getElementById("output-id");
+    const outputDoc = document.getElementById("output-id") as HTMLTextAreaElement;
 
     runFile(file).then((data) => {
       outputDoc.value = data;
     });
   };
 
-  document.getElementById(headerButtonsID).appendChild(runButton);
+  const headerButtons: any = document.getElementById(headerButtonsID);
+  headerButtons.appendChild(runButton);
 }
